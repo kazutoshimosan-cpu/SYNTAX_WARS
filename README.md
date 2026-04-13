@@ -1,0 +1,2 @@
+# SYNTAX_WARS
+SYNTAX_WARSファイル

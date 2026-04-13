@@ -1,0 +1,4473 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SYNTAX WARS v6.2 - Prototype</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; min-height:100vh; user-select:none; }
+
+/* ===== SCREENS ===== */
+.screen { display:none !important; }
+.screen.active { display:block !important; }
+#title-screen.active { display:flex !important; }
+#game-screen.active { display:flex !important; }
+#result-screen.active { display:flex !important; }
+
+/* ===== TITLE ===== */
+#title-screen {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:100vh; gap:20px;
+}
+.title-logo { font-size:36px; font-weight:bold; color:#a0f0ff; letter-spacing:6px; text-shadow:0 0 20px #a0f0ff; }
+.title-sub { font-size:12px; color:#5080a0; letter-spacing:3px; }
+.title-version { font-size:10px; color:#304060; letter-spacing:2px; }
+.btn {
+  background:transparent; border:2px solid #4080c0; color:#a0d0ff;
+  font-family:'Courier New',monospace; font-size:14px; padding:12px 32px;
+  cursor:pointer; letter-spacing:2px; transition:all 0.15s;
+}
+.btn:hover { background:#4080c020; box-shadow:0 0 12px #4080c0; }
+.btn:active { transform:scale(0.97); }
+
+.difficulty-row { display:flex; gap:8px; }
+.diff-btn {
+  background:transparent; border:1px solid #304060; color:#506080;
+  font-family:'Courier New',monospace; font-size:12px; padding:8px 16px;
+  cursor:pointer; transition:all 0.15s; letter-spacing:1px;
+}
+.diff-btn.selected { border-color:#a0f0ff; color:#a0f0ff; background:#0a1520; }
+.diff-btn:hover { border-color:#a0d0ff; color:#a0d0ff; }
+
+/* ===== CHAR SELECT ===== */
+#select-screen { padding:16px; min-height:100vh; }
+.select-title { text-align:center; color:#a0f0ff; font-size:16px; letter-spacing:4px; margin-bottom:16px; }
+.char-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+.char-card {
+  border:1px solid #304060; padding:12px; cursor:pointer; transition:all 0.15s;
+  background:#050510;
+}
+.char-card:hover, .char-card.selected { border-color:#a0f0ff; background:#0a1520; box-shadow:0 0 10px #a0f0ff44; }
+.char-name { font-size:13px; color:#a0f0ff; margin-bottom:4px; }
+.char-type { font-size:10px; color:#506080; margin-bottom:6px; }
+.char-stats { font-size:10px; color:#8090b0; line-height:1.6; }
+.char-detail {
+  display:none; background:#050510; border:1px solid #304060;
+  padding:12px; margin-bottom:12px; font-size:11px; line-height:1.8;
+}
+.char-detail.active { display:block; }
+.detail-section { margin-bottom:8px; }
+.detail-label { color:#a0f0ff; font-size:10px; letter-spacing:2px; margin-bottom:3px; }
+.detail-text { color:#8090b0; }
+
+/* ===== GAME SCREEN ===== */
+#game-screen { padding:8px; min-height:100vh; display:flex; flex-direction:column; gap:8px; }
+
+.fighter-row { display:flex; gap:8px; }
+.fighter-panel {
+  flex:1; background:#050510; border:1px solid #203040; padding:10px;
+  border-color: var(--panel-color, #203040);
+  transition: border-color 0.3s;
+  position: relative;
+  overflow: visible;
+}
+.fighter-panel-top { display:flex; gap:8px; align-items:center; margin-bottom:6px; }
+.char-icon-wrap { flex-shrink:0; }
+.char-icon {
+  width:56px; height:56px; border-radius:50%;
+  object-fit:cover; display:block;
+  border:2px solid var(--panel-color, #203040);
+  box-shadow: 0 0 10px var(--panel-color, #203040), 0 0 20px var(--panel-color-dim, #203040);
+  animation: neon-breathe 2.5s ease-in-out infinite;
+  background:#0a0a1a;
+}
+.char-icon-fallback {
+  width:56px; height:56px; border-radius:50%;
+  border:2px solid var(--panel-color, #203040);
+  box-shadow: 0 0 10px var(--panel-color, #203040), 0 0 20px var(--panel-color-dim, #203040);
+  animation: neon-breathe 2.5s ease-in-out infinite;
+  background:#0a0a1a;
+  display:flex; align-items:center; justify-content:center;
+  font-size:24px;
+}
+@keyframes neon-breathe {
+  0%,100% { box-shadow: 0 0 8px var(--panel-color,#203040), 0 0 16px var(--panel-color-dim,#203040); }
+  50%      { box-shadow: 0 0 18px var(--panel-color,#203040), 0 0 36px var(--panel-color-dim,#203040), 0 0 56px var(--panel-color-dim,#203040); }
+}
+.fighter-panel-info { flex:1; min-width:0; }
+.fighter-name { font-size:11px; color:#a0f0ff; letter-spacing:2px; margin-bottom:4px; }
+.stat-bar-wrap { margin-bottom:4px; }
+.stat-label { font-size:9px; color:#506080; display:flex; justify-content:space-between; margin-bottom:2px; }
+.bar-bg { height:8px; background:#0a1520; border:1px solid #203040; }
+.bar-fill { height:100%; transition:width 0.4s; }
+.hp-fill { background: linear-gradient(90deg, var(--hp-color-dark,#0a8), var(--hp-color,#0f8)); }
+.hp-fill.mid { background:linear-gradient(90deg,#880,#ff0); }
+.hp-fill.low { background:linear-gradient(90deg,#800,#f00); }
+.gauge-fill { background:linear-gradient(90deg,#048,#08f); }
+.audience-wrap { margin:6px 8px 2px; }
+.audience-label { font-size:9px; color:#806020; display:flex; justify-content:space-between; margin-bottom:2px; }
+.audience-fill { background:linear-gradient(90deg,#a60,#ff0); }
+.crowd-on-fire { color:#ff4400; font-weight:bold; font-size:13px; text-align:center; animation:flicker 0.5s infinite alternate; }
+@keyframes flicker { from { opacity:1; } to { opacity:0.5; } }
+
+/* ===== DEV MODE ===== */
+.dev-badge { font-size:9px; color:#ff8800; border:1px solid #804000; padding:1px 5px; border-radius:2px; margin-left:8px; vertical-align:middle; letter-spacing:1px; }
+.dev-panel { background:#050508; border:1px solid #402000; padding:8px; margin-top:6px; }
+.dev-panel-title { font-size:9px; color:#804000; letter-spacing:2px; margin-bottom:6px; cursor:pointer; }
+.dev-btns { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:4px; }
+.dev-btn { font-size:9px; padding:2px 7px; background:#0a0805; border:1px solid #603010; color:#c08040; font-family:inherit; cursor:pointer; border-radius:1px; }
+.dev-btn:hover { background:#1a1005; border-color:#ff8800; color:#ffaa40; }
+.dev-btn.undo { border-color:#4060a0; color:#6090d0; }
+.log-line.dev { color:#806040; font-size:9px; }
+
+/* ===== AUTO BATTLE ===== */
+#auto-screen { padding:10px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
+.ab-section { background:#050510; border:1px solid #1a2840; padding:10px; border-radius:2px; }
+.ab-title { font-size:9px; color:#405060; letter-spacing:2px; margin-bottom:8px; }
+.ab-row { display:flex; align-items:center; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
+.ab-lbl { font-size:9px; color:#607080; width:80px; flex-shrink:0; }
+.ab-select { background:#0a0a1f; border:1px solid #253550; color:#80c0e0; padding:4px 8px; font-family:inherit; font-size:11px; }
+.ab-inp { background:#0a0a1f; border:1px solid #253550; color:#80c0e0; padding:4px 8px; font-family:inherit; font-size:10px; width:190px; }
+.ab-rank { width:100%; border-collapse:collapse; font-size:10px; }
+.ab-rank th { background:#0a1520; color:#405060; padding:4px 6px; border:1px solid #152030; }
+.ab-rank td { padding:4px 6px; border:1px solid #152030; }
+.ab-matrix { border-collapse:collapse; font-size:9px; }
+.ab-matrix th { background:#0a1520; color:#405060; padding:3px 5px; border:1px solid #152030; white-space:nowrap; }
+.ab-matrix td { padding:3px 5px; border:1px solid #152030; text-align:center; }
+.ab-hi { background:#0f2010; color:#66ee44; }
+.ab-mid { background:#0a1018; color:#80b0d0; }
+.ab-lo { background:#1a0810; color:#ee6644; }
+
+/* ===== スクリーンシェイク ===== */
+@keyframes shake {
+  0%  { transform: translate(0,0) rotate(0deg); }
+  15% { transform: translate(-5px, 4px) rotate(-1deg); }
+  30% { transform: translate(5px,-5px) rotate(1deg); }
+  45% { transform: translate(-4px, 5px) rotate(-0.8deg); }
+  60% { transform: translate(4px,-3px) rotate(0.6deg); }
+  75% { transform: translate(-3px, 2px) rotate(-0.4deg); }
+  100%{ transform: translate(0,0) rotate(0deg); }
+}
+.shake { animation: shake 0.28s ease-in-out !important; }
+
+/* ===== ダメージポップアップ ===== */
+@keyframes float-up {
+  0%   { opacity:1; transform: translateY(0) scale(1.3); }
+  20%  { opacity:1; transform: translateY(-14px) scale(1); }
+  100% { opacity:0; transform: translateY(-48px) scale(0.85); }
+}
+.dmg-popup {
+  position: absolute;
+  top: 8px; left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 20px;
+  color: #ff4444;
+  text-shadow: 0 0 8px #ff0000, 0 0 20px #ff000066;
+  pointer-events: none;
+  z-index: 200;
+  animation: float-up 1.1s ease-out forwards;
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+.dmg-popup.big  { font-size:26px; color:#ff8800; text-shadow: 0 0 10px #ff6600, 0 0 24px #ff660066; }
+.dmg-popup.huge { font-size:32px; color:#ffdd00; text-shadow: 0 0 14px #ffaa00, 0 0 32px #ffaa0066; letter-spacing:2px; }
+.dmg-popup.heal { font-size:18px; color:#44ff88; text-shadow: 0 0 8px #00ff44, 0 0 18px #00ff4466; }
+.speed-val { font-size:11px; color:#a0d0ff; margin-top:2px; }
+.status-tags { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; min-height:16px; }
+.tag {
+  font-size:9px; padding:1px 5px; border-radius:2px;
+  background:#203040; color:#a0d0ff; border:1px solid #304050;
+}
+.tag.fast { background:#102020; color:#0ff; border-color:#0ff4; }
+.tag.slow { background:#100020; color:#80f; border-color:#80f4; }
+.tag.seal { background:#200010; color:#f08; border-color:#f084; }
+.tag.counter { background:#201000; color:#fa0; border-color:#fa04; }
+.tag.taunt { background:#001020; color:#08f; border-color:#08f4; }
+.tag.primed { background:#200000; color:#f44; border-color:#f444; }
+.tag.learned { background:#002010; color:#0f8; border-color:#0f84; }
+.tag.quantum { background:#001020; color:#4ff; border-color:#4ff4; }
+.tag.corrode { background:#100800; color:#a80; border-color:#a804; }
+.tag.shimai { background:#001820; color:#0af; border-color:#0af4; }
+.tag.countpen { background:#201500; color:#f80; border-color:#f804; }
+
+.battle-bottom {
+  display:flex; gap:8px; flex:1; min-height:0;
+}
+.battle-left {
+  flex:1; display:flex; flex-direction:column; gap:6px; min-width:0;
+}
+.battle-right {
+  flex:1; display:flex; flex-direction:column; min-width:0;
+}
+.battle-log {
+  background:#050510; border:1px solid #203040; padding:8px 10px;
+  flex:1; min-height:200px; overflow-y:auto; font-size:13px; color:#8090b0; line-height:1.75;
+}
+.log-line { padding:1px 0; }
+.log-turn-group { margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #1a2a3a; }
+.log-line.hit { color:#f99; }
+.log-line.heal { color:#9f9; }
+.log-line.status { color:#ffd; }
+.log-line.system { color:#a0f0ff; font-weight:bold; }
+
+.turn-timer-row {
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:11px; color:#506080; letter-spacing:2px;
+}
+#timer-display { font-size:14px; font-weight:bold; color:#a0f0ff; }
+#timer-display.warn { color:#f84; animation:pulse 0.5s infinite alternate; }
+@keyframes pulse { from { opacity:1; } to { opacity:0.4; } }
+
+/* ===== ACTION BUTTONS ===== */
+.action-area { flex:1; overflow-y:auto; }
+.col-label { font-size:9px; color:#304060; letter-spacing:2px; margin-bottom:4px; text-align:center; }
+.btn-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px; }
+.action-btn {
+  background:#050510; border:1px solid #203040; color:#a0c0e0;
+  font-family:'Courier New',monospace; font-size:10px; padding:10px 4px;
+  cursor:pointer; transition:all 0.12s; text-align:center; line-height:1.4;
+}
+.action-btn:hover { border-color:#a0f0ff; color:#fff; background:#0a1520; box-shadow:0 0 12px #a0f0ff88, 0 0 24px #a0f0ff33; }
+.action-btn:active { transform:scale(0.96); }
+.action-btn.disabled { opacity:0.3; pointer-events:none; }
+.action-btn.selected { border-color:#ffff00; color:#ffff00; background:#0a0a00; box-shadow:0 0 8px #ffff0044; }
+.action-btn .cost { font-size:8px; color:#506080; display:block; margin-top:2px; }
+.action-btn .cost.active { color:#08f; }
+
+/* READY button */
+#ready-area { text-align:center; margin:4px 0 8px; }
+#ready-btn {
+  background:transparent; border:2px solid #ffaa00; color:#ffaa00;
+  font-family:'Courier New',monospace; font-size:14px; padding:10px 48px;
+  cursor:pointer; letter-spacing:3px; transition:all 0.15s;
+  opacity:0.3; pointer-events:none;
+}
+#ready-btn.active { opacity:1; pointer-events:auto; box-shadow:0 0 12px #ffaa0066; }
+#ready-btn:hover { background:#ffaa0020; }
+#ready-btn:active { transform:scale(0.97); }
+
+/* ===== TUTORIAL ===== */
+#tutorial-screen {
+  display:flex; flex-direction:column; min-height:100vh; padding:16px;
+}
+.tut-header {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:12px;
+}
+.tut-title { font-size:13px; color:#a0f0ff; letter-spacing:3px; }
+.tut-page-num { font-size:11px; color:#506080; }
+.tut-body {
+  flex:1; overflow-y:auto; background:#050510;
+  border:1px solid #203040; padding:14px; margin-bottom:12px;
+  font-size:11px; line-height:1.9; color:#8090b0;
+}
+.tut-h { color:#a0f0ff; font-size:12px; letter-spacing:2px; margin:10px 0 4px; border-bottom:1px solid #203040; padding-bottom:2px; }
+.tut-h:first-child { margin-top:0; }
+.tut-row { display:flex; gap:8px; margin-bottom:3px; }
+.tut-key { color:#a0d0ff; min-width:90px; flex-shrink:0; }
+.tut-val { color:#8090b0; }
+.tut-note { color:#506080; font-size:10px; margin-top:6px; }
+.tut-nav { display:flex; gap:8px; }
+.tut-nav .btn { flex:1; font-size:12px; padding:10px 0; }
+
+/* ===== ONLINE ===== */
+#online-screen.active { display:flex !important; }
+#online-screen {
+  flex-direction:column; align-items:center; justify-content:center;
+  min-height:100vh; gap:20px;
+}
+.online-title {
+  font-size:22px; font-weight:bold; color:#00ffcc; letter-spacing:6px;
+  text-shadow:0 0 16px #00ffcc88; margin-bottom:4px;
+}
+.online-sub { font-size:11px; color:#406060; letter-spacing:3px; margin-bottom:8px; }
+.online-panel {
+  background:#050510; border:1px solid #006644; padding:24px 32px;
+  max-width:340px; width:90%; display:flex; flex-direction:column; gap:14px; align-items:center;
+}
+.online-code-box {
+  font-size:36px; letter-spacing:10px; color:#00ffcc; font-weight:bold;
+  text-shadow:0 0 12px #00ffcc; background:#000; padding:12px 24px;
+  border:1px solid #006644;
+}
+.online-status {
+  font-size:11px; letter-spacing:2px; color:#406060;
+  animation: op-blink 1.2s step-end infinite;
+}
+.online-status.success { color:#00ffcc; animation:none; }
+.online-status.error   { color:#ff4444; animation:none; }
+.online-input {
+  background:#000; border:1px solid #006644; color:#00ffcc;
+  font-family:'Courier New',monospace; font-size:28px; letter-spacing:10px;
+  text-align:center; padding:10px 16px; width:180px;
+  outline:none;
+}
+.online-input::placeholder { color:#203030; }
+.online-btn {
+  background:transparent; border:2px solid #006644; color:#00ffcc;
+  font-family:'Courier New',monospace; font-size:13px; padding:10px 28px;
+  cursor:pointer; letter-spacing:2px; transition:all 0.15s; width:100%;
+}
+.online-btn:hover { background:#001a0f; border-color:#00ffcc; }
+.online-btn.secondary { border-color:#203030; color:#406060; font-size:11px; }
+.online-btn.secondary:hover { border-color:#406060; color:#808080; }
+.online-separator { border:none; border-top:1px solid #0a1a14; width:100%; margin:0; }
+/* バトル中コマンド待機オーバーレイ */
+#online-battle-overlay {
+  position:fixed; inset:0; background:rgba(0,0,15,0.80);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:12px; z-index:9998;
+}
+#online-battle-overlay .ow-title { font-size:18px; color:#00ffcc; letter-spacing:5px; font-weight:bold; }
+#online-battle-overlay .ow-sub   { font-size:12px; color:#406060; letter-spacing:2px; animation:op-blink 1.2s step-end infinite; }
+#online-battle-overlay .ow-en    { font-size:10px; color:#203030; letter-spacing:1px; }
+
+/* 待機オーバーレイ（キャラ確定後・相手待ち） */
+#online-wait-overlay {
+  position:fixed; inset:0; background:rgba(0,0,15,0.88);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:14px; z-index:9999;
+}
+#online-wait-overlay .ow-title {
+  font-size:20px; color:#00ffcc; letter-spacing:6px; font-weight:bold;
+  text-shadow:0 0 14px #00ffcc88;
+}
+#online-wait-overlay .ow-sub {
+  font-size:12px; color:#406060; letter-spacing:2px;
+  animation:op-blink 1.2s step-end infinite;
+}
+#online-wait-overlay .ow-en {
+  font-size:10px; color:#203030; letter-spacing:1px;
+}
+
+/* ===== RESULT ===== */
+#result-screen {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:100vh; gap:16px;
+}
+.result-title { font-size:40px; letter-spacing:6px; text-shadow:0 0 30px currentColor; }
+.result-title.win { color:#ff0; }
+.result-title.lose { color:#f44; }
+.result-title.draw { color:#0ff; }
+.result-stats { border:1px solid #304060; padding:20px 32px; min-width:240px; }
+.result-row { display:flex; justify-content:space-between; font-size:13px; gap:24px; margin-bottom:8px; }
+.result-label { color:#506080; }
+.result-val { color:#a0f0ff; }
+.result-btns { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+#result-log-modal {
+  display:none; position:fixed; inset:0; background:rgba(0,0,10,0.92);
+  z-index:1000; flex-direction:column; align-items:center; justify-content:flex-start;
+  padding:16px;
+}
+#result-log-modal.open { display:flex; }
+.result-log-inner {
+  width:100%; max-width:540px; display:flex; flex-direction:column;
+  background:#050510; border:1px solid #203040; border-radius:4px;
+  max-height:calc(100vh - 32px); overflow:hidden;
+}
+.result-log-header {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 12px; border-bottom:1px solid #203040; color:#a0f0ff; font-size:14px; font-weight:bold;
+}
+.result-log-body {
+  flex:1; overflow-y:auto; padding:8px 12px; font-size:12px; color:#8090b0; line-height:1.75;
+}
+
+/* ===== OPENING SCREEN ===== */
+/* ===== LOADING OVERLAY ===== */
+#loading-overlay {
+  position:fixed; inset:0; background:#000; z-index:9999;
+  display:flex; align-items:center; justify-content:center;
+}
+#loading-overlay.hidden { display:none; }
+#loading-box { text-align:center; width:280px; }
+#loading-title {
+  font-size:24px; color:#a0f0ff; letter-spacing:6px; margin-bottom:8px;
+  text-shadow:0 0 20px #a0f0ff;
+}
+#loading-sub { font-size:10px; color:#304060; letter-spacing:3px; margin-bottom:28px; }
+#loading-bar-bg {
+  height:3px; background:#0a1520; border:1px solid #203040; margin-bottom:12px;
+}
+#loading-bar-fill { height:100%; background:#a0f0ff; width:0%; transition:width 0.15s; }
+#loading-pct { font-size:11px; color:#506080; letter-spacing:2px; }
+#loading-file { font-size:9px; color:#304860; letter-spacing:1px; margin-top:6px; height:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:280px; }
+
+/* ===== AUDIO DEBUG PANEL ===== */
+#dbg-toggle {
+  position:fixed; bottom:12px; right:12px; z-index:9500;
+  background:#001a00; border:1px solid #00aa44; color:#00ff41;
+  font-family:'Courier New',monospace; font-size:10px; padding:5px 10px;
+  cursor:pointer; letter-spacing:1px; border-radius:2px;
+  opacity:0.7;
+}
+#dbg-toggle:active { opacity:1; }
+#dbg-panel {
+  display:none; position:fixed; inset:0; z-index:9400;
+  background:#000e; padding:12px; overflow:hidden;
+  flex-direction:column; gap:8px;
+  font-family:'Courier New',monospace; font-size:11px;
+}
+#dbg-panel.open { display:flex; }
+#dbg-header {
+  color:#00ff41; font-size:12px; letter-spacing:2px;
+  border-bottom:1px solid #003300; padding-bottom:6px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+#dbg-state {
+  background:#000; border:1px solid #002200; padding:8px;
+  color:#00cc44; font-size:10px; line-height:1.8; letter-spacing:1px;
+  flex-shrink:0;
+}
+#dbg-log {
+  flex:1; overflow-y:auto; background:#000;
+  border:1px solid #002200; padding:6px;
+  display:flex; flex-direction:column; gap:2px;
+}
+.dbg-entry {
+  font-size:10px; padding:2px 4px; border-left:2px solid;
+  line-height:1.5;
+}
+.dbg-entry.loaded   { color:#405870; border-color:#203040; }
+.dbg-entry.decoded  { color:#00bb44; border-color:#006622; }
+.dbg-entry.unlocked { color:#80d0ff; border-color:#40a0c0; }
+.dbg-entry.bgm_play { color:#ffcc44; border-color:#886600; }
+.dbg-entry.bgm_nobuf{ color:#ff6644; border-color:#882200; }
+.dbg-entry.error    { color:#ff4444; border-color:#880000; }
+.dbg-entry.info     { color:#8899aa; border-color:#334455; }
+#dbg-close {
+  background:none; border:1px solid #006600; color:#00aa44;
+  font-family:'Courier New',monospace; font-size:11px;
+  padding:4px 14px; cursor:pointer; letter-spacing:1px;
+}
+/* 既存トーストは削除 */
+#audio-log { display:none; }
+
+#opening-screen.active, #ending-screen.active { display:flex !important; }
+#opening-screen, #ending-screen {
+  background:#000; cursor:pointer;
+  flex-direction:column; align-items:center; justify-content:center;
+  min-height:100vh; padding:16px;
+}
+.op-container {
+  width:100%; max-width:600px;
+  font-family:'Courier New', Courier, monospace;
+  font-size:11px; color:#00ff41; line-height:1.8;
+}
+.op-header {
+  font-size:10px; color:#00aa22; border-bottom:1px solid #003300;
+  padding-bottom:6px; margin-bottom:12px; letter-spacing:2px;
+}
+#op-text {
+  white-space:pre-wrap; word-break:break-word;
+  margin:0; pointer-events:none;
+}
+#op-cursor {
+  display:inline-block; width:8px; height:1em;
+  background:#00ff41; vertical-align:text-bottom;
+  animation:op-blink 0.7s step-end infinite;
+  margin-left:1px;
+}
+@keyframes op-blink { 50% { opacity:0; } }
+#op-start {
+  margin-top:24px; color:#00aa22; font-size:13px; letter-spacing:2px;
+  animation:op-blink 1.2s step-end infinite;
+}
+#op-prompt {
+  display:none; margin-top:12px; color:#00ff41;
+  font-size:14px; font-weight:bold; letter-spacing:2px;
+  animation:op-blink 1s step-end infinite;
+}
+
+/* ===== INTERACTIVE TUTORIAL PANEL ===== */
+#itut-panel {
+  display:none; position:fixed; bottom:0; left:0; right:0;
+  background:rgba(2,8,18,0.97); border-top:2px solid #a0f0ff;
+  padding:12px 16px 16px; z-index:600;
+  font-family:'Courier New',monospace; max-height:55vh; overflow-y:auto;
+}
+#itut-panel.open { display:block; }
+#itut-step-num { font-size:10px; color:#506080; letter-spacing:2px; margin-bottom:6px; }
+#itut-msg { font-size:13px; color:#a0f0ff; line-height:1.7; margin-bottom:8px; white-space:pre-wrap; }
+#itut-explain {
+  display:none; font-size:11px; color:#8090b0; line-height:1.8;
+  background:#050510; border:1px solid #203040; padding:8px 10px;
+  margin-bottom:8px; white-space:pre-wrap;
+}
+#itut-next-btn {
+  display:none; background:transparent; border:2px solid #a0f0ff; color:#a0f0ff;
+  font-family:'Courier New',monospace; font-size:13px; padding:10px 0;
+  cursor:pointer; letter-spacing:2px; width:100%; transition:all 0.15s;
+}
+#itut-next-btn:hover { background:#a0f0ff22; }
+#itut-next-btn.show { display:block; }
+.action-btn.tut-force {
+  border-color:#ffff00 !important; color:#ffff00 !important;
+  pointer-events:auto !important; opacity:1 !important;
+  animation:tut-btn-pulse 0.7s ease-in-out infinite alternate;
+}
+@keyframes tut-btn-pulse {
+  from { box-shadow:0 0 4px #ffff0066; }
+  to   { box-shadow:0 0 18px #ffff00cc, 0 0 36px #ffff0044; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay">
+  <div id="loading-box">
+    <div id="loading-title">SYNTAX WARS</div>
+    <div id="loading-sub">TURN-BASED SF FIGHTER</div>
+    <div id="loading-bar-bg"><div id="loading-bar-fill"></div></div>
+    <div id="loading-pct">NOW LOADING... 0%</div>
+    <div id="loading-file"></div>
+  </div>
+</div>
+<!-- AUDIO DEBUG LOG (既存トーストコンテナ、非表示) -->
+<div id="audio-log"></div>
+
+<!-- AUDIO DEBUG PANEL -->
+<button id="dbg-toggle" onclick="DbgPanel.toggle()">DEBUG</button>
+<div id="dbg-panel">
+  <div id="dbg-header">
+    <span>[ AUDIO DEBUG ]</span>
+    <button id="dbg-close" onclick="DbgPanel.toggle()">CLOSE</button>
+  </div>
+  <div id="dbg-state">initializing...</div>
+  <div id="dbg-log"></div>
+</div>
+
+<!-- OPENING -->
+<div id="opening-screen" class="screen active" onclick="openingClick()" ontouchstart="openingClick(); event.preventDefault()">
+  <div class="op-container">
+    <div class="op-header">[ SYNTAX WARS / TERMINAL v1.0 ]&nbsp;&nbsp;████████ SECURE CONNECTION</div>
+    <pre id="op-text"></pre><span id="op-cursor"></span>
+    <div id="op-start">▶ CLICK TO INITIALIZE...</div>
+    <div id="op-prompt">▶ CLICK TO ENTER THE ARENA...</div>
+  </div>
+</div>
+
+<!-- ENDING -->
+<div id="ending-screen" class="screen" onclick="endingClick()">
+  <div class="op-container">
+    <div class="op-header">[ SYNTAX WARS / TERMINAL v1.0 ]&nbsp;&nbsp;████████ SECURE CONNECTION</div>
+    <pre id="ed-text"></pre><span id="ed-cursor"></span>
+    <div id="ed-prompt" style="display:none; margin-top:16px; color:#00ff41; font-size:13px; letter-spacing:2px; animation:op-blink 1s step-end infinite;">▶ CLICK TO CONTINUE...</div>
+  </div>
+</div>
+
+<!-- ONLINE -->
+<div id="online-screen" class="screen">
+  <div class="online-title">ONLINE MATCH</div>
+  <div class="online-sub">REAL-TIME FIGHTER / BETA</div>
+
+  <!-- フェーズ1: HOST / GUEST 選択 -->
+  <div id="online-menu" class="online-panel">
+    <button class="online-btn" onclick="AudioManager.unlock(); window.OnlineManager?.startHost()">▶ HOST &nbsp;（部屋を作る）</button>
+    <button class="online-btn" onclick="AudioManager.unlock(); window.OnlineManager?.startGuest()">▶ GUEST（部屋に入る）</button>
+    <hr class="online-separator">
+    <button class="online-btn secondary" onclick="goToTitle()">← BACK</button>
+  </div>
+
+  <!-- フェーズ2a: HOST 待機 -->
+  <div id="online-host-wait" class="online-panel" style="display:none">
+    <div style="font-size:11px;color:#406060;letter-spacing:2px;">ROOM CODE</div>
+    <div class="online-code-box" id="online-room-code">----</div>
+    <div class="online-status" id="online-wait-status">WAITING FOR GUEST...</div>
+    <hr class="online-separator">
+    <button class="online-btn secondary" onclick="window.OnlineManager?.cancelRoom()">✕ CANCEL</button>
+  </div>
+
+  <!-- フェーズ2b: GUEST 入力 -->
+  <div id="online-guest-input" class="online-panel" style="display:none">
+    <div style="font-size:11px;color:#406060;letter-spacing:2px;">ENTER ROOM CODE</div>
+    <input class="online-input" id="online-code-input" type="text"
+           maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="0000"
+           onkeydown="if(event.key==='Enter') window.OnlineManager?.joinRoom()">
+    <button class="online-btn" onclick="AudioManager.unlock(); window.OnlineManager?.joinRoom()">▶ JOIN</button>
+    <div class="online-status error" id="online-guest-error" style="display:none"></div>
+    <hr class="online-separator">
+    <button class="online-btn secondary" onclick="window.OnlineManager?.showMenu()">← BACK</button>
+  </div>
+
+  <!-- フェーズ3: マッチング成功 -->
+  <div id="online-matched" class="online-panel" style="display:none">
+    <div style="font-size:18px;color:#00ffcc;letter-spacing:4px;">MATCHED!</div>
+    <div class="online-status success">CONNECTION ESTABLISHED</div>
+    <div style="font-size:11px;color:#406060;letter-spacing:1px;" id="online-role-label"></div>
+  </div>
+</div>
+
+<!-- TITLE -->
+<div id="title-screen" class="screen">
+  <div class="title-logo">SYNTAX WARS<span class="dev-badge" id="dev-badge" style="display:none">DEV</span></div>
+  <div class="title-sub">TURN-BASED SF FIGHTER</div>
+  <div class="title-version">v6.2 PROTOTYPE</div>
+  <div class="difficulty-row">
+    <button class="diff-btn selected" id="diff-easy" onclick="setDifficulty('easy')">EASY</button>
+    <button class="diff-btn" id="diff-normal" onclick="setDifficulty('normal')">NORMAL</button>
+    <button class="diff-btn" id="diff-hard" onclick="setDifficulty('hard')">HARD</button>
+  </div>
+  <button class="btn" onclick="startCpuMode()">▶ VS CPU</button>
+  <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#a06000;color:#f0a000;" onclick="startSeriesMode(5)">▶ 5連戦</button>
+  <button class="btn" onclick="start2PMode()">▶ 2P LOCAL</button>
+  <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#006644;color:#00ffcc;" onclick="startOnlineMode()">🌐 ONLINE MATCH</button>
+  <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#f0a000;color:#f0a000;" onclick="startInteractiveTutorial()">▶ TUTORIAL</button>
+  <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#304060;color:#506080;" onclick="openTutorial()">? HOW TO PLAY</button>
+  <button class="btn dev-only" id="title-auto-btn" style="font-size:11px;padding:6px 28px;border-color:#203050;color:#4080a0;display:none;" onclick="showScreen('auto-screen')">⚙ AUTO BATTLE</button>
+</div>
+
+<!-- AUTO BATTLE -->
+<div id="auto-screen" class="screen">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div style="font-size:14px;color:#4080a0;letter-spacing:3px;">⚙ AUTO BATTLE</div>
+    <button class="btn" onclick="goToTitle()" style="padding:4px 12px;font-size:10px;border-color:#304060;color:#506080;">✕ CLOSE</button>
+  </div>
+
+  <div class="ab-section">
+    <div class="ab-title">AI MODEL</div>
+    <div class="ab-row">
+      <select class="ab-select" id="ab-model" onchange="abModelChange()">
+        <option value="smart">SMART (Built-in)</option>
+        <option value="random">RANDOM</option>
+        <option value="gemma">GEMMA (Ollama)</option>
+        <option value="sonnet">CLAUDE Sonnet 4.6</option>
+      </select>
+    </div>
+    <div id="ab-gemma-cfg" style="display:none">
+      <div class="ab-row"><span class="ab-lbl">OLLAMA URL</span><input class="ab-inp" id="ab-ollama-url" value="http://localhost:11434"></div>
+      <div class="ab-row"><span class="ab-lbl">MODEL NAME</span><input class="ab-inp" id="ab-ollama-model" value="gemma3" style="width:110px"></div>
+    </div>
+    <div id="ab-sonnet-cfg" style="display:none">
+      <div class="ab-row"><span class="ab-lbl">API KEY</span><input class="ab-inp" id="ab-api-key" type="password" placeholder="sk-ant-api03-..."></div>
+      <div style="font-size:9px;color:#405060;margin-top:4px;">※ ブラウザ直接アクセス（anthropic-dangerous-direct-browser-access）</div>
+    </div>
+  </div>
+
+  <div class="ab-section">
+    <div class="ab-title">SETTINGS</div>
+    <div class="ab-row">
+      <span class="ab-lbl">BATTLES</span>
+      <select class="ab-select" id="ab-battles">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="50">50</option>
+        <option value="100" selected>100</option>
+      </select>
+      <span style="font-size:9px;color:#405060;margin-left:6px;">× 30 マッチアップ</span>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:6px;margin-bottom:6px;">
+    <button class="btn" id="ab-run-btn" onclick="abStart()" style="flex:1;font-size:12px;">▶ 全キャラ総当たり</button>
+    <button class="btn" id="ab-csv-btn" onclick="abSaveCsv()" style="flex:0;padding:8px 14px;font-size:11px;border-color:#203050;color:#405070;" disabled>💾 CSV</button>
+    <button class="btn" id="ab-detail-csv-btn" onclick="abSaveDetailCsv()" style="flex:0;padding:8px 14px;font-size:11px;border-color:#203050;color:#405070;" disabled>📋 詳細</button>
+  </div>
+  <div id="ab-progress" style="font-size:10px;color:#506080;min-height:16px;margin-bottom:6px;"></div>
+
+  <div id="ab-results" style="display:none">
+    <div class="ab-section">
+      <div class="ab-title">総合ランキング（勝率）</div>
+      <table class="ab-rank" id="ab-rank-tbl"></table>
+    </div>
+    <div class="ab-section" style="overflow-x:auto;">
+      <div class="ab-title">相性表（P1勝率%）赤=有利 青=不利</div>
+      <table class="ab-matrix" id="ab-matrix-tbl"></table>
+    </div>
+    <div class="ab-section">
+      <div class="ab-title">属性攻撃使用率（全マッチアップ合計）</div>
+      <table class="ab-rank" id="ab-atk-tbl"></table>
+    </div>
+    <div class="ab-section">
+      <div class="ab-title">NEXUS-7 / NOVA QUEEN マッチアップ別使用率</div>
+      <table class="ab-rank" id="ab-focus-tbl"></table>
+    </div>
+  </div>
+</div>
+
+<!-- TUTORIAL -->
+<div id="tutorial-screen" class="screen">
+  <div class="tut-header">
+    <div class="tut-title" id="tut-title">HOW TO PLAY</div>
+    <div class="tut-page-num" id="tut-page-num">1 / 6</div>
+  </div>
+  <div class="tut-body" id="tut-body"></div>
+  <div class="tut-nav">
+    <button class="btn" id="tut-prev" onclick="tutNav(-1)">◀ PREV</button>
+    <button class="btn" id="tut-next" onclick="tutNav(1)">NEXT ▶</button>
+    <button class="btn" onclick="goToTitle()" style="border-color:#304060;color:#506080;">✕</button>
+  </div>
+</div>
+
+<!-- CHAR SELECT -->
+<div id="select-screen" class="screen">
+  <div class="select-title">SELECT FIGHTER</div>
+  <div class="char-grid" id="char-grid"></div>
+  <div class="char-detail" id="char-detail"></div>
+  <div style="text-align:center">
+    <button class="btn" id="confirm-btn" onclick="confirmSelect()" style="opacity:0.4;pointer-events:none">FIGHT ▶</button>
+  </div>
+</div>
+
+<!-- オンラインバトル コマンド待機オーバーレイ -->
+<div id="online-battle-overlay" style="display:none">
+  <div class="ow-title">WAITING...</div>
+  <div class="ow-sub">相手のコマンド入力待ち...</div>
+  <div class="ow-en">Waiting for opponent's command...</div>
+</div>
+
+<!-- オンライン待機オーバーレイ（キャラ確定後・相手待ち） -->
+<div id="online-wait-overlay" style="display:none">
+  <div class="ow-title">WAITING...</div>
+  <div class="ow-sub">相手の選択を待っています...</div>
+  <div class="ow-en">Waiting for opponent...</div>
+  <button class="online-btn secondary" style="width:180px;margin-top:8px;"
+          onclick="window.OnlineManager?.cancelMatchmaking()">✕ CANCEL</button>
+</div>
+
+<!-- GAME -->
+<div id="game-screen" class="screen">
+  <div class="fighter-row">
+    <div class="fighter-panel" id="p-panel">
+      <div class="fighter-panel-top">
+        <div class="char-icon-wrap"><div class="char-icon-fallback" id="p-icon">?</div></div>
+        <div class="fighter-panel-info">
+          <div class="fighter-name" id="p-name">PLAYER</div>
+          <div class="stat-bar-wrap">
+            <div class="stat-label"><span>HP</span><span id="p-hp-val">100</span></div>
+            <div class="bar-bg"><div class="bar-fill hp-fill" id="p-hp-bar" style="width:100%"></div></div>
+          </div>
+          <div class="stat-bar-wrap">
+            <div class="stat-label"><span>GAUGE</span><span id="p-gauge-val">30%</span></div>
+            <div class="bar-bg"><div class="bar-fill gauge-fill" id="p-gauge-bar" style="width:30%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="speed-val">SPEED: <span id="p-speed-val">50</span></div>
+      <div class="status-tags" id="p-tags"></div>
+    </div>
+    <div class="fighter-panel" id="c-panel">
+      <div class="fighter-panel-top">
+        <div class="char-icon-wrap"><div class="char-icon-fallback" id="c-icon">?</div></div>
+        <div class="fighter-panel-info">
+          <div class="fighter-name" id="c-name">CPU</div>
+          <div class="stat-bar-wrap">
+            <div class="stat-label"><span>HP</span><span id="c-hp-val">100</span></div>
+            <div class="bar-bg"><div class="bar-fill hp-fill" id="c-hp-bar" style="width:100%"></div></div>
+          </div>
+          <div class="stat-bar-wrap">
+            <div class="stat-label"><span>GAUGE</span><span id="c-gauge-val">30%</span></div>
+            <div class="bar-bg"><div class="bar-fill gauge-fill" id="c-gauge-bar" style="width:30%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="speed-val">SPEED: <span id="c-speed-val">50</span></div>
+      <div class="status-tags" id="c-tags"></div>
+    </div>
+  </div>
+
+  <div class="audience-wrap">
+    <div class="audience-label"><span>🔥 AUDIENCE</span><span id="audience-val">0 / 10</span></div>
+    <div class="bar-bg"><div class="bar-fill audience-fill" id="audience-bar" style="width:0%"></div></div>
+  </div>
+
+  <div class="battle-bottom">
+    <div class="battle-left">
+      <div class="turn-timer-row">
+        <div id="turn-info">TURN 1 — SELECT ACTION</div>
+        <div id="timer-display">30s</div>
+      </div>
+      <div class="battle-log" id="battle-log"></div>
+    </div>
+    <div class="battle-right">
+      <div id="ready-area">
+        <button id="ready-btn" onclick="confirmAction()">▶ READY</button>
+      </div>
+      <div class="action-area" id="action-area">
+    <div class="col-label">NORMAL</div>
+    <div class="btn-grid">
+      <button class="action-btn" id="btn-weak" onclick="selectAction('weak')">
+        <span id="lbl-weak">弱</span><span class="cost">FREE +15%G</span>
+      </button>
+      <button class="action-btn" id="btn-mid" onclick="selectAction('mid')">
+        <span id="lbl-mid">中</span><span class="cost">FREE +8%G</span>
+      </button>
+      <button class="action-btn" id="btn-strong" onclick="selectAction('strong')">
+        <span id="lbl-strong">強</span><span class="cost">FREE +5%G</span>
+      </button>
+      <button class="action-btn" id="btn-guard" onclick="selectAction('guard')">
+        <span id="lbl-guard">ガード</span><span class="cost">FREE</span>
+      </button>
+    </div>
+    <div class="col-label">SPECIAL ATTACK</div>
+    <div class="btn-grid">
+      <button class="action-btn" id="btn-speedatk" onclick="selectAction('speedatk')">
+        速度特攻<span class="cost" id="cost-speedatk">25%</span>
+      </button>
+      <button class="action-btn" id="btn-guardbk" onclick="selectAction('guardbk')">
+        ガード破壊<span class="cost" id="cost-guardbk">25%</span>
+      </button>
+      <button class="action-btn" id="btn-sealatk" onclick="selectAction('sealatk')">
+        回復封じ<span class="cost" id="cost-sealatk">25%</span>
+      </button>
+      <button class="action-btn" id="btn-counter" onclick="selectAction('counter')">
+        カウンター<span class="cost" id="cost-counter">25%</span>
+      </button>
+    </div>
+    <div class="col-label">SPECIAL ACTION</div>
+    <div class="btn-grid">
+      <button class="action-btn" id="btn-accel" onclick="selectAction('accel')">
+        加速<span class="cost" id="cost-accel">15%</span>
+      </button>
+      <button class="action-btn" id="btn-slow" onclick="selectAction('slow')">
+        スロー<span class="cost" id="cost-slow">30%</span>
+      </button>
+      <button class="action-btn" id="btn-heal" onclick="selectAction('heal')">
+        回復<span class="cost" id="cost-heal">30%</span>
+      </button>
+      <button class="action-btn" id="btn-taunt" onclick="selectAction('taunt')">
+        挑発<span class="cost" id="cost-taunt">30%</span>
+      </button>
+    </div>
+    <div class="btn-grid" style="grid-template-columns:1fr">
+      <button class="action-btn" id="btn-overclock" onclick="selectAction('overclock')">
+        オーバークロック<span class="cost" id="cost-overclock">100%</span>
+      </button>
+    </div>
+    <div class="col-label">SPECIAL MOVE</div>
+    <div class="btn-grid" style="grid-template-columns:1fr">
+      <button class="action-btn" id="btn-unique" onclick="selectAction('unique')">
+        <span id="btn-unique-name">固有技</span><span class="cost" id="cost-unique">50%</span>
+      </button>
+    </div>
+  </div>
+    </div><!-- /.battle-right -->
+  </div><!-- /.battle-bottom -->
+
+  <!-- DEV PANEL (dev mode only) -->
+  <div class="dev-panel dev-only" id="dev-battle-panel" style="display:none">
+    <div class="dev-panel-title" onclick="devPanelToggle()">🔧 DEV PANEL ▾</div>
+    <div id="dev-panel-body">
+      <div class="dev-btns">
+        <button class="dev-btn" onclick="devForce('p','slow')">P:SLOW</button>
+        <button class="dev-btn" onclick="devForce('p','fast')">P:FAST</button>
+        <button class="dev-btn" onclick="devForce('p','hp10')">P:HP10</button>
+        <button class="dev-btn" onclick="devForce('p','hp27')">P:HP27</button>
+        <button class="dev-btn" onclick="devForce('p','g100')">P:G100</button>
+        <button class="dev-btn" onclick="devForce('p','primed')">P:PRIMED</button>
+      </div>
+      <div class="dev-btns">
+        <button class="dev-btn" onclick="devForce('c','slow')">C:SLOW</button>
+        <button class="dev-btn" onclick="devForce('c','fast')">C:FAST</button>
+        <button class="dev-btn" onclick="devForce('c','hp10')">C:HP10</button>
+        <button class="dev-btn" onclick="devForce('c','hp27')">C:HP27</button>
+        <button class="dev-btn" onclick="devForce('c','g100')">C:G100</button>
+        <button class="dev-btn" onclick="devForce('c','primed')">C:PRIMED</button>
+      </div>
+      <div class="dev-btns">
+        <button class="dev-btn undo" onclick="devUndo()">⏪ UNDO</button>
+        <label style="font-size:9px;color:#806040;cursor:pointer;">
+          <input type="checkbox" id="dev-detail-log" checked style="margin-right:3px;">詳細ログ
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INTERACTIVE TUTORIAL PANEL (position:fixed → ゲーム画面全体に重なる) -->
+<div id="itut-panel">
+  <div id="itut-step-num">STEP 0 — TUTORIAL</div>
+  <div id="itut-msg"></div>
+  <div id="itut-explain"></div>
+  <button id="itut-next-btn" onclick="InteractiveTutorial.next()">NEXT ▶</button>
+</div>
+
+<!-- RESULT -->
+<div id="result-screen" class="screen">
+  <div class="result-title" id="result-title">???</div>
+  <div id="series-score" style="display:none;font-size:18px;letter-spacing:3px;color:#f0a000;margin:8px 0;"></div>
+  <div class="result-stats" id="result-stats"></div>
+  <div class="result-btns">
+    <button class="btn" id="next-battle-btn" style="display:none;border-color:#a06000;color:#f0a000;" onclick="nextSeriesBattle()">NEXT BATTLE</button>
+    <button class="btn" id="series-end-btn" style="display:none;border-color:#806000;color:#c08000;" onclick="endSeries()">SERIES END</button>
+    <button class="btn" id="rematch-btn" onclick="AudioManager.playSE('confirm');goToSelect()">REMATCH</button>
+    <button class="btn" onclick="AudioManager.playSE('confirm');goToTitle()">TITLE</button>
+    <button class="btn" id="result-log-btn" style="border-color:#304060;color:#a0f0ff;" onclick="openResultLog()">📜 LOG</button>
+  </div>
+  <div style="margin-top:12px;">
+    <a id="feedback-link" href="https://docs.google.com/forms/d/e/1FAIpQLSfJ1g-kveywf8YOxu4Ehf0vQQkyGMuBXgMDYxEg6C95Da6Ycg/viewform?usp=publish-editor" target="_blank" rel="noopener"
+       style="font-size:11px;color:#506080;letter-spacing:1px;text-decoration:none;border-bottom:1px solid #304060;padding-bottom:1px;">
+      📩 開発者にフィードバックを送る
+    </a>
+  </div>
+</div>
+
+<!-- バトルログモーダル -->
+<div id="result-log-modal">
+  <div class="result-log-inner">
+    <div class="result-log-header">
+      <span>📜 BATTLE LOG</span>
+      <button class="btn" style="padding:2px 10px;font-size:11px;border-color:#304060;color:#506080;" onclick="closeResultLog()">✕ CLOSE</button>
+    </div>
+    <div class="result-log-body" id="result-log-body"></div>
+  </div>
+</div>
+
+<script>
+// ===== AUDIO MANAGER =====
+// ===== ASSET LOADER =====
+const AssetLoader = (() => {
+  const cache = {};
+
+  function get(path) {
+    return cache[path] !== undefined ? cache[path] : path;
+  }
+
+  async function loadAll(urls, onProgress) {
+    let done = 0;
+    const total = urls.length;
+    await Promise.all(urls.map(async url => {
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          const blob = await res.blob();
+          cache[url] = URL.createObjectURL(blob);
+        } else {
+          cache[url] = url; // フォールバック
+        }
+      } catch(e) {
+        cache[url] = url; // フォールバック
+      }
+      done++;
+      onProgress(done, total);
+    }));
+  }
+
+  return { get, loadAll };
+})();
+
+const AudioManager = (() => {
+  // Web Audio API：AudioContext を安全に初期化
+  // 失敗時は null のまま → 全音声メソッドが無音で動作し、ゲーム本体は止まらない
+  let audioCtx = null;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) audioCtx = new AC();
+  } catch(e) {}
+  const buffers    = {}; // path → AudioBuffer（デコード済み）
+  const rawBuffers = {}; // path → ArrayBuffer（fetch済み・未デコード）
+  const decodeQ    = {}; // path → 進行中のデコード Promise
+  let bgmSource = null; // 現在再生中の BGM SourceNode
+  let bgmGen    = 0;    // playBGM の世代番号（古い呼び出しをキャンセルするため）
+
+  const SE = {
+    // システム
+    ready:       'assets/sound/system,bgm/system/ready.mp3',
+    confirm:     'assets/sound/system,bgm/system/systemdecision.mp3',
+    battleStart: 'assets/sound/system,bgm/system/characterdecision.mp3',
+    // 共通
+    crowdOnFire: 'assets/sound/battle/common/crowd on fire.mp3',
+    crowdGauge:  'assets/sound/battle/common/crowdgaze.mp3',
+    overclock:   'assets/sound/battle/common/overclock.mp3',
+    guardBreak:  'assets/sound/battle/common/gardblake.mp3',
+    counter:     'assets/sound/battle/common/counter.mp3',
+    justGuard:   'assets/sound/battle/common/justguard.mp3',
+    slow:        'assets/sound/battle/common/slow.mp3',
+    accel:       'assets/sound/battle/common/fast.mp3',
+    heal:        'assets/sound/battle/common/kaihuku.mp3',
+    seal:        'assets/sound/battle/common/kaihukuhuuji.mp3',
+    miss:        'assets/sound/battle/common/attackmiss.mp3',
+    speedAtk:    'assets/sound/battle/common/sokudotokkou.mp3',
+    corrosion:   'assets/sound/battle/common/husyokudamage.mp3',
+    // NEXUS-7
+    nexus_weak:   'assets/sound/battle/NEXUS/nanobureido.mp3',
+    nexus_mid:    'assets/sound/battle/NEXUS/EMPhadou.mp3',
+    nexus_strong: 'assets/sound/battle/NEXUS/purazumakanon.mp3',
+    nexus_unique: 'assets/sound/battle/NEXUS/ryousibiimu.mp3',
+    // SHADOW
+    shadow_weak:     'assets/sound/battle/SHADOW/kunainage.mp3',
+    shadow_mid:      'assets/sound/battle/SHADOW/kusarigama.mp3',
+    shadow_strong:   'assets/sound/battle/SHADOW/kagegiri.mp3',
+    shadow_unique:   'assets/sound/battle/SHADOW/kagebunsin.mp3',
+    shadow_zettsuei: 'assets/sound/battle/SHADOW/zetsuei.mp3',
+    // NOVA QUEEN
+    nova_weak:   'assets/sound/battle/NOVA/energyball.mp3',
+    nova_mid:    'assets/sound/battle/NOVA/jigensaki.mp3',
+    nova_strong: 'assets/sound/battle/NOVA/jyuuryokuba.mp3',
+    nova_unique: 'assets/sound/battle/NOVA/hosikuzuhou.mp3',
+    // TITAN
+    titan_weak:   'assets/sound/battle/TITAN/tekken.mp3',
+    titan_mid:    'assets/sound/battle/TITAN/jisinkudaki.mp3',
+    titan_strong: 'assets/sound/battle/TITAN/gigantpuresu.mp3',
+    titan_unique: 'assets/sound/battle/TITAN/superdenjihou.mp3',
+    // LYRA-X
+    lyrax_weak:     'assets/sound/battle/LYRA-X/sanekihunsya.mp3',
+    lyrax_mid:      'assets/sound/battle/LYRA-X/henitsume.mp3',
+    lyrax_strong:   'assets/sound/battle/LYRA-X/hobakusyokusyu.mp3',
+    lyrax_unique:   'assets/sound/battle/LYRA-X/saibousaisei.mp3',
+    lyrax_autoHeal: 'assets/sound/battle/LYRA-X/jidoukaihuku.mp3',
+    // BLAZE
+    blaze_weak:   'assets/sound/battle/BLAZE/fireball.mp3',
+    blaze_mid:    'assets/sound/battle/BLAZE/kaenhousya.mp3',
+    blaze_strong: 'assets/sound/battle/BLAZE/magmastrike.mp3',
+    blaze_primed: 'assets/sound/battle/BLAZE/kibakujyunnbi.mp3',
+    blaze_unique: 'assets/sound/battle/BLAZE/bakuretsuken.mp3',
+  };
+
+  const BGM_BATTLE = [
+    'assets/sound/system,bgm/BGM/battle1.mp3',
+    'assets/sound/system,bgm/BGM/battle2.mp3',
+    'assets/sound/system,bgm/BGM/battle3.mp3',
+  ];
+  const BGM_MAP = {
+    title:        'assets/sound/system,bgm/BGM/title.mp3',
+    select:       'assets/sound/system,bgm/BGM/characterchoosing.mp3',
+    result:       'assets/sound/system,bgm/BGM/result.mp3',
+    opening:      'assets/sound/system,bgm/system/opening.mp3',
+    opening_once: 'assets/sound/system,bgm/system/opening.mp3',
+  };
+
+  const CHAR_PFX = { learning:'nexus', shadow:'shadow', nova:'nova', titan:'titan', lyrax:'lyrax', blaze:'blaze' };
+
+  // プリロード用：fetch で取得した ArrayBuffer を AudioBuffer にデコードして保存
+  // iOS Safari は Promise 版 decodeAudioData に非対応の場合があるためコールバック版で包む
+  function decodeAndStore(path, arrayBuffer) {
+    if (!audioCtx) return Promise.resolve();
+    return new Promise(resolve => {
+      let settled = false;
+      const ok  = buf => { if (!settled) { settled = true; buffers[path] = buf; resolve(); } };
+      const err = ()  => { if (!settled) { settled = true; resolve(); } };
+      try {
+        const result = audioCtx.decodeAudioData(arrayBuffer.slice(0), ok, err);
+        // モダンブラウザは Promise も返すので両方サポート
+        if (result && typeof result.then === 'function') result.then(ok).catch(err);
+      } catch(e) { err(); }
+    });
+  }
+
+  // デバッグログ（DbgPanel 経由でパネルに出力）
+  function _audioLog(type, path) {
+    try {
+      const name = (path || '').split('/').pop() || path;
+      console.log('[Audio]', type, name);
+      const fileEl = document.getElementById('loading-file');
+      if (type === 'loaded' && fileEl) fileEl.textContent = '> ' + name;
+      if (typeof DbgPanel !== 'undefined') {
+        const labels = { loaded:'LOADED', decoded:'DECODED', unlocked:'UNLOCKED', bgm_play:'BGM PLAY', bgm_nobuf:'BGM NO BUF' };
+        DbgPanel.log(type, '[' + (labels[type] || type.toUpperCase()) + '] ' + name);
+        DbgPanel.updateState(buffers, rawBuffers);
+      }
+    } catch(e) {}
+  }
+
+  // DOMContentLoaded がロードすべき全音声パスを取得するために使用
+  function getAllAudioPaths() {
+    return [...Object.values(SE), ...BGM_BATTLE, ...Object.values(BGM_MAP)];
+  }
+
+  // プリロード時：ArrayBuffer を保存するだけ（デコードはユーザー操作後に行う）
+  function storeRaw(path, ab) {
+    rawBuffers[path] = ab;
+    _audioLog('loaded', path);
+  }
+
+  // 指定パスのデコードを開始（未デコードなら即開始、進行中なら同一Promiseを返す）
+  function decodeOne(path) {
+    if (buffers[path])    return Promise.resolve();
+    if (decodeQ[path])    return decodeQ[path];
+    if (!rawBuffers[path]) return Promise.resolve();
+    const ab = rawBuffers[path];
+    delete rawBuffers[path]; // 解放
+    decodeQ[path] = decodeAndStore(path, ab).then(() => {
+      _audioLog('decoded', path);
+    }).finally(() => { delete decodeQ[path]; });
+    return decodeQ[path];
+  }
+
+  // 全rawBuffersをデコード（unlock後に呼ぶ）
+  function decodeAll() {
+    return Promise.all(Object.keys(rawBuffers).map(path => decodeOne(path)));
+  }
+
+  // 内部：AudioBuffer をソースノードで再生（毎回新しいノードを生成するため高速連続再生に対応）
+  function _playBuffer(path, vol, loop) {
+    if (!audioCtx) return null;
+    const buf = buffers[path];
+    if (!buf) return null;
+    // state チェックを削除：resume() 呼び出し後は suspended でも start() をキューに積む
+    try {
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      src.loop = loop;
+      const gain = audioCtx.createGain();
+      gain.gain.value = vol;
+      src.connect(gain);
+      gain.connect(audioCtx.destination);
+      src.start(0);
+      return src;
+    } catch(e) { return null; }
+  }
+
+  function playSE(key, vol = 1.0) {
+    if (!audioCtx) return;
+    if (typeof autoMode !== 'undefined' && autoMode) return;
+    const path = SE[key];
+    if (!path) return;
+    if (buffers[path]) {
+      _playBuffer(path, vol, false);
+    } else {
+      // フォールバック：バッファなしなら <audio> 要素で単発再生
+      try { const a = new Audio(path); a.volume = vol; a.play().catch(() => {}); } catch(e) {}
+    }
+  }
+
+  function playAttackSE(passive, action) {
+    const pfx = CHAR_PFX[passive];
+    if (!pfx) return;
+    const slot = { weak:'weak', mid:'mid', strong:'strong', unique:'unique' }[action];
+    if (slot) playSE(`${pfx}_${slot}`);
+  }
+
+  // BGM は async にして resume() 完了・デコード完了を待ってから start() する
+  // bgmGen で世代管理：await 中に新しい playBGM が呼ばれたら古い呼び出しをキャンセル
+  function _dbg(msg, type) {
+    console.log('[BGM]', msg);
+    if (typeof DbgPanel !== 'undefined') DbgPanel.log(type || 'info', '[BGM] ' + msg);
+  }
+
+  async function playBGM(key) {
+    if (!audioCtx) { _dbg('no audioCtx', 'error'); return; }
+    stopBGM();
+    const myGen = ++bgmGen;
+    const path = key === 'battle'
+      ? BGM_BATTLE[Math.floor(Math.random() * BGM_BATTLE.length)]
+      : BGM_MAP[key];
+    if (!path) { _dbg('no path for key: ' + key, 'error'); return; }
+    const fname = path.split('/').pop();
+    _dbg('playBGM ' + key + ' | ctx:' + audioCtx.state + ' | buf:' + !!buffers[path] + ' | raw:' + !!rawBuffers[path]);
+    if (audioCtx.state !== 'running') {
+      _dbg('resuming audioCtx...');
+      await unlock();
+      _dbg('resumed → ' + audioCtx.state);
+    }
+    if (myGen !== bgmGen) { _dbg('cancelled after resume'); return; }
+    if (!buffers[path]) {
+      _dbg('await decodeOne ' + fname);
+      await decodeOne(path);
+      _dbg('decodeOne done | buf:' + !!buffers[path]);
+    }
+    if (myGen !== bgmGen) { _dbg('cancelled after decode'); return; }
+    const loop = (key !== 'result' && key !== 'opening_once');
+    if (!buffers[path]) {
+      // フォールバック：fetch不可環境（file://プロトコル等）では <audio> 要素で直接再生
+      _audioLog('bgm_nobuf', path);
+      _dbg('NO BUFFER → <audio> fallback');
+      try {
+        const audio = new Audio(path);
+        audio.loop = loop;
+        audio.volume = 0.5;
+        audio.stop = function() { try { this.pause(); this.currentTime = 0; } catch(e) {} };
+        bgmSource = audio;
+        audio.play().catch(e => _dbg('<audio> play failed: ' + e.message, 'error'));
+        _audioLog('bgm_play', path);
+        if (key === 'opening') setTimeout(() => { if (myGen === bgmGen) stopBGM(); }, 16000);
+      } catch(e) { _dbg('<audio> fallback error: ' + e.message, 'error'); }
+      return;
+    }
+    bgmSource = _playBuffer(path, 0.5, loop);
+    _audioLog('bgm_play', path);
+    _dbg('playing via AudioBuffer ✓');
+    if (key === 'opening') setTimeout(() => { if (myGen === bgmGen) stopBGM(); }, 16000);
+  }
+
+  function stopBGM() {
+    if (bgmSource) {
+      try { bgmSource.stop(0); } catch(e) {}
+      bgmSource = null;
+    }
+  }
+
+  // audioCtx.resume() を呼び、running 状態になったら resolve する
+  // iOS Safari では resume() の Promise がハングすることがあるため
+  // statechange イベント + 500ms タイムアウトで確実に解決する
+  function unlock() {
+    if (!audioCtx) return Promise.resolve();
+    if (audioCtx.state === 'running') {
+      _audioLog('unlocked', 'AudioContext-already-running');
+      return Promise.resolve();
+    }
+    audioCtx.resume().catch(() => {});
+    return new Promise(resolve => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        audioCtx.removeEventListener('statechange', onState);
+        _audioLog('unlocked', 'AudioContext(' + audioCtx.state + ')');
+        resolve();
+      };
+      const onState = () => { if (audioCtx.state === 'running') finish(); };
+      audioCtx.addEventListener('statechange', onState);
+      // iOS Safari ハング対策：500ms で強制 resolve
+      setTimeout(finish, 500);
+    });
+  }
+
+  const warmupAll = unlock; // openingClick から呼ばれる互換エイリアス
+
+  return { storeRaw, decodeOne, decodeAll, decodeAndStore, getAllAudioPaths, playSE, playAttackSE, playBGM, stopBGM, unlock, warmupAll };
+})();
+
+// ===== DEBUG PANEL =====
+const DbgPanel = (() => {
+  let _open = false;
+  const _entries = [];
+
+  function toggle() {
+    _open = !_open;
+    const panel = document.getElementById('dbg-panel');
+    if (panel) panel.classList.toggle('open', _open);
+    if (_open) _render();
+  }
+
+  function log(type, msg) {
+    const now = new Date();
+    const ts = now.toTimeString().slice(0,8) + '.' + String(now.getMilliseconds()).padStart(3,'0');
+    _entries.push({ type, msg, ts });
+    if (_entries.length > 200) _entries.shift();
+    if (_open) _render();
+  }
+
+  function updateState(buffers, rawBuffers) {
+    const el = document.getElementById('dbg-state');
+    if (!el) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ctx = AC ? '(has AudioContext)' : '(NO AudioContext!)';
+    const protocol = window.location.protocol;
+    el.innerHTML =
+      'protocol : ' + protocol + '\n' +
+      'audioCtx : ' + ctx + '\n' +
+      'rawBuf   : ' + Object.keys(rawBuffers).length + ' files\n' +
+      'decoded  : ' + Object.keys(buffers).length + ' files';
+  }
+
+  function _render() {
+    const logEl = document.getElementById('dbg-log');
+    if (!logEl) return;
+    logEl.innerHTML = '';
+    _entries.forEach(e => {
+      const el = document.createElement('div');
+      el.className = 'dbg-entry ' + e.type;
+      el.textContent = e.ts + ' ' + e.msg;
+      logEl.appendChild(el);
+    });
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  return { toggle, log, updateState };
+})();
+
+// ===== INTERACTIVE TUTORIAL (独立実装・本編バトルロジック不変) =====
+// チュートリアル用グローバルフラグ
+let _tutForceHit     = false; // trueの間、攻撃命中率チェックをスキップ
+let _tutForceCounter = false; // trueの間、カウンター成功チェックをスキップ
+
+const InteractiveTutorial = (() => {
+  let _active  = false;
+  let _dataIdx = 0;
+
+  // --- UI ヘルパー ---
+  const _panel   = () => document.getElementById('itut-panel');
+  const _msgEl   = () => document.getElementById('itut-msg');
+  const _expEl   = () => document.getElementById('itut-explain');
+  const _nextBtn = () => document.getElementById('itut-next-btn');
+
+  function _showStep(label, msg) {
+    document.getElementById('itut-step-num').textContent = label;
+    _msgEl().textContent = msg;
+    _expEl().style.display = 'none';
+    _expEl().textContent = '';
+    _nextBtn().classList.remove('show');
+    _nextBtn().textContent = 'NEXT ▶';
+    _panel().classList.add('open');
+  }
+
+  function _showExplain(text, isLast) {
+    _expEl().textContent = text;
+    _expEl().style.display = 'block';
+    if (isLast) _nextBtn().textContent = 'TUTORIAL COMPLETE！タイトルへ ▶';
+    _nextBtn().classList.add('show');
+  }
+
+  function _lockAllButtons(forcedId) {
+    document.querySelectorAll('.action-btn').forEach(b => {
+      b.classList.add('disabled');
+      b.classList.remove('tut-force');
+    });
+    if (forcedId) {
+      const b = document.getElementById('btn-' + forcedId);
+      if (b) { b.classList.remove('disabled'); b.classList.add('tut-force'); }
+    }
+    const r = document.getElementById('ready-btn');
+    if (r) r.classList.remove('active');
+  }
+
+  // --- ステップ定義（CPU: SHADOW固定） ---
+  const STEPS = [
+    {
+      // STEP 0: 基本操作 UI説明 + 弱攻撃
+      label: 'STEP 0 — 基本操作：弱攻撃',
+      msg:   '①「弱」ボタンをタップして選択\n②「READY」ボタンを押して行動確定！\n\nまずは「弱」攻撃で基本操作を覚えよう！',
+      btn: 'weak', cpuAct: 'idle', cpuSpeed: 50,
+      explain: '「弱」攻撃は必中・8ダメ・ゲージ+15%。\nボタン選択→READYの2ステップで行動が確定する。\n序盤のゲージ稼ぎに欠かせない基本技だ。',
+    },
+    {
+      // STEP 1: 中攻撃
+      label: 'STEP 1 — 基本攻撃：中',
+      msg:   '次は「中」攻撃！弱よりダメージが大きいが\n命中率80%と少しリスクがある！',
+      btn: 'mid', cpuAct: 'idle', cpuSpeed: 50,
+      explain: '「中」攻撃は15ダメ・命中率80%・ゲージ+8%。\nダメージ効率が高いバランス技。',
+    },
+    {
+      // STEP 2: 強攻撃ミス（速度差）
+      label: 'STEP 2 — 速度差による空振り',
+      msg:   '強攻撃を試そう！…だが相手SPEED 75、こちら50。\n相手のSPEEDが自分より20以上高いと\n強攻撃は確定外れになる！',
+      btn: 'strong', cpuAct: 'idle', cpuSpeed: 75,
+      explain: '「強」攻撃が外れた！\n相手のSPEEDが自分より20以上高いと確定外れ（速度差回避）。\n→「速度特攻」で相手の高速を逆手に取るか、「加速」で対策しよう！',
+    },
+    {
+      // STEP 3: 速度特攻（NEW）
+      label: 'STEP 3 — 速度特攻',
+      msg:   '相手のSPEEDが高い！\n「速度特攻」を使おう！\nSPEEDが高い相手ほどボーナスダメージが大きい！',
+      btn: 'speedatk', cpuAct: 'idle', cpuSpeed: 75,
+      preSetup() {
+        pState.gauge = Math.max(pState.gauge, 30); // speedatk コスト 25% 保証
+      },
+      explain: '「速度特攻」がヒット！相手SPEED 75→ボーナス+14ダメ！\nSPEED 85ならボーナス+20、SPEED 70で+8。\nただし強攻撃はまだ当たらない。次は「加速」でスピードを上げよう！',
+    },
+    {
+      // STEP 4: 加速
+      label: 'STEP 4 — 加速でスピードアップ',
+      msg:   '「加速」でSPEEDを上げよう！\nFAST状態（SPEED 70以上）になれば\n速度アドバンテージが生まれる！',
+      btn: 'accel', cpuAct: 'idle', cpuSpeed: 75,
+      preSetup() {
+        pState.gauge = Math.max(pState.gauge, 20); // accel コスト 15% 保証
+      },
+      afterResolve() {
+        if (pState.speed < 78) pState.speed = 78; // STEP 5で確実ヒットするよう速度確保
+        pState.fast = pState.speed >= 70;
+        updateHUD();
+      },
+      explain: '「加速」でSPEEDが上昇！FAST状態（70以上）で速度アドバンテージ獲得。\nこれで強攻撃が当たるはずだ！',
+    },
+    {
+      // STEP 5: 強攻撃リベンジ
+      label: 'STEP 5 — 強攻撃リベンジ',
+      msg:   'スピードが追いついた！もう一度「強」攻撃だ！\n今度は当たるはず！',
+      btn: 'strong', cpuAct: 'idle', cpuSpeed: 75,
+      forceHit: true,
+      explain: '「強」攻撃がヒット！ヒット時に相手SPEED-10の追加効果もある。\nスピード差を縮めてから強攻撃→これが読み合いの基本だ！',
+    },
+    {
+      // STEP 6: ガード→ジャストガード（CPU初めて攻撃）
+      label: 'STEP 6 — ジャストガード',
+      msg:   '敵の「強」攻撃が来る！\n「ガード」を選べ！\n強攻撃をガードすると「ジャストガード」発動！',
+      btn: 'guard', cpuAct: 'strong', cpuSpeed: 65,
+      forceHit: true,  // CPU強攻撃ミスなし
+      explain: 'ジャストガード！強攻撃に対してガードするとダメージ0＆ゲージ+20%！\n観客が沸いた！（観客ゲージ+3）\n次は「カウンター」で反撃だ！',
+    },
+    {
+      // STEP 7: カウンター（CPU強攻撃、ミスなし）
+      label: 'STEP 7 — カウンター',
+      msg:   '「カウンター」を選べ！\n次の攻撃を受けて同等ダメージを倍返しにする！\n相手は必ず「強」攻撃で来る！',
+      btn: 'counter', cpuAct: 'strong', cpuSpeed: 65,
+      forceHit: true,     // CPU強攻撃ミスなし（カウンター発動のため）
+      forceCounter: true, // カウンター成功確定
+      preSetup() {
+        pState.gauge = Math.max(pState.gauge, 30); // カウンター コスト 25% 保証
+        pState.counterConsecutive = 0;
+      },
+      explain: 'カウンター成功！相手の強攻撃ダメージをそのまま返した！\n観客が熱狂！（観客ゲージ+3）\n次は「ガード破壊」で観客をさらに盛り上げよう！',
+    },
+    {
+      // STEP 8: ガード破壊→CROWD ON FIRE自然発動（NEW）
+      label: 'STEP 8 — ガード破壊で観客を熱狂させろ！',
+      msg:   '相手がガードしてきた！\n「ガード破壊」を使おう！\nガード中の相手に当てると観客ゲージが上がる！',
+      btn: 'guardbk', cpuAct: 'guard', cpuSpeed: 65,
+      preSetup() {
+        pState.gauge = Math.max(pState.gauge, 30); // guardbk コスト 25% 保証
+      },
+      explain: 'ガード破壊成功！ガード中の相手に命中→観客ゲージ+2！\n観客ゲージMAX到達→「CROWD ON FIRE」発動！！\n両者ゲージ+30%、キャラ固有ボーナス付与！\n次はゲージを使って固有技でとどめを刺そう！',
+    },
+    {
+      // STEP 9: CROWD ON FIRE中 → 固有技フィニッシュ
+      label: 'STEP 9 — 固有技でフィニッシュ！',
+      msg:   'CROWD ON FIRE中！\n貯まったゲージ（50%消費）で\n「固有技」を叩き込め！！',
+      btn: 'unique', cpuAct: 'idle', cpuSpeed: 65,
+      preSetup() {
+        // SHADOWのpendingDouble/extraTurnをリセット（チュートリアルでは余分な行動を防ぐ）
+        cState.pendingDouble = false;
+        cState.extraTurn = false;
+        cState.hp = 40;                              // 固有技（45ダメ）で確実KO
+        pState.gauge = Math.max(pState.gauge, 55);   // 固有技コスト 50% 保証
+        updateHUD();
+      },
+      explain: 'TUTORIAL COMPLETE！\n量子ビームで大ダメージ！KO！\n\nCROWD ON FIRE：両者ゲージ+30%＆固有ボーナス付与！\nNEXUS-7は「量子強化」が乗り、次の属性攻撃が無料で強化される！\nこれで基本操作はマスターだ。実戦で読み合いを楽しもう！',
+      isLast: true,
+    },
+  ];
+
+  // --- ステップ初期化 ---
+  function _setupStep(idx) {
+    const s = STEPS[idx];
+    if (!s) return;
+    cState.speed = s.cpuSpeed;
+    cState.fast  = cState.speed >= 70;
+    cState.slow  = cState.speed <= 35;
+    if (s.preSetup) s.preSetup();
+    updateHUD();
+    updateButtons(pState);
+    document.getElementById('turn-info').textContent = s.label;
+    _showStep(s.label, s.msg);
+    _lockAllButtons(s.btn);
+  }
+
+  // --- 公開 API ---
+  function start() {
+    _active  = true;
+    _dataIdx = 0;
+    gameMode = 'cpu';
+
+    pState = makeState('nexus', true);
+    cState = makeState('shadow', false);
+    pState.displayName = 'あなた';
+    cState.displayName = 'CPU';
+
+    turn = 1; window.turn = 1;
+    waitingResult    = false;
+    audienceGauge    = 0;
+    crowdOnFireNext  = false;
+    crowdOnFireCount = 0;
+    actionLogBuffer  = [];
+    pSelectedAction  = null;
+    p2SelectedAction = null;
+    selectionPhase   = 1;
+    logEl = document.getElementById('battle-log');
+    logEl.innerHTML = '';
+    currentTurnGroup = null;
+
+    document.getElementById('audience-bar').style.width = '0%';
+    document.getElementById('audience-val').textContent = '0 / ' + AUDIENCE_MAX;
+
+    showScreen('game-screen');
+    applyTheme('p', 'nexus');
+    applyTheme('c', 'shadow');
+    document.getElementById('p-name').textContent = pState.name + ' [YOU]';
+    document.getElementById('c-name').textContent = cState.name + ' [CPU]';
+
+    devSaved = null;
+    updateDevUI();
+    resetReadyBtn();
+    updateHUD();
+    addLog('=== TUTORIAL START ===', 'system');
+    _setupStep(0);
+  }
+
+  function isActive() { return _active; }
+
+  function onConfirm() {
+    if (!_active || !pSelectedAction) return;
+    const s = STEPS[_dataIdx];
+    if (!s || pSelectedAction !== s.btn) return;
+
+    AudioManager.playSE('ready');
+    clearTimer();
+    const pAct = pSelectedAction;
+    const cAct = s.cpuAct;
+    resetReadyBtn();
+
+    if (s.forceHit)     _tutForceHit     = true;
+    if (s.forceCounter) _tutForceCounter = true;
+    resolveActions(pAct, cAct);
+    _tutForceHit     = false;
+    _tutForceCounter = false;
+
+    if (s.afterResolve) s.afterResolve();
+
+    setTimeout(() => {
+      // 解説フェーズ中はすべてのボタンを無効化
+      document.querySelectorAll('.action-btn').forEach(b => {
+        b.classList.add('disabled');
+        b.classList.remove('tut-force');
+      });
+      _showExplain(s.explain, !!s.isLast);
+    }, 800);
+  }
+
+  function next() {
+    const s = STEPS[_dataIdx];
+    if (s && s.isLast) {
+      _active = false;
+      _panel().classList.remove('open');
+      goToTitle();
+      return;
+    }
+    _dataIdx++;
+    if (_dataIdx >= STEPS.length) {
+      _active = false;
+      _panel().classList.remove('open');
+      goToTitle();
+      return;
+    }
+    turn++;
+    window.turn = turn;
+    addLog(`=== TURN ${turn} ===`, 'system');
+    _setupStep(_dataIdx);
+  }
+
+  return { start, isActive, onConfirm, next };
+})();
+
+function startInteractiveTutorial() {
+  AudioManager.playSE('confirm');
+  InteractiveTutorial.start();
+}
+
+// ===== OPENING SEQUENCE =====
+const OPENING_TEXT =
+`> SYSTEM BOOT... [OK]
+> CONNECTING TO UNDERGROUND NETWORK... [OK]
+> WELCOME TO ARENA [ SYNTAX ]
+
+ここは、巨額のバウンティ（賞金）を求め、狂人やAI兵器、
+ミュータントたちが戦う未来の地下闘技場『SYNTAX』。
+
+リングに立つ全ての戦士には、特殊なデバイスが埋め込まれている。
+運営の目的は「極限状態における戦闘データの収集」と、
+リミッター解除による「潜在能力の強制解放」だ。
+
+この闘いは全世界に生配信されている。
+コンソール越しにコマンドを送る君（ハンドラー）の使命は一つ。
+ただ勝つだけでなく、観客（オーディエンス）を熱狂させることだ。
+
+=================================================
+ [ SYSTEM TUTORIAL: CROWD ON FIRE ]
+=================================================
+華麗な読み合い（ジャストガード、カウンター成功等）を
+魅せることで、観客のボルテージ（ゲージ）が上昇する。
+
+ゲージがMAXに達した瞬間、闘技場のリミッターが強制解除。
+【 観客の大歓声 ＋ 両者のゲージが激しく発光 】
+熱狂のエネルギーがデバイスに流れ込み、戦士を限界突破させる！
+
+次ターンはSPEED差無効。
+一瞬の判断ミスが命取りになる、極限の読み合いを制圧せよ。
+=================================================
+
+> PRESS [START] TO ENGAGE...`;
+
+let _opInterval = null;
+let _opIdx = 0;
+let _opStarted = false;
+let _opDone = false;
+
+function openingClick() {
+  if (!_opStarted) {
+    // 初回クリック：resume() 完了を待ってから BGM＋タイピング開始
+    _opStarted = true;
+    document.getElementById('op-start').style.display = 'none';
+    // タイピングアニメーションは即座に開始（音声待ちにしない）
+    // iOS Safari では audioCtx.resume() の Promise がハングする場合があるため
+    // アニメーションを音声と切り離して独立して動作させる
+    _opStartTyping();
+    // 優先デコード方式：最初に使うBGM3本を先にデコードしてから再生
+    // 残りはバックグラウンドでデコード（battle BGM など）
+    AudioManager.unlock().then(async () => {
+      DbgPanel.log('info', '[OP] unlock OK → priority decode...');
+      await Promise.all([
+        'assets/sound/system,bgm/system/opening.mp3',
+        'assets/sound/system,bgm/BGM/title.mp3',
+        'assets/sound/system,bgm/BGM/characterchoosing.mp3',
+      ].map(p => AudioManager.decodeOne(p)));
+      DbgPanel.log('info', '[OP] decode done → playBGM');
+      AudioManager.decodeAll();
+      AudioManager.playBGM('opening');
+    }).catch(e => { DbgPanel.log('error', '[OP] ERROR: ' + e.message); });
+    return;
+  }
+  if (_opInterval) {
+    // タイピング中クリック：即全文表示
+    clearInterval(_opInterval);
+    _opInterval = null;
+    document.getElementById('op-text').textContent = OPENING_TEXT;
+    document.getElementById('op-cursor').style.display = 'none';
+    _opDone = true;
+    document.getElementById('op-prompt').style.display = 'block';
+    return;
+  }
+  if (_opDone) {
+    // 全文表示後クリック：タイトルへ
+    showScreen('title-screen');
+    AudioManager.playBGM('title');
+  }
+}
+
+function _opStartTyping() {
+  const el = document.getElementById('op-text');
+  _opInterval = setInterval(() => {
+    if (_opIdx >= OPENING_TEXT.length) {
+      clearInterval(_opInterval);
+      _opInterval = null;
+      _opDone = true;
+      document.getElementById('op-cursor').style.display = 'none';
+      document.getElementById('op-prompt').style.display = 'block';
+      return;
+    }
+    el.textContent += OPENING_TEXT[_opIdx];
+    window.scrollTo(0, document.body.scrollHeight);
+    _opIdx++;
+  }, 22);
+}
+
+// BGMは opening 経由でのみアンロック（グローバルリスナー不要）
+
+// ===== キャラクターデータ =====
+const CHARS = {
+  nexus: {
+    name:'NEXUS-7 🤖', type:'バランス型', hp:100, speed:50, gauge:30,
+    dmgMod:1.0, hitMod:0, gaugeIncMod:1.0,
+    themeColor:'#00ffff', emoji:'🤖', imgSrc:'assets/image/nexus7.PNG',
+    moves:{ weak:'ナノブレード', mid:'EMP波動', strong:'プラズマカノン', guard:'ガード', unique:'量子ビーム' },
+    passive:'learning', uniqueName:'量子ビーム',
+    passiveDesc:'アドバンスド・ラーニング：相手の属性攻撃がヒットすると学習済みフラグをセット。同じ属性を自分が使う時に威力×2.0（+100%）。発動までフラグを保持。全属性攻撃に固有×1.1バフあり。相手の固有技被ダメ-20%。',
+    uniqueDesc:'量子ビーム：45ダメージ。命中時ゲージ+25%＆次の属性攻撃コスト0%＋威力+20%（量子強化）付与。',
+  },
+  shadow: {
+    name:'SHADOW 🥷', type:'速度型', hp:100, speed:65, gauge:30,
+    dmgMod:0.9, hitMod:10, gaugeIncMod:1.0,
+    themeColor:'#ff003c', emoji:'🥷', imgSrc:'assets/image/shadow.PNG', imgPosition:'top',
+    moves:{ weak:'クナイ投げ', mid:'鎖鎌', strong:'影斬り', guard:'ガード', unique:'影分身' },
+    passive:'shadow', uniqueName:'影分身',
+    passiveDesc:'絶影：SPEED差30以上で相手の強攻撃を確定回避。通常ダメージ-15%、速度特攻ボーナスはフルで入る。速度差回避でゲージ+25%。2回行動時の2撃目は確定クリティカル。SPEED自然回復なし。',
+    uniqueDesc:'影分身：次の相手の攻撃を1回身代わりで無効化（ダメージ・追加効果0）。',
+  },
+  novaqueen: {
+    name:'NOVA QUEEN 🔮', type:'属性型', hp:95, speed:50, gauge:30,
+    dmgMod:1.0, hitMod:0, gaugeIncMod:1.0,
+    themeColor:'#b026ff', emoji:'🔮', imgSrc:'assets/image/nova.PNG', imgPosition:'top',
+    moves:{ weak:'エナジー弾', mid:'次元裂き', strong:'重力場', guard:'ガード', unique:'星屑砲' },
+    passive:'nova', uniqueName:'星屑砲',
+    passiveDesc:'コズミック・共鳴（瀕死の逆転王）：通常攻撃ゲージ×1.5。ゲージ60%以上で属性攻撃コスト10%。HP48以上で被ダメ-10%。HP38以下で被ダメ-25%・ゲージ+50%。CROWD ON FIRE時は星屑砲のゲージ吸収-60%に強化。',
+    uniqueDesc:'星屑砲：基礎40ダメ＋損失HP×0.5の追加ダメ。相手ゲージ-40%（CROWD時-60%）＆属性攻撃1ターン封じ。使用後自ゲージ+20%。',
+  },
+  titan: {
+    name:'TITAN 🦾', type:'パワー型', hp:100, speed:30, gauge:30,
+    dmgMod:1.3, hitMod:-10, gaugeIncMod:1.0,
+    themeColor:'#ffb000', emoji:'🦾', imgSrc:'assets/image/titan.PNG', imgPosition:'20% top',
+    moves:{ weak:'鉄拳', mid:'地震砕き', strong:'ギガントプレス', guard:'ガード', unique:'超電磁砲' },
+    passive:'titan', uniqueName:'超電磁砲',
+    passiveDesc:'不動の要塞：SLOW状態で被ダメ-15%＆与ダメ+10%（全キャラ共通のSLOWペナルティを無効化＋バフ）。FAST状態（オーバーヒート）で通常攻撃-10%・ガード不可。',
+    uniqueDesc:'超電磁砲：残HP50以上→30、30〜49→45、29以下→55ダメージ。瀕死ほど強い逆転の一撃。',
+  },
+  lyrax: {
+    name:'LYRA-X 🧬', type:'デバフ型', hp:100, speed:50, gauge:30,
+    dmgMod:0.9, hitMod:0, gaugeIncMod:0.8,
+    themeColor:'#39ff14', emoji:'🧬', imgSrc:'assets/image/lyra.PNG',
+    moves:{ weak:'酸液噴射', mid:'変異爪', strong:'捕縛触手', guard:'ガード', unique:'細胞再生' },
+    passive:'lyrax', uniqueName:'細胞再生',
+    passiveDesc:'バイオ・エボリューション：毎ターン終了時+2HP自動回復。スロー・回復封じ効果が1ターン持続。SLOW状態の相手に毎ターン腐食-3HP。',
+    uniqueDesc:'細胞再生：35ダメージ＆与ダメの30%をHP吸収。',
+  },
+  blaze: {
+    name:'BLAZE 🔥', type:'爆発型', hp:100, speed:50, gauge:30,
+    dmgMod:1.3, hitMod:0, gaugeIncMod:1.0,
+    themeColor:'#ff5500', emoji:'🔥', imgSrc:'assets/image/blaze.PNG',
+    moves:{ weak:'ファイアボール', mid:'火炎放射', strong:'マグマストライク', guard:'起爆準備', unique:'爆裂拳' },
+    passive:'blaze', uniqueName:'爆裂拳',
+    passiveDesc:'エクスプローシブ：全攻撃+30%。属性攻撃は×1.4の専用倍率追加・固有技使用時は確定自爆（与ダメ20%反射、誘爆50%）。起爆準備で自爆回避＆確定クリティカル。',
+    uniqueDesc:'爆裂拳：固定45ダメージ（起爆準備後は×1.3=58）。起爆準備なしは確定自爆。',
+  },
+};
+
+// ===== グローバル状態 =====
+let pState, cState, turn, waitingResult, logEl;
+let savedBattleLogHTML = '';
+let currentTurnGroup = null; // ターングループ（最新ターンを上に表示するため）
+let audienceGauge = 0;
+let crowdOnFireCount = 0;     // CROWD ON FIRE 発生回数（試合単位）
+let actionLogBuffer = [];     // 行動ログ蓄積バッファ（試合終了時に一括送信）
+let _onlineTurnLogCapture = null; // ホスト計算中のログキャプチャ（null=無効）
+let _onlineHostComputing  = false; // ホスト計算中フラグ（endOfTurnの副作用を抑制）
+const AUDIENCE_MAX = 10;
+let crowdOnFireNext = false;
+let autoMode = false;
+let autoResults = null;
+let abDetailLogs = []; // turn-by-turn logs for first 5 battles
+let devMode = false;
+let devSaved = null;  // undo用ステート
+
+// ===== DEV MODE 初期化 =====
+(function initDev() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('dev') === '1' || params.get('mode') === 'dev' ||
+      localStorage.getItem('dev_mode') === '1') {
+    devMode = true;
+  }
+  window.addEventListener('load', () => updateDevUI());
+})();
+
+function updateDevUI() {
+  const show = devMode ? '' : 'none';
+  document.getElementById('dev-badge').style.display        = devMode ? 'inline' : 'none';
+  document.getElementById('title-auto-btn').style.display   = show;
+  document.querySelectorAll('.dev-only').forEach(el => el.style.display = show);
+}
+
+// タイトル画面で "SYNTAX" とタイプしたら DEV トグル（PC）
+let _devBuf = '';
+document.addEventListener('keydown', e => {
+  if (document.activeElement.tagName === 'INPUT') return;
+  _devBuf = (_devBuf + e.key.toUpperCase()).slice(-10);
+  if (_devBuf.endsWith('SYNTAX')) {
+    devMode = !devMode;
+    localStorage.setItem('dev_mode', devMode ? '1' : '0');
+    updateDevUI();
+    _devBuf = '';
+    const b = document.getElementById('dev-badge');
+    b.textContent = devMode ? 'DEV ON' : 'DEV OFF';
+    setTimeout(() => { if (b) b.textContent = 'DEV'; }, 1000);
+  }
+});
+
+// スマホ向け：タイトルロゴを5回タップで DEV トグル
+let _devTapCount = 0, _devTapTimer = null;
+document.addEventListener('DOMContentLoaded', () => {
+  const logo = document.querySelector('.title-logo');
+  if (!logo) return;
+  logo.addEventListener('click', () => {
+    _devTapCount++;
+    clearTimeout(_devTapTimer);
+    _devTapTimer = setTimeout(() => { _devTapCount = 0; }, 1500);
+    if (_devTapCount >= 5) {
+      _devTapCount = 0;
+      devMode = !devMode;
+      localStorage.setItem('dev_mode', devMode ? '1' : '0');
+      updateDevUI();
+      const b = document.getElementById('dev-badge');
+      b.textContent = devMode ? 'DEV ON' : 'DEV OFF';
+      setTimeout(() => { if (b) b.textContent = 'DEV'; }, 1000);
+    }
+  });
+});
+
+function devPanelToggle() {
+  const body = document.getElementById('dev-panel-body');
+  if (body) body.style.display = body.style.display === 'none' ? '' : 'none';
+}
+
+// 強制状態付与
+function devForce(who, state) {
+  const s = who === 'p' ? pState : cState;
+  if (!s) return;
+  switch(state) {
+    case 'slow':   s.speed = 25; s.slow = true;  s.fast = false; break;
+    case 'fast':   s.speed = 80; s.fast = true;  s.slow = false; break;
+    case 'hp10':   s.hp = 10;   break;
+    case 'hp27':   s.hp = 27;   break;
+    case 'g100':   s.gauge = 100; break;
+    case 'primed': if (s.passive === 'blaze') s.primed = true; break;
+  }
+  updateHUD();
+  addLog(`🔧 ${who.toUpperCase()}: ${state} 強制付与`, 'dev');
+}
+
+// 1ターン巻き戻し
+function devSaveUndo() {
+  if (!devMode) return;
+  devSaved = {
+    p: JSON.parse(JSON.stringify(pState)),
+    c: JSON.parse(JSON.stringify(cState)),
+    turn, audienceGauge, crowdOnFireNext
+  };
+}
+
+function devUndo() {
+  if (!devSaved) { addLog('🔧 巻き戻しデータなし', 'dev'); return; }
+  pState = devSaved.p; cState = devSaved.c;
+  turn = devSaved.turn; audienceGauge = devSaved.audienceGauge;
+  crowdOnFireNext = devSaved.crowdOnFireNext;
+  waitingResult = false;
+  updateHUD();
+  addLog(`🔧 UNDO: TURN ${turn} に巻き戻し`, 'dev');
+  if (gameMode !== '2p') startTimer();
+}
+
+// 詳細ログ（詳細ログON時のみ出力）
+function devLog(text) {
+  if (!devMode) return;
+  if (document.getElementById('dev-detail-log')?.checked) {
+    addLog(`  📐 ${text}`, 'dev');
+  }
+}
+let difficulty = 'easy';
+let pSelectedAction = null;
+let timerInterval = null;
+let timerSeconds = 30;
+let gameMode = 'cpu';       // 'cpu' | '2p' | 'online'
+let onlineRole = null;      // 'host' | 'guest'（オンラインモード時）
+let savedPKey = null;
+let savedCKey = null;
+// ===== 全キャラ制覇モード =====
+let seriesActive = false;
+let seriesTotal = 5;
+let seriesCurrent = 0;
+let seriesPlayerWins = 0;
+let seriesCpuWins = 0;
+let seriesOpponents = []; // 残りの対戦相手キュー
+let selectionPhase = 1;     // 2Pモード: 1=P1選択中, 2=P2選択中
+let p2SelectedAction = null;
+let charSelectPhase = 1;    // 2Pキャラ選択: 1=P1, 2=P2
+let p1CharKey = null;
+
+// ===== チュートリアル =====
+const TUT_PAGES = [
+  {
+    title: '① 基本ルール',
+    html: `
+      <div class="tut-h">どんなゲーム？</div>
+      プレイヤーとCPU（または2人）が<b style="color:#a0d0ff">毎ターン同時に行動を選択</b>し、まとめて解決するターン制バトル。<br>相手のHPを0にしたら勝ち！
+
+      <div class="tut-h">行動の流れ</div>
+      <div class="tut-row"><span class="tut-key">① 行動選択</span><span class="tut-val">ボタンをタップして行動を選ぶ（何度でも選び直しOK）</span></div>
+      <div class="tut-row"><span class="tut-key">② READY</span><span class="tut-val">確定ボタンを押すと行動が確定</span></div>
+      <div class="tut-row"><span class="tut-key">③ 同時解決</span><span class="tut-val">両者の行動をSPEED順に処理</span></div>
+
+      <div class="tut-h">勝敗条件</div>
+      <div class="tut-row"><span class="tut-key">勝利</span><span class="tut-val">相手のHPを0にする（1本勝負）</span></div>
+      <div class="tut-row"><span class="tut-key">引き分け</span><span class="tut-val">同じターンに両者HP0 → DRAW＆リマッチ</span></div>
+
+      <div class="tut-h">速度順解決</div>
+      <div class="tut-row"><span class="tut-key">SPEED差10以上</span><span class="tut-val">速い方が先に攻撃。先手で倒したら後手の行動はキャンセル</span></div>
+      <div class="tut-row"><span class="tut-key">SPEED差70以上</span><span class="tut-val">速い方が同ターンに2回行動！</span></div>
+    `
+  },
+  {
+    title: '② 通常行動 ＆ ゲージ',
+    html: `
+      <div class="tut-h">通常行動（ゲージ不要）</div>
+      <div class="tut-row"><span class="tut-key">弱攻撃</span><span class="tut-val">8ダメ / 必中 / ゲージ+15%　確実に当たる基本技</span></div>
+      <div class="tut-row"><span class="tut-key">中攻撃</span><span class="tut-val">15ダメ / 命中率80% / ゲージ+8%　バランス型</span></div>
+      <div class="tut-row"><span class="tut-key">強攻撃</span><span class="tut-val">22ダメ / 命中率70% / ゲージ+5%　ヒットで相手SPEED-10</span></div>
+      <div class="tut-row"><span class="tut-key">ガード</span><span class="tut-val">被ダメを半分にする。強攻撃をガードするとジャストガード（被ダメ0・ゲージ+20%）</span></div>
+
+      <div class="tut-h">ゲージとは？</div>
+      攻撃するたびに溜まる必殺技ゲージ。<b style="color:#a0d0ff">属性攻撃・特殊行動・固有技</b>を使うのに必要。
+
+      <div class="tut-row"><span class="tut-key">初期値</span><span class="tut-val">30%からスタート</span></div>
+      <div class="tut-row"><span class="tut-key">HP40%以下</span><span class="tut-val">ゲージ増加量が×1.5倍！瀕死からの逆転を後押し</span></div>
+      <div class="tut-note">※ ゲージは最大100%。溢れても無駄にはなりません。</div>
+    `
+  },
+  {
+    title: '③ 属性付き攻撃',
+    html: `
+      <div class="tut-h">属性付き攻撃（ゲージ25%消費）</div>
+      必中（速度差で外れない）。ガードやカウンターは有効。
+
+      <div class="tut-row"><span class="tut-key">速度特攻</span><span class="tut-val">相手のSPEEDが高いほど追加ダメージ大。FASTな相手には特に有効</span></div>
+      <div class="tut-row"><span class="tut-key">ガード破壊</span><span class="tut-val">ガードを無視してダメージ。ガード多用の相手に</span></div>
+      <div class="tut-row"><span class="tut-key">回復封じ</span><span class="tut-val">次ターンの相手の回復・挑発を封じる</span></div>
+
+      <div class="tut-h">カウンター（ゲージ25%）</div>
+      相手が攻撃してきた時に<b style="color:#a0d0ff">ダメージをそのまま返す</b>（命中率80%）。
+
+      <div class="tut-row"><span class="tut-key">固有技への返し</span><span class="tut-val">固有技に対してはダメージが半分（50%）になる</span></div>
+      <div class="tut-row"><span class="tut-key">自分への被ダメ</span><span class="tut-val">相手が速いほど自分もかすりダメージを受ける</span></div>
+      <div class="tut-row"><span class="tut-key">連続使用</span><span class="tut-val">2ターン連続で使うとコストが50%に倍増！</span></div>
+
+      <div class="tut-h">🔥 AUDIENCE（観客）ゲージ</div>
+      読み勝ちでオーディエンスゲージが上昇。MAX10で<b style="color:#ff4400">CROWD ON FIRE！</b><br>両者ゲージ+30%のボーナス発生。
+    `
+  },
+  {
+    title: '④ 特殊行動 ＆ SPEED',
+    html: `
+      <div class="tut-h">特殊行動（ゲージ消費）</div>
+      <div class="tut-row"><span class="tut-key">加速（15%）</span><span class="tut-val">自分のSPEEDを+20〜30上昇。速くなるほど先手を取りやすい</span></div>
+      <div class="tut-row"><span class="tut-key">スロー（30%）</span><span class="tut-val">相手のSPEEDを大幅低下。SLOW状態は攻撃-20%</span></div>
+      <div class="tut-row"><span class="tut-key">回復（30%）</span><span class="tut-val">HP+15〜25回復。回復封じ中は使用不可</span></div>
+      <div class="tut-row"><span class="tut-key">挑発（30%）</span><span class="tut-val">次の自分の攻撃ダメージ+30%。回復封じ中は使用不可</span></div>
+      <div class="tut-row"><span class="tut-key">オーバークロック（100%）</span><span class="tut-val">次ターン2回行動！ただし3ターンゲージ増加量-50%</span></div>
+
+      <div class="tut-h">SPEEDの仕組み</div>
+      <div class="tut-row"><span class="tut-key">FAST（70以上）</span><span class="tut-val">先手を取りやすい。ただし速度特攻で追加ダメージを受けるリスクあり</span></div>
+      <div class="tut-row"><span class="tut-key">SLOW（35以下）</span><span class="tut-val">攻撃ダメージ-20%。後手になりやすい</span></div>
+      <div class="tut-row"><span class="tut-key">自然回復</span><span class="tut-val">ターン終了時、SPEED50以上なら50に向かって15%戻る</span></div>
+      <div class="tut-note">※ 加速しすぎると速度特攻の的になる！速度管理が読み合いの鍵。</div>
+    `
+  },
+  {
+    title: '⑤ 固有技 ＆ キャラ特性',
+    html: `
+      <div class="tut-h">固有技（ゲージ50%消費・必中）</div>
+      <div class="tut-row"><span class="tut-key">NEXUS-7 🤖</span><span class="tut-val">量子ビーム：40ダメ＆ゲージ+25%。相手の属性攻撃を学習して同じ技の威力+70%</span></div>
+      <div class="tut-row"><span class="tut-key">SHADOW 🥷</span><span class="tut-val">影分身：次の攻撃を身代わりで無効化（ダメージ・効果ゼロ）</span></div>
+      <div class="tut-row"><span class="tut-key">NOVA QUEEN 🔮</span><span class="tut-val">星屑砲：相手ゲージ-40%＆次の属性攻撃を封じる</span></div>
+      <div class="tut-row"><span class="tut-key">TITAN 🦾</span><span class="tut-val">超電磁砲：残HP少ないほど威力アップ（29以下で55ダメ）</span></div>
+      <div class="tut-row"><span class="tut-key">LYRA-X 🧬</span><span class="tut-val">細胞再生：35ダメ＆与ダメの30%をHP吸収</span></div>
+      <div class="tut-row"><span class="tut-key">BLAZE 🔥</span><span class="tut-val">爆裂拳：固定45ダメ。使うと自爆（与ダメ×0.2）。「起爆準備」で自爆回避＆×1.3</span></div>
+    `
+  },
+  {
+    title: '⑥ キャラ選びのヒント',
+    html: `
+      <div class="tut-h">初めての人におすすめ</div>
+      <div class="tut-row"><span class="tut-key">NEXUS-7 🤖</span><span class="tut-val">全能力が平均的。まずはこれで感覚を掴もう</span></div>
+
+      <div class="tut-h">上級者向け</div>
+      <div class="tut-row"><span class="tut-key">BLAZE 🔥</span><span class="tut-val">高火力だが自爆リスクあり。「挑発→起爆準備→爆裂拳」を決めると超強力</span></div>
+      <div class="tut-row"><span class="tut-key">TITAN 🦾</span><span class="tut-val">遅いがSLOW時は攻撃も強くなる重戦車。瀕死からの逆転が狙える</span></div>
+
+      <div class="tut-h">立ち回りのコツ</div>
+      <div class="tut-row"><span class="tut-key">ゲージ管理</span><span class="tut-val">弱攻撃でゲージを溜めて、チャンスに特殊技を叩き込む</span></div>
+      <div class="tut-row"><span class="tut-key">読み合い</span><span class="tut-val">相手がカウンターを多用するなら「ガード」や「スロー」で様子見</span></div>
+      <div class="tut-row"><span class="tut-key">速度管理</span><span class="tut-val">加速しすぎると速度特攻の的に。SPEEDは70前後をキープが基本</span></div>
+      <div class="tut-row"><span class="tut-key">逆転狙い</span><span class="tut-val">HP40%以下はゲージ増加×1.5倍！一気にオーバークロックを狙える</span></div>
+
+      <div class="tut-note">キャラ選択画面でキャラをタップするとパッシブ・固有技の詳細を確認できます。</div>
+    `
+  }
+];
+
+let tutPage = 0;
+
+function openTutorial() {
+  tutPage = 0;
+  renderTutPage();
+  showScreen('tutorial-screen');
+}
+
+function renderTutPage() {
+  const p = TUT_PAGES[tutPage];
+  document.getElementById('tut-title').textContent = p.title;
+  document.getElementById('tut-page-num').textContent = `${tutPage + 1} / ${TUT_PAGES.length}`;
+  document.getElementById('tut-body').innerHTML = p.html;
+  document.getElementById('tut-prev').style.opacity = tutPage === 0 ? '0.3' : '1';
+  document.getElementById('tut-prev').style.pointerEvents = tutPage === 0 ? 'none' : 'auto';
+  document.getElementById('tut-next').textContent = tutPage === TUT_PAGES.length - 1 ? 'CLOSE ✕' : 'NEXT ▶';
+}
+
+function tutNav(dir) {
+  if (dir === 1 && tutPage === TUT_PAGES.length - 1) { goToTitle(); return; }
+  tutPage = Math.max(0, Math.min(TUT_PAGES.length - 1, tutPage + dir));
+  renderTutPage();
+}
+
+function setDifficulty(d) {
+  difficulty = d;
+  ['easy','normal','hard'].forEach(x => {
+    document.getElementById('diff-' + x).classList.toggle('selected', x === d);
+  });
+}
+
+function addAudience(pts) {
+  if (autoMode) {
+    audienceGauge = Math.min(AUDIENCE_MAX, audienceGauge + pts);
+    if (audienceGauge >= AUDIENCE_MAX) {
+      AudioManager.playSE('crowdOnFire');
+      crowdOnFireNext = true;
+      crowdOnFireCount++;
+      pState.crowdBonusPending = true; cState.crowdBonusPending = true;
+      if (pState.passive === 'shadow') pState.pendingDouble = true;
+      if (cState.passive === 'shadow') cState.pendingDouble = true;
+      addGauge(pState, 30); addGauge(cState, 30);
+      audienceGauge = 0;
+    }
+    return;
+  }
+  audienceGauge = Math.min(AUDIENCE_MAX, audienceGauge + pts);
+  AudioManager.playSE('crowdGauge', 0.5);
+  document.getElementById('audience-bar').style.width = (audienceGauge / AUDIENCE_MAX * 100) + '%';
+  document.getElementById('audience-val').textContent = audienceGauge + ' / ' + AUDIENCE_MAX;
+  if (audienceGauge >= AUDIENCE_MAX) {
+    AudioManager.playSE('crowdOnFire');
+    addLog('🔥 CROWD ON FIRE! 🔥 両者ゲージ+30%！次ターン同時解決！', 'system');
+    crowdOnFireNext = true;
+    crowdOnFireCount++;
+    // キャラ固有ボーナス付与（次ターン頭でactiveに変換）
+    pState.crowdBonusPending = true;
+    cState.crowdBonusPending = true;
+    // SHADOW: 次ターン2回行動確定（pendingDouble経由）
+    if (pState.passive === 'shadow') { pState.pendingDouble = true; addLog('⭐ SHADOW：絶影の極み！次ターン2回行動確定！', 'status'); }
+    if (cState.passive === 'shadow') { cState.pendingDouble = true; addLog('⭐ SHADOW：絶影の極み！次ターン2回行動確定！', 'status'); }
+    // 他キャラのボーナスログ
+    [pState, cState].forEach(s => {
+      const msg = { nova:'⭐ NOVA QUEEN：星屑砲ゲージ吸収-60%！', blaze:'⭐ BLAZE：次の自爆ダメ0！無双モード！', titan:'⭐ TITAN：超電磁砲1段階強化！', lyrax:'⭐ LYRA-X：細胞再生吸収50%！', learning:'⭐ NEXUS-7：量子強化威力+20%UP！属性攻撃強化！' }[s.passive];
+      if (msg) addLog(msg, 'status');
+    });
+    addGauge(pState, 30);
+    addGauge(cState, 30);
+    audienceGauge = 0;
+    document.getElementById('audience-bar').style.width = '0%';
+    document.getElementById('audience-val').textContent = '0 / ' + AUDIENCE_MAX;
+    updateHUD();
+  }
+}
+
+function makeState(charKey, isPlayer) {
+  const c = CHARS[charKey];
+  return {
+    charKey, isPlayer,
+    name: c.name, passive: c.passive,
+    hp: c.hp, maxHp: c.hp,
+    speed: c.speed, baseSpeed: c.speed,
+    gauge: c.gauge,
+    dmgMod: c.dmgMod, hitMod: c.hitMod, gaugeIncMod: c.gaugeIncMod,
+    moves: c.moves, uniqueName: c.uniqueName,
+    fast: false, slow: false,
+    sealTurns: 0,
+    counterStance: false,
+    counterConsecutive: 0,   // 連続カウンターカウント
+    lastAction: null,
+    taunt: false,
+    primed: false,
+    learned: null,
+    quantum: false,
+    corrode: false,
+    shimaiNext: false,       // 影分身（身代わり）
+    overclockCooldown: 0,
+    extraTurn: false,
+    pendingDouble: false,  // オーバークロック／絶影の極み：次ターン2回行動フラグ
+    totalDmgDealt: 0,
+    guardThisTurn: false,
+    crowdBonusActive: false,
+    crowdBonusPending: false, // CROWD ON FIRE発動ターン末→次ターン頭でactiveに変換
+    actionHistory: [],  // 直近5ターンの行動履歴
+  };
+}
+
+// ===== 画面遷移 =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goToTitle() { clearTimer(); showScreen('title-screen'); updateDevUI(); AudioManager.playBGM('title'); }
+
+function startCpuMode() { gameMode = 'cpu'; goToSelect(); }
+function start2PMode() { gameMode = '2p'; charSelectPhase = 1; p1CharKey = null; goToSelect(); }
+function startOnlineMode() {
+  gameMode = 'online'; onlineRole = null;
+  // online-screen を初期状態（メニュー表示）にリセット
+  ['online-menu','online-host-wait','online-guest-input','online-matched'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('online-menu').style.display = '';
+  document.getElementById('online-code-input').value = '';
+  document.getElementById('online-guest-error').style.display = 'none';
+  showScreen('online-screen');
+  AudioManager.playSE('confirm');
+}
+
+function startSeriesMode(n) {
+  seriesActive = true;
+  seriesCurrent = 0;
+  seriesPlayerWins = 0;
+  seriesCpuWins = 0;
+  seriesOpponents = [];
+  gameMode = 'cpu';
+  goToSelect();
+}
+
+function buildSeriesOpponents(playerKey) {
+  // プレイヤー以外の全キャラをシャッフルしてキューに
+  const keys = Object.keys(CHARS).filter(k => k !== playerKey);
+  for (let i = keys.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [keys[i], keys[j]] = [keys[j], keys[i]];
+  }
+  seriesOpponents = keys;
+  seriesTotal = keys.length;
+}
+
+function nextSeriesBattle() {
+  // seriesCurrentはshowResultでインクリメント済みなので次の相手はseriesCurrent番目
+  startGame(savedPKey, seriesOpponents[seriesCurrent]);
+}
+
+function endSeries() {
+  seriesActive = false;
+  showEnding();
+}
+
+const ENDING_TEXT = `> ALL COMBAT DATA SECURED & UPLOADED`;
+let _edInterval = null, _edIdx = 0, _edDone = false;
+
+function showEnding() {
+  document.getElementById('ed-text').textContent = '';
+  document.getElementById('ed-cursor').style.display = 'inline-block';
+  document.getElementById('ed-prompt').style.display = 'none';
+  _edIdx = 0; _edDone = false; _edInterval = null;
+  showScreen('ending-screen');
+  setTimeout(() => AudioManager.playBGM('opening_once'), 80); // 同じ音源・ループなし
+  _startEndingType();
+}
+
+function _startEndingType() {
+  const el = document.getElementById('ed-text');
+  _edInterval = setInterval(() => {
+    if (_edIdx >= ENDING_TEXT.length) {
+      clearInterval(_edInterval); _edInterval = null; _edDone = true;
+      document.getElementById('ed-cursor').style.display = 'none';
+      document.getElementById('ed-prompt').style.display = 'block';
+      return;
+    }
+    el.textContent += ENDING_TEXT[_edIdx++];
+  }, 60); // オープニングより少しゆっくり
+}
+
+function endingClick() {
+  if (_edInterval) {
+    clearInterval(_edInterval); _edInterval = null;
+    document.getElementById('ed-text').textContent = ENDING_TEXT;
+    document.getElementById('ed-cursor').style.display = 'none';
+    _edDone = true;
+    document.getElementById('ed-prompt').style.display = 'block';
+    return;
+  }
+  if (_edDone) {
+    AudioManager.stopBGM();
+    goToTitle();
+  }
+}
+
+function goToSelect() {
+  clearTimer();
+  showScreen('select-screen');
+  AudioManager.playBGM('select');
+  selectedChar = null;
+  const grid = document.getElementById('char-grid');
+  grid.innerHTML = '';
+  const confirmBtn = document.getElementById('confirm-btn');
+  confirmBtn.style.opacity = '0.4';
+  confirmBtn.style.pointerEvents = 'none';
+  // タイトル更新
+  const titleEl = document.querySelector('.select-title');
+  if (gameMode === '2p') {
+    titleEl.textContent = charSelectPhase === 1 ? 'P1: SELECT FIGHTER' : 'P2: SELECT FIGHTER';
+    confirmBtn.textContent = charSelectPhase === 1 ? 'P2 SELECT ▶' : 'FIGHT ▶';
+  } else if (gameMode === 'online') {
+    titleEl.textContent = window.onlineRole === 'host' ? 'P1: SELECT FIGHTER' : 'P2: SELECT FIGHTER';
+    confirmBtn.textContent = 'DECIDE ▶';
+  } else {
+    titleEl.textContent = 'SELECT FIGHTER';
+    confirmBtn.textContent = 'FIGHT ▶';
+  }
+  Object.entries(CHARS).forEach(([key, c]) => {
+    const div = document.createElement('div');
+    div.className = 'char-card';
+    div.dataset.key = key;
+    div.innerHTML = `
+      <div class="char-name">${c.name}</div>
+      <div class="char-type">${c.type}</div>
+      <div class="char-stats">HP:${c.hp} SPD:${c.speed} DMG:${c.dmgMod>=1?'+':''}${Math.round((c.dmgMod-1)*100)}%</div>
+    `;
+    div.onclick = () => {
+      document.querySelectorAll('.char-card').forEach(d => d.classList.remove('selected'));
+      div.classList.add('selected');
+      selectedChar = key;
+      confirmBtn.style.opacity = '1';
+      confirmBtn.style.pointerEvents = 'auto';
+      const detail = document.getElementById('char-detail');
+      detail.classList.add('active');
+      detail.innerHTML = `
+        <div class="detail-section">
+          <div class="detail-label">PASSIVE</div>
+          <div class="detail-text">${c.passiveDesc}</div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">SPECIAL MOVE</div>
+          <div class="detail-text">${c.uniqueDesc}</div>
+        </div>
+      `;
+    };
+    grid.appendChild(div);
+  });
+}
+
+let selectedChar = null;
+function confirmSelect() {
+  if (!selectedChar) return;
+  if (gameMode === 'online') {
+    window.OnlineManager?.confirmCharOnline(selectedChar);
+    return;
+  }
+  if (gameMode === '2p') {
+    if (charSelectPhase === 1) {
+      p1CharKey = selectedChar;
+      charSelectPhase = 2;
+      goToSelect();
+    } else {
+      startGame(p1CharKey, selectedChar);
+    }
+  } else if (seriesActive) {
+    buildSeriesOpponents(selectedChar);
+    startGame(selectedChar, seriesOpponents[0]);
+  } else {
+    const keys = Object.keys(CHARS);
+    let cpuKey;
+    do { cpuKey = keys[Math.floor(Math.random()*keys.length)]; } while (cpuKey === selectedChar);
+    startGame(selectedChar, cpuKey);
+  }
+}
+
+// ===== ゲーム開始 =====
+function startGame(pKey, cKey) {
+  AudioManager.playSE('battleStart');
+  setTimeout(() => AudioManager.playBGM('battle'), 80);
+  savedPKey = pKey;
+  savedCKey = cKey;
+  pState = makeState(pKey, true);
+  cState = makeState(cKey, false);
+  if (gameMode === '2p') {
+    pState.displayName = 'P1';
+    cState.displayName = 'P2';
+  } else if (gameMode === 'online') {
+    pState.displayName = 'YOU';
+    cState.displayName = 'OPPONENT';
+  } else {
+    pState.displayName = 'あなた';
+    cState.displayName = 'CPU';
+  }
+  turn = 1;
+  window.turn = turn; // Firebaseモジュール（let宣言はwindowに露出しない）向け
+  waitingResult = false;
+  audienceGauge = 0;
+  crowdOnFireNext = false;
+  crowdOnFireCount = 0;
+  actionLogBuffer = [];
+  pSelectedAction = null;
+  p2SelectedAction = null;
+  selectionPhase = 1;
+  logEl = document.getElementById('battle-log');
+  logEl.innerHTML = '';
+  currentTurnGroup = null;
+  document.getElementById('audience-bar').style.width = '0%';
+  document.getElementById('audience-val').textContent = '0 / ' + AUDIENCE_MAX;
+  showScreen('game-screen');
+  if (gameMode === '2p') {
+    document.getElementById('p-name').textContent = pState.name + ' [P1]';
+    document.getElementById('c-name').textContent = cState.name + ' [P2]';
+  } else if (gameMode === 'online') {
+    document.getElementById('p-name').textContent = pState.name + ' [YOU]';
+    document.getElementById('c-name').textContent = cState.name + ' [ONLINE]';
+  } else {
+    document.getElementById('p-name').textContent = pState.name + ' [YOU]';
+    document.getElementById('c-name').textContent = cState.name + ' [CPU]';
+  }
+  devSaved = null;
+  updateDevUI();
+  applyTheme('p', pKey);
+  applyTheme('c', cKey);
+  resetReadyBtn();
+  // チュートリアル後にdisabled/tut-forceが残っている場合をクリア（updateButtonsの前に実施）
+  document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('disabled', 'tut-force'));
+  updateButtons();
+  updateHUD();
+  addLog(`=== TURN ${turn} ===`, 'system');
+  if (gameMode === '2p') {
+    document.getElementById('turn-info').textContent = `TURN ${turn} — P1: SELECT ACTION`;
+  } else if (gameMode === 'online') {
+    document.getElementById('turn-info').textContent = `TURN ${turn} — SELECT ACTION`;
+    window.OnlineManager?.startBattleTurn(); // タイマー起動＋Firestore監視開始
+  } else {
+    document.getElementById('turn-info').textContent = `TURN ${turn} — SELECT ACTION`;
+    startTimer();
+  }
+}
+
+// ===== ヒットエフェクト =====
+function screenShake(isPlayer, intensity = 'normal') {
+  if (autoMode) return;
+  if (_onlineTurnLogCapture !== null) return; // ホスト計算中は抑制（SSOT）
+  const el = document.getElementById(isPlayer ? 'p-panel' : 'c-panel');
+  el.classList.remove('shake');
+  void el.offsetWidth; // アニメーション再スタート用リフロー
+  el.classList.add('shake');
+  setTimeout(() => el.classList.remove('shake'), 320);
+}
+
+function showDmgPopup(isPlayer, amount, type = 'normal') {
+  if (autoMode || amount <= 0) return;
+  if (_onlineTurnLogCapture !== null) return; // ホスト計算中は抑制（SSOT）
+  const panel = document.getElementById(isPlayer ? 'p-panel' : 'c-panel');
+  const popup = document.createElement('div');
+  let cls = 'dmg-popup';
+  if (type === 'heal') {
+    cls += ' heal';
+    popup.textContent = `+${amount}`;
+  } else {
+    if (amount >= 30) cls += ' huge';
+    else if (amount >= 20) cls += ' big';
+    popup.textContent = `-${amount}`;
+  }
+  popup.className = cls;
+  // 少しランダムにずらしてダブルヒット時に見やすく
+  popup.style.left = (30 + Math.random() * 40) + '%';
+  panel.appendChild(popup);
+  setTimeout(() => popup.remove(), 1200);
+}
+
+// ===== キャラクターテーマ適用 =====
+function applyTheme(prefix, charKey) {
+  const c = CHARS[charKey];
+  const panel = document.getElementById(`${prefix}-panel`);
+  const dimColor = c.themeColor + '55';
+  panel.style.setProperty('--panel-color', c.themeColor);
+  panel.style.setProperty('--panel-color-dim', dimColor);
+  panel.style.setProperty('--hp-color', c.themeColor);
+  panel.style.setProperty('--hp-color-dark', c.themeColor + '88');
+  const iconEl = document.getElementById(`${prefix}-icon`);
+  iconEl.textContent = c.emoji;
+  iconEl.style.setProperty('--panel-color', c.themeColor);
+  iconEl.style.setProperty('--panel-color-dim', dimColor);
+  const img = new Image();
+  img.onload = () => {
+    iconEl.innerHTML = '';
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = 'cover';
+    img.style.objectPosition = c.imgPosition || 'center';
+    img.style.borderRadius = '50%';
+    iconEl.appendChild(img);
+  };
+  img.onerror = () => { iconEl.textContent = c.emoji; };
+  img.src = c.imgSrc;
+}
+
+// ===== タイマー =====
+function startTimer() {
+  clearTimer();
+  timerSeconds = 30;
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    updateTimerDisplay();
+    if (timerSeconds <= 0) {
+      clearTimer();
+      if (gameMode === 'online') {
+        // ★ オンライン専用: まだ送信していない場合のみmidを強制送信（CPU AIは絶対呼ばない）
+        if (!waitingResult) {
+          addLog('⏰ 時間切れ！midが自動選択されました', 'status');
+          pSelectedAction = pSelectedAction || 'mid';
+          confirmAction(); // → online分岐 → submitAction のみ
+        }
+        // waitingResult=trueなら既に送信済み → 何もしない
+      } else {
+        addLog('⏰ 時間切れ！弱攻撃が自動選択されました', 'status');
+        pSelectedAction = 'weak';
+        confirmAction();
+      }
+    }
+  }, 1000);
+}
+
+function clearTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function updateTimerDisplay() {
+  const el = document.getElementById('timer-display');
+  if (!el) return;
+  el.textContent = timerSeconds + 's';
+  el.className = timerSeconds <= 10 ? 'warn' : '';
+}
+
+// ===== HUD更新 =====
+function updateHUD() {
+  if (autoMode) return;
+  if (_onlineTurnLogCapture !== null) return; // ホスト計算中は抑制（SSOT）
+  updateFighterHUD('p', pState);
+  updateFighterHUD('c', cState);
+}
+
+function updateFighterHUD(prefix, s) {
+  const hpPct = Math.max(0, s.hp / s.maxHp * 100);
+  document.getElementById(`${prefix}-hp-val`).textContent = devMode ? Math.max(0,s.hp).toFixed(1) : Math.max(0, s.hp);
+  const bar = document.getElementById(`${prefix}-hp-bar`);
+  bar.style.width = hpPct + '%';
+  bar.className = 'bar-fill hp-fill' + (hpPct <= 25 ? ' low' : hpPct <= 50 ? ' mid' : '');
+  document.getElementById(`${prefix}-gauge-val`).textContent = devMode ? s.gauge.toFixed(1) + '%' : Math.round(s.gauge) + '%';
+  document.getElementById(`${prefix}-gauge-bar`).style.width = Math.min(100, s.gauge) + '%';
+  document.getElementById(`${prefix}-speed-val`).textContent = devMode ? s.speed.toFixed(1) : Math.round(s.speed);
+  const tags = document.getElementById(`${prefix}-tags`);
+  tags.innerHTML = '';
+  if (s.fast) addTag(tags, 'FAST', 'fast');
+  if (s.slow) addTag(tags, s.passive === 'titan' ? 'SLOW⚡+10%' : 'SLOW', 'slow');
+  if (s.sealTurns > 0) addTag(tags, `封じ${s.sealTurns}T`, 'seal');
+  if (s.counterStance) addTag(tags, 'COUNTER', 'counter');
+  if (s.counterConsecutive > 0) addTag(tags, '連カウ', 'countpen');
+  if (s.taunt) addTag(tags, '挑発', 'taunt');
+  if (s.primed) addTag(tags, '起爆準備', 'primed');
+  if (s.learned) addTag(tags, '学習済み', 'learned');
+  if (s.quantum) addTag(tags, '量子強化', 'quantum');
+  if (s.corrode) addTag(tags, '腐食', 'corrode');
+  if (s.shimaiNext) addTag(tags, '身代わり', 'shimai');
+}
+
+// ===== オンライン用 ステートシリアライズ =====
+function serializeState(s) {
+  return {
+    hp: s.hp, maxHp: s.maxHp,
+    speed: s.speed, baseSpeed: s.baseSpeed,
+    gauge: s.gauge,
+    dmgMod: s.dmgMod, hitMod: s.hitMod,
+    fast: s.fast, slow: s.slow,
+    sealTurns: s.sealTurns,
+    counterStance: s.counterStance,
+    counterConsecutive: s.counterConsecutive,
+    lastAction: s.lastAction,
+    taunt: s.taunt,
+    primed: s.primed,
+    learned: s.learned,
+    quantum: s.quantum,
+    corrode: s.corrode,
+    shimaiNext: s.shimaiNext,
+    overclockCooldown: s.overclockCooldown,
+    extraTurn: s.extraTurn,
+    pendingDouble: s.pendingDouble,
+    totalDmgDealt: s.totalDmgDealt,
+    guardThisTurn: s.guardThisTurn,
+    crowdBonusActive: s.crowdBonusActive,
+    crowdBonusPending: s.crowdBonusPending,
+    actionHistory: s.actionHistory ? [...s.actionHistory] : [],
+  };
+}
+function applySerializedState(s, data) {
+  const keys = ['hp','maxHp','speed','baseSpeed','gauge','dmgMod','hitMod','fast','slow',
+    'sealTurns','counterStance','counterConsecutive','lastAction','taunt','primed',
+    'learned','quantum','corrode','shimaiNext','overclockCooldown','extraTurn',
+    'pendingDouble','totalDmgDealt','guardThisTurn','crowdBonusActive','crowdBonusPending'];
+  keys.forEach(k => { if (data[k] !== undefined) s[k] = data[k]; });
+  if (data.actionHistory) s.actionHistory = [...data.actionHistory];
+}
+
+// ===== オンラインバトル ターン処理 =====
+// ホスト: resolveActionsを実行し結果をキャプチャして返す
+window.hostComputeTurn = function(p1Act, p2Act) {
+  _onlineTurnLogCapture = [];
+  _onlineHostComputing  = true;
+  resolveActions(p1Act, p2Act);
+  _onlineHostComputing  = false;
+  const pDead = pState.hp <= 0, cDead = cState.hp <= 0;
+  const result = {
+    turn: turn,
+    p1State: serializeState(pState),
+    p2State: serializeState(cState),
+    logs: _onlineTurnLogCapture.slice(),
+    audienceGauge,
+    crowdOnFireNext,
+    gameOver: pDead || cDead,
+    winner: (pDead && cDead) ? 'draw' : cDead ? 'p1' : pDead ? 'p2' : null,
+  };
+  _onlineTurnLogCapture = null;
+  return result;
+};
+
+// 両端末: turn_resultを受け取ってステートを適用し次ターンへ
+window.applyOnlineTurnResult = function(data) {
+  // ★ let onlineRole はwindowプロパティにならないため window.onlineRole を使用
+  const isHost = (window.onlineRole === 'host');
+  // ★ステート適用: P1(host)視点 pState=P1/cState=P2、P2(guest)視点 pState=P2/cState=P1
+  //   p1State は常にhostキャラ、p2State は常にguestキャラ
+  if (isHost) {
+    applySerializedState(pState, data.p1State); // host: pState = P1キャラ
+    applySerializedState(cState, data.p2State); // host: cState = P2キャラ
+  } else {
+    applySerializedState(pState, data.p2State); // guest: pState = P2キャラ（自分）
+    applySerializedState(cState, data.p1State); // guest: cState = P1キャラ（相手）
+  }
+  audienceGauge    = data.audienceGauge;
+  crowdOnFireNext  = data.crowdOnFireNext;
+  // ★ SSOT: ホスト・ゲスト両方ともFirestoreのturn_resultからログを再生
+  //   ゲストはホスト視点のYOU/OPPONENTを反転してから描画する
+  if (Array.isArray(data.logs)) {
+    data.logs.forEach(({ text, cls }) => {
+      addLog(isHost ? text : mirrorOnlineLogText(text), cls);
+    });
+  }
+  updateHUD();
+  // UI完全リセット（両端末）
+  document.getElementById('online-battle-overlay').style.display = 'none';
+  resetReadyBtn();
+  waitingResult = false;
+  if (data.gameOver) {
+    clearTimer();
+    setTimeout(() => {
+      if (data.winner === 'draw') showResult('draw');
+      else if ((data.winner === 'p1' && isHost) || (data.winner === 'p2' && !isHost)) showResult('win');
+      else showResult('lose');
+    }, 600);
+  } else {
+    turn++;
+    window.turn = turn;
+    addLog(`=== TURN ${turn} ===`, 'system');
+    document.getElementById('turn-info').textContent = `TURN ${turn} — SELECT ACTION`;
+    updateButtons(pState);
+    window.OnlineManager?.startBattleTurn(); // タイマー再起動＋次ターン監視
+  }
+};
+
+function addTag(el, text, cls) {
+  const t = document.createElement('span');
+  t.className = `tag ${cls}`;
+  t.textContent = text;
+  el.appendChild(t);
+}
+
+// ===== オンライン ゲスト用ログミラーリング =====
+// ホストが生成したログ内の YOU ↔ OPPONENT を反転してゲスト視点に変換する
+function mirrorOnlineLogText(text) {
+  const TMP = '\x01'; // ゼロ幅プレースホルダー（YOU/OPPONENTには含まれない文字）
+  return text
+    .replace(/YOU/g, TMP)
+    .replace(/OPPONENT/g, 'YOU')
+    .replace(new RegExp(TMP, 'g'), 'OPPONENT');
+}
+
+// ===== ログ =====
+function addLog(text, cls='') {
+  // ★ SSOT: ホスト計算中はバッファに記録してDOMへの直接書き込みを抑制
+  //   ログはFirestoreのturn_resultを受信した時に両端末で一括再生する
+  if (_onlineTurnLogCapture !== null) {
+    _onlineTurnLogCapture.push({ text, cls });
+    return;
+  }
+  if (autoMode) return;
+  const d = document.createElement('div');
+  d.className = `log-line ${cls}`;
+  d.textContent = text;
+
+  if (text.startsWith('=== TURN')) {
+    // 新ターン：グループを作って一番上に挿入
+    currentTurnGroup = document.createElement('div');
+    currentTurnGroup.className = 'log-turn-group';
+    currentTurnGroup.appendChild(d);
+    logEl.prepend(currentTurnGroup);
+  } else {
+    // ターン内：グループの末尾に追加（なければlogElに直接）
+    (currentTurnGroup || logEl).appendChild(d);
+  }
+}
+
+// ===== ボタン更新 =====
+function updateButtons(s = pState) {
+  document.getElementById('lbl-weak').textContent = s.moves.weak + '（弱）';
+  document.getElementById('lbl-mid').textContent = s.moves.mid + '（中）';
+  document.getElementById('lbl-strong').textContent = s.moves.strong + '（強）';
+  document.getElementById('lbl-guard').textContent = s.moves.guard;
+  document.getElementById('btn-unique-name').textContent = s.uniqueName;
+
+  const atk25 = (s.passive === 'nova' && s.gauge >= 60) ? 10 : 25;
+  const counterCost = s.counterConsecutive > 0 ? 50 : atk25;
+
+  document.getElementById('cost-speedatk').textContent = (s.quantum ? 0 : atk25) + '%';
+  document.getElementById('cost-guardbk').textContent = (s.quantum ? 0 : atk25) + '%';
+  document.getElementById('cost-sealatk').textContent = (s.quantum ? 0 : atk25) + '%';
+  document.getElementById('cost-counter').textContent = counterCost + '%' + (s.counterConsecutive > 0 ? '(×2!)' : '');
+
+  ['speedatk','guardbk','sealatk'].forEach(id => {
+    const cost = s.quantum ? 0 : atk25;
+    document.getElementById(`btn-${id}`).classList.toggle('disabled', s.gauge < cost && !s.quantum);
+  });
+  document.getElementById('btn-counter').classList.toggle('disabled', s.gauge < counterCost);
+  document.getElementById('btn-accel').classList.toggle('disabled', s.gauge < 15);
+  document.getElementById('btn-slow').classList.toggle('disabled', s.gauge < 30);
+  document.getElementById('btn-heal').classList.toggle('disabled', s.gauge < 30 || s.sealTurns > 0);
+  document.getElementById('btn-taunt').classList.toggle('disabled', s.gauge < 30 || s.sealTurns > 0);
+  document.getElementById('btn-overclock').classList.toggle('disabled', s.gauge < 100);
+  document.getElementById('btn-unique').classList.toggle('disabled', s.gauge < 50);
+}
+
+// ===== プレイヤー行動選択（2ステップ） =====
+function selectAction(action) {
+  if (waitingResult) return;
+  const btn = document.getElementById('btn-' + action);
+  if (btn && btn.classList.contains('disabled')) return;
+  if (gameMode === '2p' && selectionPhase === 2) {
+    p2SelectedAction = action;
+  } else {
+    pSelectedAction = action;
+  }
+  // ハイライト
+  document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('btn-' + action).classList.add('selected');
+  // READYボタン有効化
+  const readyBtn = document.getElementById('ready-btn');
+  readyBtn.classList.add('active');
+}
+
+function resetReadyBtn() {
+  pSelectedAction = null;
+  p2SelectedAction = null;
+  selectionPhase = 1;
+  document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('selected'));
+  const readyBtn = document.getElementById('ready-btn');
+  readyBtn.classList.remove('active');
+}
+
+function confirmAction() {
+  if (waitingResult) return;
+  if (InteractiveTutorial.isActive()) { InteractiveTutorial.onConfirm(); return; }
+  AudioManager.playSE('ready');
+  if (gameMode === 'online') {
+    if (!pSelectedAction) return;
+    clearTimer();
+    const act = pSelectedAction;
+    resetReadyBtn();
+    waitingResult = true;
+    document.getElementById('online-battle-overlay').style.display = 'flex';
+    document.getElementById('turn-info').textContent = `TURN ${turn} — WAITING...`;
+    window.OnlineManager?.submitAction(act);
+    return;
+  }
+  if (gameMode === '2p') {
+    if (selectionPhase === 1) {
+      if (!pSelectedAction) return;
+      // P1確定 → P2の番へ
+      selectionPhase = 2;
+      document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('selected'));
+      const readyBtn = document.getElementById('ready-btn');
+      readyBtn.classList.remove('active');
+      readyBtn.textContent = '▶ READY (P2)';
+      p2SelectedAction = null;
+      document.getElementById('turn-info').textContent = `TURN ${turn} — P2: SELECT ACTION`;
+      updateButtons(cState);
+    } else {
+      if (!p2SelectedAction) return;
+      // 両者確定 → 解決
+      const p1Act = pSelectedAction;
+      const p2Act = p2SelectedAction;
+      resetReadyBtn();
+      document.getElementById('ready-btn').textContent = '▶ READY';
+      updateButtons(pState);
+      resolveActions(p1Act, p2Act);
+    }
+  } else {
+    if (!pSelectedAction) return;
+    // ★ CPU AI完全封印: オンライン時はここに絶対到達させない
+    if (gameMode === 'online') {
+      console.warn('[Bug] confirmAction: online mode reached CPU branch. Aborting.');
+      return;
+    }
+    clearTimer();
+    const cpuAction = chooseCpuAction();
+    resolveActions(pSelectedAction, cpuAction);
+    resetReadyBtn();
+  }
+}
+
+// ===== CPU AI =====
+function chooseCpuAction() {
+  const s = cState;
+  const opp = pState;
+  const atk25 = (s.passive === 'nova' && s.gauge >= 60) ? 10 : 25;
+  const counterCost = s.counterConsecutive > 0 ? 50 : atk25;
+
+  // weighted pool
+  const pool = [];
+  const add = (a, w) => { for (let i = 0; i < w; i++) pool.push(a); };
+
+  if (difficulty === 'easy') {
+    // ほぼランダム
+    const avail = ['weak','mid','strong','guard'];
+    if (s.gauge >= atk25) avail.push('speedatk','guardbk','sealatk');
+    if (s.gauge >= counterCost) avail.push('counter');
+    if (s.gauge >= 15) avail.push('accel');
+    if (s.gauge >= 30) { avail.push('slow'); if (s.sealTurns===0) avail.push('heal','taunt'); }
+    if (s.gauge >= 100) avail.push('overclock');
+    if (s.gauge >= 50) avail.push('unique');
+    return avail[Math.floor(Math.random() * avail.length)];
+  }
+
+  // HARD: abSmartActと共通ロジック
+  if (difficulty === 'hard') return abSmartAct(s, opp);
+
+
+  // NORMAL / HARD: キャラ別ウェイト
+  add('weak', 2); add('mid', 3); add('strong', 3); add('guard', 2);
+  if (s.gauge >= atk25) { add('speedatk',2); add('guardbk',2); add('sealatk',2); }
+  if (s.gauge >= counterCost) add('counter', 2);
+  if (s.gauge >= 15) add('accel', 2);
+  if (s.gauge >= 30) {
+    add('slow', 2);
+    if (s.sealTurns === 0) { add('heal', 1); add('taunt', 2); }
+  }
+  if (s.gauge >= 100) add('overclock', 1);
+  if (s.gauge >= 50) add('unique', 2);
+
+  // キャラ固有ウェイト調整
+  switch(s.passive) {
+    case 'titan':
+      // 加速を封印、カウンター・中・強を強化
+      const titanPool = pool.filter(a => a !== 'accel');
+      add('counter', 3); add('mid', 2); add('strong', 2);
+      if (difficulty === 'hard') {
+        // HP低いほど超電磁砲を狙う
+        if (s.hp <= 49 && s.gauge >= 50) add('unique', 6);
+      }
+      return titanPool.concat(pool.slice(pool.indexOf('counter'))).filter(a => a !== 'accel')[Math.floor(Math.random() * (pool.filter(a => a !== 'accel').length))];
+    case 'blaze':
+      // 挑発→起爆→爆裂拳コンボを強化
+      if (s.primed && s.gauge >= 50) add('unique', 8);
+      else if (s.taunt && !s.primed) add('guard', 4); // 起爆準備（BLAZEのguard）
+      else if (!s.taunt && s.gauge >= 30 && s.sealTurns === 0) add('taunt', 4);
+      break;
+  }
+
+  if (difficulty === 'hard') {
+    // プレイヤーのゲージ50%以上→70%でガード/カウンター、30%で逆読み攻撃（ファジー行動）
+    if (opp.gauge >= 50) {
+      if (Math.random() < 0.7) {
+        add('guard', 4); add('counter', 4);  // 最適解：固有技警戒
+      } else {
+        add('mid', 4); add('strong', 4);  // 逆読み：相手は様子見と読んで強気に攻撃
+      }
+    }
+    // プレイヤーHP8以下→70%で弱確殺、30%でタイミングずらし（カウンター対策）
+    if (opp.hp <= 8) {
+      if (Math.random() < 0.7) {
+        add('weak', 10);  // 確実なトドメ
+      } else {
+        if (s.gauge >= 25) add('guardbk', 6);  // カウンター持ちを崩す
+        if (s.gauge >= 30) add('slow', 4);      // タイミングずらし
+      }
+    }
+    // プレイヤーがオーバークロック使用直後→スローで妨害
+    if (opp.lastAction === 'overclock' && s.gauge >= 30) add('slow', 8);
+    // 自分がSLOW→加速優先
+    if (s.slow && s.gauge >= 15) add('accel', 8);
+    // 相手が起爆準備状態→次ターン爆裂拳警戒（BLAZEメタ）
+    if (opp.primed) {
+      if (s.gauge >= 50 && s.gauge >= counterCost) {
+        // ゲージ50%以上かつカウンター可能→カウンター優先（ウェイト3）
+        add('counter', 3);
+      } else {
+        // ゲージ不足→ガードorスローで被害を抑える
+        add('guard', 3);
+        if (s.gauge >= 30) add('slow', 2);
+      }
+    }
+  }
+
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ===== 防御スタンス先行設定（同時選択システム） =====
+// カウンター・ガードは同時選択のため、速度順解決の前にフラグを確定させる
+function preSetDefenseStance(s, act) {
+  const atk25 = (s.passive === 'nova' && s.gauge >= 60) ? 10 : 25;
+  const aName = s.displayName || (s.isPlayer ? 'あなた' : (gameMode === '2p' ? s.name : 'CPU'));
+  if (act === 'counter') {
+    const cost = s.counterConsecutive > 0 ? 50 : atk25;
+    if (s.gauge >= cost) {
+      s.gauge -= cost;
+      if (s.quantum) s.quantum = false;
+      s.counterStance = true;
+      const penMsg = s.counterConsecutive > 0 ? '（連続ペナルティ：コスト50%）' : '';
+      addLog(`${aName}がカウンター構え！${penMsg}`, 'status');
+    }
+  } else if (act === 'guard') {
+    if (s.passive === 'blaze') {
+      s.primed = true;
+      AudioManager.playSE('blaze_primed');
+      addLog(`${aName}が起爆準備！`, 'status');
+    } else {
+      s.guardThisTurn = true;
+      addLog(`${aName}がガード構え`, '');
+    }
+  }
+}
+
+// ===== 行動解決 =====
+function resolveActions(pAct, cAct) {
+  devSaveUndo(); // DEV: ターン開始前にステートを保存
+  waitingResult = true;
+  // アクションログ蓄積（非autoModeのみ）
+  if (!autoMode) {
+    actionLogBuffer.push({ turn, char: pState.name, action: pAct, is_ai: false });
+    actionLogBuffer.push({ turn, char: cState.name, action: cAct, is_ai: gameMode !== '2p' });
+  }
+  const p1Disp = pState.displayName || 'あなた';
+  const p2Disp = cState.displayName || 'CPU';
+  addLog(`▶ ${p1Disp}: ${actionLabel(pAct, pState)} / ${p2Disp}: ${actionLabel(cAct, cState)}`, 'system');
+
+  // オーバークロック：前ターンのpendingDoubleをextraTurnに変換（次ターン2回行動）
+  if (pState.pendingDouble) { pState.pendingDouble = false; pState.extraTurn = true; }
+  if (cState.pendingDouble) { cState.pendingDouble = false; cState.extraTurn = true; }
+
+  // CROWD ON FIRE 同時解決フラグ
+  const forceSim = crowdOnFireNext;
+  crowdOnFireNext = false;
+  if (forceSim) addLog('⚡ CROWD ON FIRE！SPEED差無視・同時解決！', 'system');
+
+  // 防御スタンスを速度順解決前に先行設定（同時選択の整合性）
+  preSetDefenseStance(pState, pAct);
+  preSetDefenseStance(cState, cAct);
+
+  const speedDiff = pState.speed - cState.speed;
+  const absSpeedDiff = Math.abs(speedDiff);
+  const pFirst = speedDiff >= 0;
+
+  const first  = pFirst ? pState : cState;
+  const firstAct  = pFirst ? pAct : cAct;
+  const second = pFirst ? cState : pState;
+  const secondAct = pFirst ? cAct : pAct;
+
+  applyAction(first, second, firstAct);
+
+  // 速度順解決：forceSim時はキャンセルなし（同時解決）
+  if (!forceSim && absSpeedDiff >= 10 && second.hp <= 0) {
+    addLog(`⚡ 先手で撃破！後手の行動キャンセル！`, 'status');
+  } else {
+    applyAction(second, first, secondAct);
+  }
+
+  // SPEED差70以上で追加行動（forceSim時はなし）
+  if (!forceSim && absSpeedDiff >= 70) {
+    if (pFirst && cState.hp > 0) {
+      addLog(`▶ SPEEDアドバンテージ！${p1Disp}が追加行動！`, 'status');
+      applyAction(pState, cState, pAct);
+    } else if (!pFirst && pState.hp > 0) {
+      addLog(`▶ SPEEDアドバンテージ！${p2Disp}が追加行動！`, 'status');
+      applyAction(cState, pState, cAct);
+    }
+  }
+
+  // 2回行動（オーバークロック／絶影の極み）
+  if (pState.extraTurn) {
+    pState.extraTurn = false;
+    if (cState.hp > 0) {
+      const lbl = pState.passive === 'shadow' ? `⭐ 絶影の極み！${p1Disp}が追加行動！` : `▶ オーバークロック発動！${p1Disp}が追加行動！`;
+      addLog(lbl, 'status');
+      applyAction(pState, cState, pAct);
+    }
+  }
+  if (cState.extraTurn) {
+    cState.extraTurn = false;
+    if (pState.hp > 0) {
+      const lbl = cState.passive === 'shadow' ? `⭐ 絶影の極み！${p2Disp}が追加行動！` : `▶ オーバークロック発動！${p2Disp}が追加行動！`;
+      addLog(lbl, 'status');
+      applyAction(cState, pState, cAct);
+    }
+  }
+
+  endOfTurn();
+}
+
+function actionLabel(act, s) {
+  const map = {
+    weak: s.moves.weak, mid: s.moves.mid, strong: s.moves.strong, guard: s.moves.guard,
+    speedatk:'速度特攻', guardbk:'ガード破壊', sealatk:'回復封じ', counter:'カウンター',
+    accel:'加速', slow:'スロー', heal:'回復', taunt:'挑発', overclock:'オーバークロック',
+    idle:'——（待機）',
+    unique: s.uniqueName,
+  };
+  return map[act] || act;
+}
+
+// ===== 行動適用 =====
+function applyAction(attacker, defender, action) {
+  if (attacker.hp <= 0 || defender.hp <= 0) return;
+  attacker.lastAction = action;
+  const aName = attacker.displayName || (attacker.isPlayer ? 'あなた' : 'CPU');
+  const dName = defender.displayName || (defender.isPlayer ? 'あなた' : 'CPU');
+  const atk25 = (attacker.passive === 'nova' && attacker.gauge >= 60) ? 10 : 25; // v6.5: 15→10
+
+  switch(action) {
+    // ===== 通常行動 =====
+    case 'weak':
+    case 'mid':
+    case 'strong': {
+      AudioManager.playAttackSE(attacker.passive, action);
+      const base = { weak:8, mid:15, strong:22 }[action];
+      // v5: 命中率 弱100%、中80%、強70%
+      const baseHitRate = { weak:100, mid:80, strong:70 }[action];
+      const hitRate = baseHitRate + attacker.hitMod;
+
+      // 全キャラ共通：相手SPEEDが自分より20以上高い場合、強攻撃は確定外れ
+      // SHADOW絶影：速度差回避時にゲージ+20%ボーナス
+      if (action === 'strong' && defender.speed - attacker.speed >= 20) {
+        addLog(`${aName}の強攻撃！…しかし速度差で外れた！`, '');
+        AudioManager.playSE('miss');
+        addGauge(attacker, 5);
+        if (attacker.primed) attacker.primed = false;
+        if (defender.counterStance) { defender.counterStance = false; addLog(`${dName}のカウンター！…しかし攻撃が届かず空振り！`, ''); }
+        if (defender.passive === 'shadow') {
+          addGauge(defender, 20);
+          addLog(`${dName}の絶影！速度差回避でゲージ+20%！`, 'status');
+          AudioManager.playSE('shadow_zettsuei');
+        }
+        break;
+      }
+
+      // 命中判定（弱は必中なのでスキップ。チュートリアル強制命中フラグ考慮）
+      if (action !== 'weak' && !_tutForceHit && Math.random() * 100 > hitRate) {
+        const gaugeOnMiss = action === 'strong' ? 5 : 8;
+        addLog(`${aName}の攻撃がはずれた！`, '');
+        AudioManager.playSE('miss');
+        addGauge(attacker, gaugeOnMiss);
+        if (attacker.primed) attacker.primed = false;
+        if (defender.counterStance) { defender.counterStance = false; addLog(`${dName}のカウンター！…しかし攻撃が届かず空振り！`, ''); }
+        break;
+      }
+
+      // ダメージ計算
+      let dmg = base * attacker.dmgMod;
+      if (attacker.passive === 'shadow') dmg = Math.round(dmg * 0.9); // SHADOW通常攻撃追加減衰
+      dmg = applySlowMod(attacker, dmg);
+      if (attacker.taunt) { dmg *= 1.3; attacker.taunt = false; }
+      if (attacker.primed && attacker.passive === 'blaze') dmg *= 1.3;
+      // TITANオーバーヒート
+      const titanOverheat = attacker.passive === 'titan' && attacker.fast;
+      if (titanOverheat) { dmg *= 0.9; addLog(`${aName}オーバーヒート！攻撃-10%・ガード不可！`, 'status'); }
+      dmg = Math.round(dmg);
+
+      // ゲージ（弱+15%、中+8%、強+5%）/ NOVA QUEEN通常攻撃ゲージ×1.2（v6.7：旧×1.5）
+      const gaugeGain = { weak:15, mid:8, strong:5 }[action];
+      addGauge(attacker, attacker.passive === 'nova' ? gaugeGain * 1.2 : gaugeGain);
+      if (attacker.primed) attacker.primed = false;
+      // 通常攻撃ではBLAZE自爆なし（v5変更）
+
+      // カウンター処理
+      if (defender.counterStance) {
+        applyCounter(defender, attacker, dmg);
+        defender.counterStance = false;
+      } else {
+        // 身代わり（SHADOW影分身）
+        if (defender.shimaiNext) {
+          defender.shimaiNext = false;
+          addLog(`${dName}の身代わり！ダメージ無効！`, 'status');
+        } else {
+          dealDamage(attacker, defender, dmg, aName, dName, titanOverheat);
+          // 強攻撃ヒット時：相手SPEED-10（v5追加）
+          if (action === 'strong') {
+            defender.speed = Math.max(0, defender.speed - 10);
+            defender.slow = defender.speed <= 35;
+            defender.fast = defender.speed >= 70;
+            addLog(`${dName}のSPEED-10 → ${Math.round(defender.speed)}`, 'status');
+          }
+        }
+      }
+      break;
+    }
+
+    case 'guard': {
+      // preSetDefenseStance で処理済み（フラグ設定・ログ出力）
+      break;
+    }
+
+    // ===== 属性付き攻撃 =====
+    case 'speedatk': {
+      AudioManager.playSE('speedAtk');
+      const cost = attacker.quantum ? 0 : atk25;
+      if (attacker.gauge < cost && !attacker.quantum) break;
+      attacker.gauge -= cost;
+      addGauge(attacker, 8);
+      const hadQuantum = attacker.quantum;
+      if (attacker.quantum) attacker.quantum = false;
+      const bonusDmg = getSpeedBonus(defender.speed);
+      let dmg = 13; // v6.7: 16→13（+5に戻す）
+      dmg = applySlowMod(attacker, dmg);
+      if (attacker.taunt) { dmg *= 1.3; attacker.taunt = false; }
+      let totalDmg = Math.round(dmg * attacker.dmgMod + bonusDmg);
+      if (hadQuantum) totalDmg = Math.round(totalDmg * 1.2); // 量子強化：威力+20%（v6.5）
+      if (attacker.passive === 'learning') totalDmg = Math.round(totalDmg * 1.1); // NEXUS-7 属性バフ
+      if (attacker.passive === 'learning' && attacker.crowdBonusActive) { totalDmg = Math.round(totalDmg * 1.2); attacker.crowdBonusActive = false; addLog(`🤖 CROWD BONUS！量子増幅+20%！`, 'status'); } // NEXUS-7 CROWD ON FIRE（v6.5）
+      if (attacker.passive === 'blaze') totalDmg = Math.round(totalDmg * 1.4);    // BLAZE 属性倍率
+      if (attacker.learned === 'speedatk') { const lm = 2.0; totalDmg = Math.round(totalDmg * lm); attacker.learned = null; attacker.crowdBonusActive = false; } // v6.5: 1.8→2.0
+      const speedatkWasPrimed = attacker.primed;
+      if (attacker.primed) attacker.primed = false;
+      addLog(`${aName}の速度特攻！(+${bonusDmg}ボーナス)`, '');
+      if (bonusDmg > 0) addAudience(2);
+      if (defender.counterStance) {
+        const selfDmg = applyCounter(defender, attacker, totalDmg); defender.counterStance = false;
+        // かすりダメージあり（完全防御でない）場合のみSLOW適用
+        if (selfDmg > 0 && defender.hp > 0) {
+          const reduction = 10 + Math.round(Math.random() * 5);
+          defender.speed = Math.max(0, defender.speed - reduction);
+          defender.slow = defender.speed <= 35;
+          if (defender.slow) addLog(`${dName}がSLOW状態に！（かすり貫通）`, 'status');
+        }
+      } else if (defender.shimaiNext) {
+        defender.shimaiNext = false;
+        addLog(`${dName}の身代わり！ダメージ無効！`, 'status');
+      } else {
+        const finalDmg = dealDamage(attacker, defender, totalDmg, aName, dName);
+        // BLAZE確定自爆（属性攻撃）起爆準備中は自爆しない
+        if (attacker.passive === 'blaze' && !speedatkWasPrimed) applyBlazeJibaku(attacker, defender, finalDmg, aName, dName);
+        // 通常ヒット時SLOW付与
+        if (defender.hp > 0) {
+          const reduction = 10 + Math.round(Math.random() * 5);
+          defender.speed = Math.max(0, defender.speed - reduction);
+          defender.slow = defender.speed <= 35;
+          if (defender.slow) addLog(`${dName}がSLOW状態に！`, 'status');
+        }
+        // NEXUS-7 学習セット
+        if (defender.passive === 'learning') defender.learned = 'speedatk';
+      }
+      break;
+    }
+
+    case 'guardbk': {
+      AudioManager.playSE('guardBreak');
+      const cost = attacker.quantum ? 0 : atk25;
+      if (attacker.gauge < cost && !attacker.quantum) break;
+      attacker.gauge -= cost;
+      addGauge(attacker, 8);
+      const hadQuantum = attacker.quantum;
+      if (attacker.quantum) attacker.quantum = false;
+      let dmg = 20; // v6.7: 23→20（+5に戻す）
+      dmg = applySlowMod(attacker, dmg);
+      if (attacker.taunt) { dmg *= 1.3; attacker.taunt = false; }
+      if (attacker.learned === 'guardbk') { const lm = 2.0; dmg *= lm; attacker.learned = null; attacker.crowdBonusActive = false; } // v6.5: 1.8→2.0
+      dmg = Math.round(dmg * attacker.dmgMod);
+      if (hadQuantum) dmg = Math.round(dmg * 1.2); // 量子強化：威力+20%（v6.5）
+      if (attacker.passive === 'learning') dmg = Math.round(dmg * 1.1); // NEXUS-7 属性バフ
+      if (attacker.passive === 'learning' && attacker.crowdBonusActive) { dmg = Math.round(dmg * 1.2); attacker.crowdBonusActive = false; addLog(`🤖 CROWD BONUS！量子増幅+20%！`, 'status'); } // NEXUS-7 CROWD ON FIRE（v6.5）
+      if (attacker.passive === 'blaze') dmg = Math.round(dmg * 1.4);    // BLAZE 属性倍率
+      const guardbkWasPrimed = attacker.primed;
+      if (attacker.primed) attacker.primed = false;
+      addLog(`${aName}のガード破壊！（ガード無視）`, '');
+      if (defender.guardThisTurn) addAudience(2); // ガード中の相手に当たった時のみCROWDゲージ上昇
+      if (defender.counterStance) {
+        applyCounter(defender, attacker, dmg); defender.counterStance = false;
+      } else if (defender.shimaiNext) {
+        defender.shimaiNext = false;
+        addLog(`${dName}の身代わり！ダメージ無効！`, 'status');
+      } else {
+        const finalDmg = dealDamage(attacker, defender, dmg, aName, dName, true); // ガード破壊：ガード無視
+        if (attacker.passive === 'blaze' && !guardbkWasPrimed) applyBlazeJibaku(attacker, defender, finalDmg, aName, dName);
+        if (defender.passive === 'learning') defender.learned = 'guardbk';
+      }
+      break;
+    }
+
+    case 'sealatk': {
+      AudioManager.playSE('seal');
+      const cost = attacker.quantum ? 0 : atk25;
+      if (attacker.gauge < cost && !attacker.quantum) break;
+      attacker.gauge -= cost;
+      addGauge(attacker, 8);
+      const hadQuantum = attacker.quantum;
+      if (attacker.quantum) attacker.quantum = false;
+      let dmg = 27; // v6.7: 30→27（+5に戻す）
+      dmg = applySlowMod(attacker, dmg);
+      if (attacker.taunt) { dmg *= 1.3; attacker.taunt = false; }
+      if (attacker.learned === 'sealatk') { const lm = 2.0; dmg *= lm; attacker.learned = null; attacker.crowdBonusActive = false; } // v6.5: 1.8→2.0
+      dmg = Math.round(dmg * attacker.dmgMod);
+      if (hadQuantum) dmg = Math.round(dmg * 1.2); // 量子強化：威力+20%（v6.5）
+      if (attacker.passive === 'learning') dmg = Math.round(dmg * 1.1); // NEXUS-7 属性バフ
+      if (attacker.passive === 'learning' && attacker.crowdBonusActive) { dmg = Math.round(dmg * 1.2); attacker.crowdBonusActive = false; addLog(`🤖 CROWD BONUS！量子増幅+20%！`, 'status'); } // NEXUS-7 CROWD ON FIRE（v6.5）
+      if (attacker.passive === 'blaze') dmg = Math.round(dmg * 1.4);    // BLAZE 属性倍率
+      const sealatkWasPrimed = attacker.primed;
+      if (attacker.primed) attacker.primed = false;
+      addLog(`${aName}の回復封じ！`, '');
+      if (defender.counterStance) {
+        const selfDmg = applyCounter(defender, attacker, dmg); defender.counterStance = false;
+        if (selfDmg > 0 && defender.hp > 0) {
+          defender.sealTurns = 1;
+          addLog(`${dName}に回復封じ1T！（かすり貫通）`, 'status');
+        }
+      } else if (defender.shimaiNext) {
+        defender.shimaiNext = false;
+        addLog(`${dName}の身代わり！ダメージ無効・封じも無効！`, 'status');
+      } else {
+        const finalDmg = dealDamage(attacker, defender, dmg, aName, dName);
+        if (attacker.passive === 'blaze' && !sealatkWasPrimed) applyBlazeJibaku(attacker, defender, finalDmg, aName, dName);
+        defender.sealTurns = 1;
+        addLog(`${dName}に回復封じ1T！`, 'status');
+        if (defender.passive === 'learning') defender.learned = 'sealatk';
+      }
+      break;
+    }
+
+    case 'counter': {
+      // preSetDefenseStance で処理済み（ゲージ消費・フラグ設定・ログ出力）
+      break;
+    }
+
+    // ===== 特殊行動 =====
+    case 'accel': {
+      if (attacker.gauge < 15) break;
+      AudioManager.playSE('accel');
+      attacker.gauge -= 15;
+      const gain = 20 + Math.round(Math.random() * 10);
+      attacker.speed = Math.min(100, attacker.speed + gain);
+      attacker.fast = attacker.speed >= 70;
+      attacker.slow = attacker.speed <= 35;
+      if (!attacker.slow) attacker.corrode = false;
+      addLog(`${aName}が加速！SPEED +${gain} → ${Math.round(attacker.speed)}`, 'status');
+      break;
+    }
+
+    case 'slow': {
+      if (attacker.gauge < 30) break;
+      AudioManager.playSE('slow');
+      attacker.gauge -= 30;
+      const reduction = 15 + Math.round(Math.random() * 10);
+      defender.speed = Math.max(0, defender.speed - reduction);
+      defender.slow = defender.speed <= 35;
+      defender.fast = defender.speed >= 70;
+      const dur = 1;
+      addLog(`${aName}がスロー！${dName} SPEED -${reduction} → ${Math.round(defender.speed)} (${dur}T効果)`, 'status');
+      if (defender.slow && attacker.passive === 'lyrax') defender.corrode = true;
+      break;
+    }
+
+    case 'heal': {
+      if (attacker.gauge < 30 || attacker.sealTurns > 0) break;
+      AudioManager.playSE('heal');
+      attacker.gauge -= 30;
+      const healAmt = 15 + Math.round(Math.random() * 10);
+      attacker.hp = Math.min(attacker.maxHp, attacker.hp + healAmt);
+      showDmgPopup(attacker.isPlayer, healAmt, 'heal');
+      addLog(`${aName}が回復！ +${healAmt}HP`, 'heal');
+      break;
+    }
+
+    case 'taunt': {
+      if (attacker.gauge < 30 || attacker.sealTurns > 0) break;
+      attacker.gauge -= 30;
+      attacker.taunt = true;
+      addLog(`${aName}が挑発！次の攻撃+30%`, 'status');
+      break;
+    }
+
+    case 'overclock': {
+      if (attacker.gauge < 100) break;
+      AudioManager.playSE('overclock');
+      attacker.gauge = 0;
+      attacker.pendingDouble = true;
+      attacker.overclockCooldown = 3;
+      addLog(`${aName}がオーバークロック！次ターン2回行動確定！`, 'status');
+      break;
+    }
+
+    // ===== 固有技 =====
+    case 'unique': {
+      if (attacker.gauge < 50) break;
+      attacker.gauge -= 50;
+      addGauge(attacker, 8);
+      // primedはapplyUnique内（BLAZEの爆裂拳）で参照するのでここでは消さない
+      applyUnique(attacker, defender, aName, dName);
+      if (attacker.primed) attacker.primed = false; // applyUnique後にリセット
+      break;
+    }
+  }
+}
+
+// ===== BLAZE確定自爆（属性攻撃・固有技用） =====
+function applyBlazeJibaku(attacker, defender, dealtDmg, aName, dName) {
+  if (attacker.primed) return;
+  // CROWD BONUS: 自爆ダメージ0（無双モード）
+  if (attacker.crowdBonusActive) {
+    attacker.crowdBonusActive = false;
+    addLog(`🔥 CROWD BONUS！${aName}の自爆無効！無双モード！`, 'status');
+    addGauge(attacker, 8);
+    return;
+  }
+  const selfDmg = Math.round(dealtDmg * 0.2);
+  const chainDmg = Math.round(selfDmg * 0.5);
+  addLog(`🔥 ${aName}が自爆！自分-${selfDmg}HP、誘爆で${dName}にも-${chainDmg}HP！`, 'hit');
+  attacker.hp -= selfDmg;
+  defender.hp -= chainDmg;
+  screenShake(attacker.isPlayer);
+  showDmgPopup(attacker.isPlayer, selfDmg);
+  if (chainDmg > 0) { screenShake(defender.isPlayer); showDmgPopup(defender.isPlayer, chainDmg); }
+  addGauge(attacker, 8); // 自爆時ゲージ2倍（通常+8が既に入っているので追加+8）
+}
+
+// ===== SLOW時ダメージ補正 =====
+// TITANはSLOW状態で-20%ペナルティ無効化＆+20%バフ（重戦車コンセプト）
+// 他キャラはSLOW状態で-20%
+function applySlowMod(attacker, dmg) {
+  if (!attacker.slow) return dmg;
+  if (attacker.passive === 'titan') return dmg * 1.1;
+  return dmg * 0.8;
+}
+
+// ===== 速度特攻ボーナス =====
+function getSpeedBonus(defSpeed) {
+  if (defSpeed >= 85) return 20;
+  if (defSpeed >= 75) return 14;
+  if (defSpeed >= 70) return 8;
+  return 0;
+}
+
+// ===== カウンター発動 =====
+function applyCounter(counterUser, attacker, incomingDmg) {
+  const cName = counterUser.displayName || (counterUser.isPlayer ? 'あなた' : (gameMode === '2p' ? counterUser.name : 'CPU'));
+  const atkName = attacker.displayName || (attacker.isPlayer ? 'あなた' : (gameMode === '2p' ? attacker.name : 'CPU'));
+  const speedDiff = attacker.speed - counterUser.speed;
+  let selfPct = 0;
+  if (speedDiff >= 70) selfPct = 0.3;
+  else if (speedDiff >= 40) selfPct = 0.2;
+  else if (speedDiff >= 20) selfPct = 0.1;
+  const selfDmg = Math.round(incomingDmg * selfPct);
+  const selfMsg = selfDmg > 0 ? `（${cName}かすり -${selfDmg}）` : '（完全シャットアウト）';
+  if (_tutForceCounter || Math.random() < 0.8) {
+    AudioManager.playSE('counter');
+    addLog(`${cName}のカウンター！${atkName}に${incomingDmg}ダメージ返し！${selfMsg}`, 'hit');
+    attacker.hp -= incomingDmg;
+    counterUser.totalDmgDealt += incomingDmg;
+    addAudience(3);
+  } else {
+    addLog(`${cName}のカウンター！…しかし返しが外れた！${selfMsg}`, '');
+  }
+  counterUser.hp -= selfDmg;
+  return selfDmg; // デバフ適用判定に使用（0=完全防御でデバフ無効）
+}
+
+// ===== 固有技 =====
+function applyUnique(attacker, defender, aName, dName) {
+  switch(attacker.passive) {
+    case 'learning': { // NEXUS-7 量子ビーム
+      AudioManager.playSE('nexus_unique');
+      let dmg = 45;
+      dmg = applySlowMod(attacker, dmg);
+      if (attacker.taunt) { dmg = Math.round(dmg * 1.3); attacker.taunt = false; }
+      dmg = Math.round(dmg * attacker.dmgMod);
+      addLog(`${aName}の量子ビーム！`, '');
+      if (defender.counterStance) { applyCounter(defender, attacker, Math.round(dmg * 0.5)); defender.counterStance = false; }
+      else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
+      else {
+        dealDamage(attacker, defender, dmg, aName, dName);
+        addGauge(attacker, 25);
+        attacker.quantum = true;
+        addLog(`量子強化付与！次の属性攻撃コスト0%`, 'status');
+      }
+      break;
+    }
+    case 'shadow': { // SHADOW 影分身（v5：身代わり）
+      AudioManager.playSE('shadow_unique');
+      attacker.shimaiNext = true;
+      addLog(`${aName}の影分身！次の攻撃を身代わりで無効化！`, 'status');
+      break;
+    }
+    case 'nova': { // NOVA QUEEN 星屑砲
+      AudioManager.playSE('nova_unique');
+      const losthp = attacker.maxHp - attacker.hp;
+      let dmg = 40 + Math.round(losthp * 0.5); // 基礎40 + 損失HP×0.5（v6.4）
+      dmg = applySlowMod(attacker, dmg);
+      if (attacker.taunt) { dmg = Math.round(dmg * 1.3); attacker.taunt = false; }
+      const gaugeSteal = attacker.crowdBonusActive ? 60 : 40;
+      attacker.crowdBonusActive = false;
+      addLog(`${aName}の星屑砲！（ダメ${dmg}）`, '');
+      if (defender.counterStance) { applyCounter(defender, attacker, Math.round(dmg * 0.5)); defender.counterStance = false; }
+      else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
+      else {
+        dealDamage(attacker, defender, dmg, aName, dName);
+        defender.gauge = Math.max(0, defender.gauge - gaugeSteal);
+        addLog(`${dName}のゲージ-${gaugeSteal}%！${gaugeSteal === 60 ? ' (CROWD BONUS！)' : ''}`, 'status');
+        addGauge(attacker, 20); // 星屑砲：使用後自ゲージ+20%（v6.5）
+        addLog(`${aName}のゲージ+20%（星屑砲リカバリー）`, 'status');
+      }
+      break;
+    }
+    case 'titan': { // TITAN 超電磁砲（v5：残HPテーブル）
+      AudioManager.playSE('titan_unique');
+      let dmg;
+      // CROWD BONUS: HP判定を20低く扱い（1段階有利）
+      const titanEffHp = attacker.crowdBonusActive ? attacker.hp - 20 : attacker.hp;
+      attacker.crowdBonusActive = false;
+      if (titanEffHp >= 50) dmg = 30;
+      else if (titanEffHp >= 30) dmg = 45;
+      else dmg = 55;
+      if (attacker.taunt) { dmg = Math.round(dmg * 1.3); attacker.taunt = false; }
+      addLog(`${aName}の超電磁砲！（残HP:${attacker.hp}）`, '');
+      if (defender.counterStance) { applyCounter(defender, attacker, Math.round(dmg * 0.5)); defender.counterStance = false; }
+      else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
+      else { dealDamage(attacker, defender, dmg, aName, dName); }
+      break;
+    }
+    case 'lyrax': { // LYRA-X 細胞再生
+      AudioManager.playSE('lyrax_unique');
+      let dmg = 35;
+      dmg = applySlowMod(attacker, dmg);
+      if (attacker.taunt) { dmg = Math.round(dmg * 1.3); attacker.taunt = false; }
+      addLog(`${aName}の細胞再生！`, '');
+      if (defender.counterStance) { applyCounter(defender, attacker, Math.round(dmg * 0.5)); defender.counterStance = false; }
+      else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
+      else {
+        const finalDmg = dealDamage(attacker, defender, dmg, aName, dName);
+        const absorbRate = attacker.crowdBonusActive ? 0.5 : 0.3;
+        attacker.crowdBonusActive = false;
+        const absorb = Math.round(finalDmg * absorbRate);
+        attacker.hp = Math.min(attacker.maxHp, attacker.hp + absorb);
+        showDmgPopup(attacker.isPlayer, absorb, 'heal');
+        addLog(`${aName}がHP${absorb}吸収！${absorbRate === 0.5 ? ' (CROWD BONUS！)' : ''}`, 'heal');
+      }
+      break;
+    }
+    case 'blaze': { // BLAZE 爆裂拳（固定45ダメージ）
+      AudioManager.playSE('blaze_unique');
+      let dmg = 45;
+      dmg = applySlowMod(attacker, dmg);
+      if (attacker.taunt) { dmg *= 1.3; attacker.taunt = false; }
+      const wasPrimed = attacker.primed;
+      if (wasPrimed) { dmg *= 1.3; } // 起爆準備クリティカル（既にprimed=falseになってる）
+      dmg = Math.round(dmg);
+      addLog(`${aName}の爆裂拳！`, '');
+      if (defender.counterStance) { applyCounter(defender, attacker, Math.round(dmg * 0.5)); defender.counterStance = false; }
+      else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
+      else {
+        const finalDmg = dealDamage(attacker, defender, dmg, aName, dName);
+        // 起爆準備なしは確定自爆（v5変更）
+        if (!wasPrimed) applyBlazeJibaku(attacker, defender, finalDmg, aName, dName);
+      }
+      break;
+    }
+  }
+}
+
+// ===== ダメージ適用 =====
+function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
+  let finalDmg = dmg;
+  if (defender.guardThisTurn && !defender.primed && !guardBreak) {
+    if (attacker.lastAction === 'strong') {
+      finalDmg = 0;
+      defender.gauge = Math.min(100, defender.gauge + 20);
+      AudioManager.playSE('justGuard');
+      addLog(`✨ ${dName}のジャストガード！ダメージ0・ゲージ+20%！`, 'status');
+      addAudience(3);
+    } else {
+      finalDmg = Math.round(dmg * 0.5);
+      addLog(`${dName}がガード！ダメージ半減`, '');
+    }
+  }
+  // TITAN被ダメ軽減
+  if (defender.passive === 'titan' && defender.slow) finalDmg = Math.round(finalDmg * 0.85);
+  // NOVA QUEEN HP閾値
+  // NEXUS-7 アドバンスド・ラーニング：相手の固有技被ダメ-20%（v6.4）
+  if (defender.passive === 'learning' && attacker.lastAction === 'unique') finalDmg = Math.round(finalDmg * 0.8);
+  // NOVA QUEEN 瀕死の逆転王: HP40%以下（38以下）で被ダメ-20%（v6.4）
+  if (defender.passive === 'nova' && defender.hp <= 38) finalDmg = Math.round(finalDmg * 0.75);
+  // NOVA QUEEN 序盤パッシブ: HP48以上で被ダメ-10%（v6.4）
+  if (defender.passive === 'nova' && defender.hp >= 48) finalDmg = Math.round(finalDmg * 0.9);
+  finalDmg = Math.max(0, finalDmg);
+  defender.hp -= finalDmg;
+  attacker.totalDmgDealt += finalDmg;
+  // ヒットエフェクト
+  if (finalDmg > 0) {
+    screenShake(defender.isPlayer);
+    showDmgPopup(defender.isPlayer, finalDmg);
+  }
+  addLog(`${aName} → ${dName}: ${finalDmg}ダメージ！(残HP:${Math.max(0,defender.hp)})`, 'hit');
+  devLog(`raw:${dmg} → final:${finalDmg} | guard:${defender.guardThisTurn} | titan:${defender.passive==='titan'&&defender.slow} | nova:${defender.passive==='nova'&&defender.hp+finalDmg<=27}`);
+  return finalDmg; // 自爆計算のために返す
+}
+
+function addGauge(s, amount) {
+  let inc = amount * s.gaugeIncMod;
+  if (s.overclockCooldown > 0) inc *= 0.5;
+  // 一般ルール: HP40%以下でゲージ+50%（NOVA QUEENは固有ルール適用）
+  if (s.hp <= s.maxHp * 0.4 && s.passive !== 'nova') inc *= 1.5;
+  // NOVA QUEEN固有: 瀕死（HP30%以下 = 27以下）でゲージ+50%
+  if (s.passive === 'nova' && s.hp <= 38) inc *= 1.5; // 瀕死閾値 HP38以下（v6.4）
+  s.gauge = Math.min(100, s.gauge + inc);
+}
+
+// ===== ターン終了処理 =====
+function endOfTurn() {
+  // ガード・カウンターフラグリセット
+  pState.guardThisTurn = false;
+  cState.guardThisTurn = false;
+  pState.counterStance = false;
+  cState.counterStance = false;
+  // CROWD BONUS: 前ターンactive→消滅、pending→active変換（1ターン遅延起動）
+  [pState, cState].forEach(s => {
+    s.crowdBonusActive = false; // 前ターンから持ち越した未使用ボーナスを消滅
+    if (s.crowdBonusPending) { s.crowdBonusPending = false; s.crowdBonusActive = true; }
+  });
+
+  // ===== 処理順序: ダメージ→回復→ステータス変化→カウントダウン =====
+
+  // 1. ダメージ系（腐食）
+  [pState, cState].forEach(s => {
+    const name = s.displayName || (s.isPlayer ? 'あなた' : (gameMode === '2p' ? s.name : 'CPU'));
+    // LYRA-X対戦中、SLOW状態のキャラに腐食ダメージ
+    const lyraxFighter = s.isPlayer ? cState : pState;
+    if (lyraxFighter.passive === 'lyrax' && s.slow) {
+      AudioManager.playSE('corrosion');
+      s.hp -= 3;
+      screenShake(s.isPlayer);
+      showDmgPopup(s.isPlayer, 3);
+      addLog(`${name}が腐食ダメージ -3HP`, 'hit');
+    }
+  });
+
+  // 2. 回復系（LYRA-X自動回復）
+  [pState, cState].forEach(s => {
+    const name = s.displayName || (s.isPlayer ? 'あなた' : (gameMode === '2p' ? s.name : 'CPU'));
+    if (s.passive === 'lyrax' && s.hp > 0) {
+      AudioManager.playSE('lyrax_autoHeal', 0.4);
+      s.hp = Math.min(s.maxHp, s.hp + 2);
+      showDmgPopup(s.isPlayer, 2, 'heal');
+      addLog(`${name}が自動回復 +2HP`, 'heal');
+    }
+  });
+
+  // 3. ステータス変化（SPEEDの自然回復）
+  [pState, cState].forEach(s => {
+    if (s.speed > 50 && s.passive !== 'shadow') {
+      const diff = s.speed - 50;
+      s.speed -= Math.round(diff * 0.15);
+      if (s.speed < 50) s.speed = 50;
+    }
+    s.fast = s.speed >= 70;
+    s.slow = s.speed <= 35;
+    if (!s.slow) s.corrode = false; // SLOW解除で腐食タグもクリア
+  });
+
+  // 4. カウントダウン
+  [pState, cState].forEach(s => {
+    if (s.sealTurns > 0) s.sealTurns--;
+    if (s.overclockCooldown > 0) s.overclockCooldown--;
+    // カウンター連続使用ペナルティ追跡
+    if (s.lastAction === 'counter') {
+      s.counterConsecutive++;
+    } else {
+      s.counterConsecutive = 0;
+    }
+  });
+
+  // 勝敗チェック
+  updateHUD();
+  const pDead = pState.hp <= 0;
+  const cDead = cState.hp <= 0;
+  if (pDead || cDead) {
+    if (!autoMode) {
+      clearTimer();
+      // オンラインホスト計算中はshowResultしない（applyOnlineTurnResultで処理）
+      if (!_onlineHostComputing && !InteractiveTutorial.isActive()) {
+        setTimeout(() => {
+          if (pDead && cDead) showResult('draw');
+          else if (cDead) showResult('win');
+          else showResult('lose');
+        }, 600);
+      }
+    }
+    waitingResult = false;
+    return;
+  }
+
+  // 行動履歴を記録（直近5ターン）
+  if (pState.lastAction) { pState.actionHistory.push(pState.lastAction); if (pState.actionHistory.length > 5) pState.actionHistory.shift(); }
+  if (cState.lastAction) { cState.actionHistory.push(cState.lastAction); if (cState.actionHistory.length > 5) cState.actionHistory.shift(); }
+
+  if (!autoMode) {
+    // オンライン・チュートリアル中はターン進行を各モジュールに委譲
+    if (!_onlineHostComputing && !InteractiveTutorial.isActive()) {
+      turn++;
+      window.turn = turn;
+      addLog(`=== TURN ${turn} ===`, 'system');
+    }
+    if (gameMode === '2p') {
+      selectionPhase = 1;
+      document.getElementById('turn-info').textContent = `TURN ${turn} — P1: SELECT ACTION`;
+      updateButtons(pState);
+    } else if (_onlineHostComputing) {
+      // ターン進行は applyOnlineTurnResult に委譲
+    } else if (InteractiveTutorial.isActive()) {
+      // ターン進行・タイマーは InteractiveTutorial.next() に委譲
+    } else {
+      document.getElementById('turn-info').textContent = `TURN ${turn} — SELECT ACTION`;
+      updateButtons(pState);
+      startTimer();
+    }
+    waitingResult = false;
+  }
+}
+
+// ===== リザルト =====
+function openResultLog() {
+  const modal = document.getElementById('result-log-modal');
+  document.getElementById('result-log-body').innerHTML = savedBattleLogHTML || '<div style="color:#506080">ログなし</div>';
+  modal.classList.add('open');
+}
+function closeResultLog() {
+  document.getElementById('result-log-modal').classList.remove('open');
+}
+
+function showResult(outcome) {
+  // バトルログを保存（モーダル表示用）
+  if (logEl) savedBattleLogHTML = logEl.innerHTML;
+  // Firestore ロギング（非autoModeのみ）
+  if (!autoMode && window.Logger) {
+    const isWin  = outcome === 'win';
+    const isLose = outcome === 'lose';
+    window.Logger.saveMatchResult({
+      winner:               isWin ? pState.name : (isLose ? cState.name : 'DRAW'),
+      loser:                isWin ? cState.name : (isLose ? pState.name : 'DRAW'),
+      total_turns:          turn,
+      winner_remaining_hp:  isWin ? Math.max(0, pState.hp) : (isLose ? Math.max(0, cState.hp) : 0),
+      crowd_on_fire_count:  crowdOnFireCount,
+      mode:                 gameMode === '2p' ? '2P' : 'CPU',
+      actions:              actionLogBuffer.slice(),
+    });
+  }
+  showScreen('result-screen');
+  AudioManager.playBGM('result');
+  const title = document.getElementById('result-title');
+  if (gameMode === '2p') {
+    if (outcome === 'win') {
+      title.textContent = '🏆 P1 WIN!'; title.className = 'result-title win';
+    } else if (outcome === 'lose') {
+      title.textContent = '🏆 P2 WIN!'; title.className = 'result-title lose';
+    } else {
+      title.textContent = '⚔ DRAW'; title.className = 'result-title draw';
+    }
+    document.getElementById('result-stats').innerHTML = `
+      <div class="result-row"><span class="result-label">TURNS</span><span class="result-val">${turn}</span></div>
+      <div class="result-row"><span class="result-label">P1 HP</span><span class="result-val">${Math.max(0,pState.hp)} / ${pState.maxHp}</span></div>
+      <div class="result-row"><span class="result-label">P2 HP</span><span class="result-val">${Math.max(0,cState.hp)} / ${cState.maxHp}</span></div>
+      <div class="result-row"><span class="result-label">P1 DMG</span><span class="result-val">${pState.totalDmgDealt}</span></div>
+      <div class="result-row"><span class="result-label">P2 DMG</span><span class="result-val">${cState.totalDmgDealt}</span></div>
+    `;
+  } else {
+    if (outcome === 'win') {
+      title.textContent = '🏆 WINNER!'; title.className = 'result-title win';
+    } else if (outcome === 'lose') {
+      title.textContent = '💀 ELIMINATED'; title.className = 'result-title lose';
+    } else {
+      title.textContent = '⚔ DRAW'; title.className = 'result-title draw';
+    }
+    const opponentLabel = gameMode === 'online' ? 'OPPONENT HP' : 'CPU HP';
+    document.getElementById('result-stats').innerHTML = `
+      <div class="result-row"><span class="result-label">TURNS</span><span class="result-val">${turn}</span></div>
+      <div class="result-row"><span class="result-label">YOUR HP</span><span class="result-val">${Math.max(0,pState.hp)} / ${pState.maxHp}</span></div>
+      <div class="result-row"><span class="result-label">${opponentLabel}</span><span class="result-val">${Math.max(0,cState.hp)} / ${cState.maxHp}</span></div>
+      <div class="result-row"><span class="result-label">DMG DEALT</span><span class="result-val">${pState.totalDmgDealt}</span></div>
+      ${gameMode !== 'online' ? `<div class="result-row"><span class="result-label">DIFFICULTY</span><span class="result-val">${difficulty.toUpperCase()}</span></div>` : ''}
+    `;
+  }
+
+  // ===== 5連戦モード処理 =====
+  const scoreEl = document.getElementById('series-score');
+  const nextBtn = document.getElementById('next-battle-btn');
+  const endBtn = document.getElementById('series-end-btn');
+  const rematchBtn = document.getElementById('rematch-btn');
+  if (seriesActive) {
+    seriesCurrent++;
+    if (outcome === 'win') seriesPlayerWins++;
+    else if (outcome === 'lose') seriesCpuWins++;
+    scoreEl.textContent = `BATTLE ${seriesCurrent}/${seriesTotal}  YOU ${seriesPlayerWins} - ${seriesCpuWins} CPU`;
+    scoreEl.style.display = 'block';
+    rematchBtn.style.display = 'none';
+    if (seriesCurrent < seriesTotal) {
+      const nextOpponent = CHARS[seriesOpponents[seriesCurrent]].name;
+      nextBtn.textContent = `NEXT: ${nextOpponent} (${seriesCurrent + 1}/${seriesTotal})`;
+      nextBtn.style.display = 'inline-block';
+      endBtn.style.display = 'none';
+    } else {
+      nextBtn.style.display = 'none';
+      endBtn.style.display = 'inline-block';
+      // 最終結果タイトル更新
+      const finalTitle = document.getElementById('result-title');
+      if (seriesPlayerWins > seriesCpuWins) { finalTitle.textContent = '🏆 SERIES WIN!'; finalTitle.className = 'result-title win'; }
+      else if (seriesPlayerWins < seriesCpuWins) { finalTitle.textContent = '💀 SERIES LOSE'; finalTitle.className = 'result-title lose'; }
+      else { finalTitle.textContent = '⚔ SERIES DRAW'; finalTitle.className = 'result-title draw'; }
+    }
+  } else {
+    scoreEl.style.display = 'none';
+    nextBtn.style.display = 'none';
+    endBtn.style.display = 'none';
+    rematchBtn.style.display = 'inline-block';
+  }
+}
+
+// ===== AUTO BATTLE =====
+
+function abModelChange() {
+  const m = document.getElementById('ab-model').value;
+  document.getElementById('ab-gemma-cfg').style.display  = m === 'gemma'  ? 'block' : 'none';
+  document.getElementById('ab-sonnet-cfg').style.display = m === 'sonnet' ? 'block' : 'none';
+}
+
+// Smart AI for auto mode (explicit state params, no global deps)
+function abSmartAct(s, opp) {
+  const atk25 = (s.passive === 'nova' && s.gauge >= 60) ? 10 : 25;
+  const ccost = s.counterConsecutive > 0 ? 50 : atk25;
+  const pool = [];
+  const add = (a, w) => { for (let i = 0; i < w; i++) pool.push(a); };
+  add('weak',2); add('mid',3); add('strong',3); add('guard',2);
+  if (s.gauge >= atk25) { add('speedatk',2); add('guardbk',2); add('sealatk',2); }
+  if (s.gauge >= ccost)  add('counter',2);
+  if (s.gauge >= 15)     add('accel',2);
+  if (s.gauge >= 30)   { add('slow',2); if (!s.sealTurns) { add('heal',1); add('taunt',2); } }
+  if (s.gauge >= 100)    add('overclock',1);
+  if (s.gauge >= 50)     add('unique',2);
+  switch (s.passive) {
+    case 'titan':
+      if (s.gauge >= 50) add('unique', 2);                          // HP関係なく超電磁砲使う
+      if (s.hp <= 40 && s.gauge >= 50) add('unique', 3);           // 低HP時はさらに優先
+      if (s.gauge >= ccost) add('counter', 1); add('mid', 2); // strongは速度差で外れるので除外
+      if (s.gauge >= atk25) { add('speedatk', 2); add('guardbk', 2); add('sealatk', 2); } // 属性攻撃（控えめ）
+      if (!s.sealTurns && s.gauge >= 30) add('taunt', 3);          // 挑発も選択肢
+      if (s.slow && opp.passive === 'lyrax' && s.gauge >= 15) add('accel', 8); // LYRA-X戦でSLOW→腐食回避
+      const titanFilter = a => (a !== 'strong' || opp.speed < 50) && (a !== 'accel' || (s.slow && opp.passive === 'lyrax'));
+      return pool.filter(titanFilter)[Math.floor(Math.random() * pool.filter(titanFilter).length)] || 'mid';
+    case 'blaze': {
+      if (s.primed && s.gauge >= 50) add('unique', 14);      // 起爆準備済み→爆裂拳をほぼ確定
+      if (s.primed && s.gauge >= atk25) { add('speedatk',6); add('guardbk',6); add('sealatk',6); } // 起爆準備中は属性攻撃も積極的に
+      if (!s.primed && s.gauge >= 30) add('guard', 9);       // 起爆準備を強く優先
+      if (!s.primed && s.gauge >= 30 && !s.sealTurns) add('taunt', 4); // 挑発も選択肢
+      // 起爆準備済み→guardを除外（二重起爆防止）
+      if (s.primed) {
+        const blazePrimed = pool.filter(a => a !== 'guard');
+        return blazePrimed[Math.floor(Math.random() * blazePrimed.length)] || 'unique';
+      }
+      // 未起爆でゲージ30%以上→mid/strongを除外して起爆準備に集中
+      if (!s.primed && s.gauge >= 30) {
+        const blazeFiltered = pool.filter(a => a !== 'mid' && a !== 'strong');
+        return blazeFiltered[Math.floor(Math.random() * blazeFiltered.length)] || 'guard';
+      }
+      break;
+    }
+    case 'lyrax': // LYRA-X: slowで腐食を稼ぎ、回復封じで長期戦制圧
+      if (s.gauge >= 30) {
+        if (!opp.slow) add('slow', 12);          // スロー多用（最優先）
+        else add('slow', 4);                     // SLOW中も延長
+      }
+      if (s.gauge >= atk25) add('sealatk', 10); // 回復封じを特に多用
+      if (s.gauge >= atk25 && opp.slow) { add('speedatk',4); add('guardbk',4); } // SLOW中は追撃も
+      if (s.gauge >= 50) add('unique', 8);       // 細胞再生で吸収+削り
+      if (s.slow && s.gauge >= 15) add('accel', 6); // 自分がSLOWなら加速
+      break;
+    case 'shadow': // SHADOW: 加速+強攻撃80%+属性攻撃で削る
+      if (s.speed < 70 && s.gauge >= 15) add('accel', 8);   // FAST到達優先
+      if (!s.fast && s.gauge >= 15) add('accel', 5);        // FAST切れたら加速
+      add('strong', 6);                                      // 強攻撃80%hit率を活かす
+      if (s.fast && s.gauge >= ccost) add('counter', 3);    // カウンターは控えめ
+      if (s.gauge >= atk25) { add('guardbk', 5); add('sealatk', 5); } // 属性攻撃で削る
+      if (opp.passive === 'nova' && s.gauge >= atk25) { add('guardbk', 5); add('sealatk', 5); } // NOVA対策
+      break;
+    case 'learning': // NEXUS-7: 属性攻撃を積極的に使う
+      if (s.gauge >= atk25) {
+        add('speedatk',8); add('guardbk',8); add('sealatk',8); // +8（合計10）
+        if (s.learned) { // 学習済みなら対応攻撃を最優先
+          if (s.learned === 'speedatk') add('speedatk',10);
+          if (s.learned === 'guardbk')  add('guardbk',10);
+          if (s.learned === 'sealatk')  add('sealatk',10);
+        }
+        if (s.quantum) { add('speedatk',6); add('guardbk',6); add('sealatk',6); } // 量子強化中も優先
+      }
+      if (s.gauge >= 50) add('unique',6); // 量子ビームでゲージ稼ぎ→属性攻撃へ
+      break;
+    case 'nova': { // NOVA QUEEN: ゲージ60%到達後に属性連発が真骨頂
+      if (s.gauge >= 70) { add('speedatk',8); add('guardbk',8); add('sealatk',8); add('unique',8); } // コスト10%で属性連発＋星屑砲
+      else if (s.gauge >= 50) add('unique',6); // ゲージ50〜69%でも星屑砲は打つ
+      // ゲージ70%未満フェーズ：相手が前ターン攻撃してきたらカウンターで返す
+      if (s.gauge < 70 && s.gauge >= ccost) {
+        const oppAtk = ['weak','mid','strong','speedatk','guardbk','sealatk','unique'];
+        if (oppAtk.includes(opp.lastAction)) add('counter', 6); // 攻撃してきたら返り討ち
+        if (opp.lastAction === 'sealatk') add('counter', 4);    // 回復封じには特に強く反応
+      }
+      // HP見て回復（封じ中は不可・3ターン目以降）
+      if (!s.sealTurns && s.gauge >= 30 && turn >= 3) {
+        const hpRate = s.hp / s.maxHp;
+        if (hpRate < 0.4) add('heal', 10);       // HP40%未満→強く回復優先
+        else if (hpRate < 0.6) add('heal', 6);   // HP60%未満→回復を選択肢に
+        else if (hpRate < 0.75) add('heal', 3);  // HP75%未満→少し意識
+      }
+      // ゲージ70%未満は弱攻撃に集中、70%以上はmid/strongを除外して属性攻撃に集中
+      if (s.gauge < 70) {
+        const novaFiltered = pool.filter(a => !['mid','strong','speedatk','guardbk','sealatk','accel','guard','slow','taunt'].includes(a));
+        return novaFiltered[Math.floor(Math.random() * novaFiltered.length)] || 'weak';
+      } else {
+        const novaAtk = pool.filter(a => !['mid','strong','accel','guard','slow','taunt'].includes(a));
+        return novaAtk[Math.floor(Math.random() * novaAtk.length)] || 'speedatk';
+      }
+      break;
+    }
+  }
+  if (opp.gauge >= 50) { add('guard',2); if (s.gauge >= ccost) add('counter',2); }
+  if (opp.hp <= 8)       add('weak',8);
+  if (s.slow && s.gauge >= 15) add('accel',6);
+  if (opp.passive === 'titan' && s.gauge >= ccost) add('counter', 5); // TITAN相手はカウンター多用
+  if (opp.passive === 'nova' && s.gauge >= atk25) add('sealatk', 6); // NOVA相手は回復封じを最優先
+  if (opp.passive === 'shadow' && opp.fast && s.gauge >= atk25) add('speedatk', 8); // SHADOW FAST時は速度特攻
+  if (opp.passive === 'shadow' && opp.slow && s.gauge >= atk25) { add('guardbk', 8); add('sealatk', 8); } // SHADOW SLOW中はガード破壊＋回復封じで畳み込む
+  if (opp.primed) {
+    if (s.gauge >= 50 && s.gauge >= ccost) add('counter',3);
+    else { add('guard',3); if (s.gauge >= 30) add('slow',2); }
+  }
+  // 前ターンにカウンターを使った相手は今ターン無防備→攻撃チャンス
+  if (opp.lastAction === 'counter') {
+    add('mid', 4); add('strong', 4);
+    if (s.gauge >= atk25) { add('guardbk', 4); add('sealatk', 4); }
+  }
+
+  // ===== 直近5ターン行動履歴分析 =====
+  if (opp.actionHistory && opp.actionHistory.length >= 2) {
+    const hist = opp.actionHistory;
+    const count = a => hist.filter(x => x === a).length;
+
+    // カウンターが多い→攻撃チャンスが増える（カウンター後は無防備）
+    if (count('counter') >= 2) { add('mid', 3); add('strong', 3); if (s.gauge >= atk25) add('guardbk', 3); }
+
+    // ガードが多い→ガード破壊で崩す
+    if (count('guard') >= 2 && s.gauge >= atk25) add('guardbk', 5);
+
+    // 加速が多い→速度特攻で迎え撃つ
+    if (count('accel') >= 2 && s.gauge >= atk25) add('speedatk', 5);
+
+    // 回復が多い→回復封じを優先
+    if (count('heal') >= 2 && s.gauge >= atk25) add('sealatk', 5);
+
+    // 固有技・属性攻撃が多い→カウンター・ガードで備える
+    if (count('unique') >= 1 && s.gauge >= ccost) add('counter', 3);
+    if ((count('speedatk') + count('guardbk') + count('sealatk')) >= 2 && s.gauge >= ccost) add('counter', 2);
+  }
+
+  // ゲージが高い相手は固有技・属性攻撃の脅威→守りを増やす
+  if (opp.gauge >= 75 && s.gauge >= ccost) add('counter', 2);
+  if (opp.gauge >= 75) add('guard', 2);
+
+  return pool[Math.floor(Math.random() * pool.length)] || 'weak';
+}
+
+// Random AI
+function abRandomAct(s) {
+  const atk25 = (s.passive === 'nova' && s.gauge >= 60) ? 10 : 25;
+  const avail = ['weak','mid','strong','guard'];
+  if (s.gauge >= atk25) avail.push('speedatk','guardbk','sealatk','counter');
+  if (s.gauge >= 15)    avail.push('accel');
+  if (s.gauge >= 30)  { avail.push('slow'); if (!s.sealTurns) avail.push('heal','taunt'); }
+  if (s.gauge >= 100)   avail.push('overclock');
+  if (s.gauge >= 50)    avail.push('unique');
+  return avail[Math.floor(Math.random() * avail.length)];
+}
+
+// Build concise prompt
+function abPrompt(s, opp) {
+  const atk25 = (s.passive === 'nova' && s.gauge >= 60) ? 10 : 25;
+  const avail = ['weak','mid','strong','guard'];
+  if (s.gauge >= atk25) avail.push('speedatk','guardbk','sealatk','counter');
+  if (s.gauge >= 15)    avail.push('accel');
+  if (s.gauge >= 30)  { avail.push('slow'); if (!s.sealTurns) avail.push('heal','taunt'); }
+  if (s.gauge >= 100)   avail.push('overclock');
+  if (s.gauge >= 50)    avail.push('unique');
+  const strategyHint = {
+    learning: s.learned
+      ? `STRATEGY: You have [LEARNED:${s.learned}]! Use ${s.learned} NOW for 2x damage bonus. Attribute attacks (speedatk/guardbk/sealatk) are your core moves — use them whenever gauge allows.`
+      : s.quantum
+      ? `STRATEGY: You have [QUANTUM BOOST]! Use speedatk/guardbk/sealatk now for free cost + 20% bonus damage.`
+      : `STRATEGY: Use speedatk/guardbk/sealatk frequently to build combos. Your unique (quantum beam) sets up power attacks.`,
+    nova: `STRATEGY: Use speedatk/guardbk/sealatk aggressively — they cost only ${atk25}% gauge. Your unique (stardust) steals foe gauge and heals yours.`,
+  }[s.passive] || '';
+
+  return `SYNTAX WARS turn-based fight. You are ${s.passive}. Choose ONE action.
+You: HP=${s.hp}/${s.maxHp} SPD=${Math.round(s.speed)} GAUGE=${Math.round(s.gauge)}%${s.slow?' [SLOW]':''}${s.fast?' [FAST]':''}${s.learned?' [LEARNED:'+s.learned+']':''}${s.quantum?' [QUANTUM]':''}
+Foe: HP=${opp.hp}/${opp.maxHp} SPD=${Math.round(opp.speed)} GAUGE=${Math.round(opp.gauge)}%${opp.slow?' [SLOW]':''}${opp.primed?' [PRIMED]':''}
+Available: ${avail.join(', ')}
+weak=8dmg sure | mid=15dmg 80% | strong=22dmg 70% foe-SPD-10 | guard=defend/prime | speedatk=13+SPD-bonus-dmg+SLOW | guardbk=20-pierce-guard | sealatk=27-seal-heal | counter=reflect | accel=+SPD | slow=foe-SPD-down | heal=+HP | unique=special
+${strategyHint}
+Reply with ONLY the action name.`;
+}
+
+// Gemma via Ollama
+async function abGemmaAct(s, opp, url, model) {
+  try {
+    const r = await fetch(`${url}/api/generate`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model, prompt: abPrompt(s, opp), stream: false }),
+      signal: AbortSignal.timeout(5000)
+    });
+    const d = await r.json();
+    const txt = (d.response || '').toLowerCase();
+    for (const a of ['speedatk','guardbk','sealatk','overclock','counter','unique','accel','taunt','guard','slow','heal','strong','mid','weak']) {
+      if (txt.includes(a)) return a;
+    }
+  } catch(_) {}
+  return null;
+}
+
+// Claude Sonnet 4.6 via Anthropic API
+async function abSonnetAct(s, opp, apiKey) {
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 20,
+        messages: [{ role:'user', content: abPrompt(s, opp) }]
+      }),
+      signal: AbortSignal.timeout(10000)
+    });
+    const d = await r.json();
+    const txt = (d.content?.[0]?.text || '').toLowerCase();
+    for (const a of ['speedatk','guardbk','sealatk','overclock','counter','unique','accel','taunt','guard','slow','heal','strong','mid','weak']) {
+      if (txt.includes(a)) return a;
+    }
+  } catch(_) {}
+  return null;
+}
+
+// Dispatch to correct AI
+async function abGetAct(s, opp, model, cfg) {
+  let act = null;
+  if      (model === 'random') act = abRandomAct(s);
+  else if (model === 'gemma')  act = await abGemmaAct(s, opp, cfg.url, cfg.ollamaModel);
+  else if (model === 'sonnet') act = await abSonnetAct(s, opp, cfg.apiKey);
+  return act || abSmartAct(s, opp);
+}
+
+// Run one full battle, returns { winner, p1Atk, p1Total, p2Atk, p2Total, turns }
+async function abOneBattle(c1, c2, model, cfg, recordTurns) {
+  const _p = pState, _c = cState, _ag = audienceGauge, _cf = crowdOnFireNext;
+  pState = makeState(c1, true);
+  cState = makeState(c2, false);
+  pState.displayName = CHARS[c1].name;
+  cState.displayName = CHARS[c2].name;
+  audienceGauge = 0; crowdOnFireNext = false;
+
+  const attrSet = new Set(['speedatk','guardbk','sealatk']);
+  let p1Atk = 0, p1Total = 0, p2Atk = 0, p2Total = 0;
+  const turns = recordTurns ? [] : null;
+  let winner = 'draw';
+
+  for (let t = 0; t < 60; t++) {
+    const [a1, a2] = await Promise.all([
+      abGetAct(pState, cState, model, cfg),
+      abGetAct(cState, pState, model, cfg)
+    ]);
+    // track attribute usage (before resolving so HP/gauge reflect pre-action state)
+    p1Total++; p2Total++;
+    if (attrSet.has(a1)) p1Atk++;
+    if (attrSet.has(a2)) p2Atk++;
+    if (turns) turns.push({
+      t: t+1, a1, a2,
+      p1hp: pState.hp, p2hp: cState.hp,
+      p1g: Math.round(pState.gauge), p2g: Math.round(cState.gauge),
+      p1s: Math.round(pState.speed), p2s: Math.round(cState.speed)
+    });
+    resolveActions(a1, a2);
+    if (pState.hp <= 0 || cState.hp <= 0) {
+      if      (pState.hp > 0)  winner = 'p1';
+      else if (cState.hp > 0)  winner = 'p2';
+      else                     winner = 'draw';
+      break;
+    }
+  }
+
+  pState = _p; cState = _c; audienceGauge = _ag; crowdOnFireNext = _cf;
+  return { winner, p1Atk, p1Total, p2Atk, p2Total, turns };
+}
+
+// Main: run all matchups
+async function abStart() {
+  const model = document.getElementById('ab-model').value;
+  const n     = parseInt(document.getElementById('ab-battles').value);
+  const cfg   = {
+    url: document.getElementById('ab-ollama-url')?.value  || 'http://localhost:11434',
+    ollamaModel: document.getElementById('ab-ollama-model')?.value || 'gemma3',
+    apiKey: document.getElementById('ab-api-key')?.value  || ''
+  };
+
+  const chars = Object.keys(CHARS);
+  const wins  = {};
+  const mat   = {};
+  const atkChar = {}; // per-char attribute usage totals
+  const atkMat  = {}; // per-matchup attribute usage
+  chars.forEach(c => {
+    wins[c] = {w:0,l:0,d:0};
+    mat[c] = {};
+    atkChar[c] = {atk:0, total:0};
+    atkMat[c] = {};
+    chars.forEach(c2 => {
+      if (c !== c2) { mat[c][c2] = {w:0,n:0}; atkMat[c][c2] = {p1a:0,p1t:0}; }
+    });
+  });
+  abDetailLogs = [];
+
+  autoMode = true;
+  document.getElementById('ab-run-btn').disabled = true;
+  document.getElementById('ab-csv-btn').disabled = true;
+  document.getElementById('ab-detail-csv-btn').disabled = true;
+  document.getElementById('ab-results').style.display = 'none';
+
+  let done = 0;
+  const total = chars.length * (chars.length - 1) * n;
+
+  for (const c1 of chars) {
+    for (const c2 of chars) {
+      if (c1 === c2) continue;
+      document.getElementById('ab-progress').textContent =
+        `▶ ${CHARS[c1].name} vs ${CHARS[c2].name} — ${done}/${total} battles`;
+      for (let b = 0; b < n; b++) {
+        const recordTurns = abDetailLogs.length < 5;
+        const res = await abOneBattle(c1, c2, model, cfg, recordTurns);
+        if (recordTurns && res.turns) {
+          abDetailLogs.push({ c1, c2, b: b+1, c1name: CHARS[c1].name, c2name: CHARS[c2].name, winner: res.winner, turns: res.turns });
+        }
+        mat[c1][c2].n++;
+        atkMat[c1][c2].p1a += res.p1Atk;
+        atkMat[c1][c2].p1t += res.p1Total;
+        atkChar[c1].atk += res.p1Atk; atkChar[c1].total += res.p1Total;
+        atkChar[c2].atk += res.p2Atk; atkChar[c2].total += res.p2Total;
+        if (res.winner === 'p1') { wins[c1].w++; wins[c2].l++; mat[c1][c2].w++; }
+        else if (res.winner === 'p2') { wins[c2].w++; wins[c1].l++; }
+        else { wins[c1].d++; wins[c2].d++; }
+        done++;
+      }
+      await new Promise(r => setTimeout(r, 0)); // yield to browser
+    }
+  }
+
+  autoMode = false;
+  document.getElementById('ab-run-btn').disabled = false;
+  document.getElementById('ab-csv-btn').disabled = false;
+  document.getElementById('ab-detail-csv-btn').disabled = false;
+  document.getElementById('ab-progress').textContent = `✅ 完了 ${done} battles`;
+
+  autoResults = { wins, mat, chars, n, atkChar, atkMat };
+  abShowResults(autoResults);
+}
+
+function abShowResults({ wins, mat, chars, n, atkChar, atkMat }) {
+  document.getElementById('ab-results').style.display = 'block';
+
+  // Ranking
+  const ranked = chars.map(c => {
+    const {w,l,d} = wins[c];
+    const t = w+l+d;
+    const rate = t > 0 ? w/t*100 : 0;
+    return {c, w, l, d, rate};
+  }).sort((a,b) => b.rate - a.rate);
+
+  let rhtml = '<tr><th>#</th><th>キャラ</th><th>勝率</th><th>W</th><th>L</th><th>D</th></tr>';
+  ranked.forEach(({c,w,l,d,rate},i) => {
+    const col = rate >= 55 ? '#ff8844' : rate <= 45 ? '#6688ff' : '#a0f0ff';
+    rhtml += `<tr><td>${i+1}</td><td>${CHARS[c].name}</td><td style="color:${col};font-weight:bold">${rate.toFixed(1)}%</td><td>${w}</td><td>${l}</td><td>${d}</td></tr>`;
+  });
+  document.getElementById('ab-rank-tbl').innerHTML = rhtml;
+
+  // Matrix
+  let mhtml = `<tr><th>P1↓ P2→</th>${chars.map(c=>`<th>${CHARS[c].emoji}</th>`).join('')}</tr>`;
+  chars.forEach(c1 => {
+    mhtml += `<tr><td style="font-size:9px;white-space:nowrap">${CHARS[c1].name}</td>`;
+    chars.forEach(c2 => {
+      if (c1 === c2) { mhtml += '<td style="background:#080810">—</td>'; return; }
+      const {w,n:tot} = mat[c1][c2];
+      const pct = tot > 0 ? Math.round(w/tot*100) : 0;
+      const cls = pct >= 60 ? 'ab-hi' : pct <= 40 ? 'ab-lo' : 'ab-mid';
+      mhtml += `<td class="${cls}">${pct}%</td>`;
+    });
+    mhtml += '</tr>';
+  });
+  document.getElementById('ab-matrix-tbl').innerHTML = mhtml;
+
+  // ===== 属性攻撃使用率 =====
+  if (!atkChar) return;
+  const ATTR_TARGETS = { nexus7:[40,60], novaqueen:[50,70] }; // 期待レンジ[%]
+  let ahtml = '<tr><th>キャラ</th><th>属性攻撃率</th><th>行動数</th><th>判定</th></tr>';
+  chars.forEach(c => {
+    const {atk, total} = atkChar[c];
+    const rate = total > 0 ? atk/total*100 : 0;
+    const range = ATTR_TARGETS[c];
+    let judge = '', col = '#a0f0ff';
+    if (range) {
+      if (rate < range[0])      { judge = `⚠ 低い（期待${range[0]}-${range[1]}%）`; col = '#6688ff'; }
+      else if (rate > range[1]) { judge = `⚠ 高い（期待${range[0]}-${range[1]}%）`; col = '#ff8844'; }
+      else                      { judge = `✅ 良好`; col = '#44ff88'; }
+    }
+    ahtml += `<tr><td>${CHARS[c].name}</td><td style="color:${col};font-weight:bold">${rate.toFixed(1)}%</td><td style="font-size:9px;color:#506080">${atk}/${total}</td><td style="font-size:9px;color:${col}">${judge}</td></tr>`;
+  });
+  document.getElementById('ab-atk-tbl').innerHTML = ahtml;
+
+  // NEXUS-7 / NOVA QUEEN マッチアップ別使用率
+  const focusChars = chars.filter(c => c === 'nexus7' || c === 'novaqueen');
+  let fhtml = '<tr><th>P1</th><th>vs</th><th>属性攻撃率</th></tr>';
+  focusChars.forEach(c1 => {
+    chars.forEach(c2 => {
+      if (c1 === c2) return;
+      const d = atkMat[c1][c2];
+      if (!d || d.p1t === 0) return;
+      const rate = d.p1a/d.p1t*100;
+      const col = rate < 30 ? '#6688ff' : rate > 60 ? '#ff8844' : '#a0f0ff';
+      const note = rate < 30 ? ' ←低すぎる' : '';
+      fhtml += `<tr><td style="font-size:9px">${CHARS[c1].name}</td><td style="font-size:9px;color:#506080">vs ${CHARS[c2].name}</td><td style="color:${col};font-weight:bold">${rate.toFixed(1)}%${note}</td></tr>`;
+    });
+  });
+  document.getElementById('ab-focus-tbl').innerHTML = fhtml;
+}
+
+function abSaveCsv() {
+  if (!autoResults) return;
+  const {mat, chars, atkChar} = autoResults;
+  let csv = 'P1,P2,P1勝率%\n';
+  chars.forEach(c1 => chars.forEach(c2 => {
+    if (c1 === c2) return;
+    const {w,n} = mat[c1][c2];
+    csv += `${CHARS[c1].name},${CHARS[c2].name},${n>0?(w/n*100).toFixed(1):0}\n`;
+  }));
+  csv += '\nキャラ,属性攻撃数,総行動数,属性攻撃率%\n';
+  if (atkChar) chars.forEach(c => {
+    const {atk,total} = atkChar[c];
+    csv += `${CHARS[c].name},${atk},${total},${total>0?(atk/total*100).toFixed(1):0}\n`;
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = `sw_auto_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function abSaveDetailCsv() {
+  if (!abDetailLogs.length) return;
+  let csv = 'バトル,P1,P2,ターン,P1行動,P2行動,P1HP,P2HP,P1ゲージ%,P2ゲージ%,P1速度,P2速度\n';
+  abDetailLogs.forEach(({c1name, c2name, b, winner, turns}) => {
+    turns.forEach(r => {
+      csv += `${c1name}vs${c2name}(${b}戦目),${c1name},${c2name},${r.t},${r.a1},${r.a2},${r.p1hp},${r.p2hp},${r.p1g},${r.p2g},${r.p1s},${r.p2s}\n`;
+    });
+    csv += `${c1name}vs${c2name}(${b}戦目)結果,,,,,${winner},,,,,,\n`;
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download = `sw_detail_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+</script>
+
+<!-- ===== FIREBASE LOGGER + ONLINE MANAGER (module) ===== -->
+<script type="module">
+import { initializeApp }          from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, serverTimestamp,
+  doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot,
+} from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyAtc2RmsBB0WtCoq9doT8mNFlCs_yQntps",
+  authDomain:        "syntax-wars.firebaseapp.com",
+  projectId:         "syntax-wars",
+  storageBucket:     "syntax-wars.firebasestorage.app",
+  messagingSenderId: "197281336331",
+  appId:             "1:197281336331:web:99bc2f9afae15254908b0e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ===== Logger API (window経由でメインスクリプトから呼び出し可) =====
+window.Logger = {
+
+  // ① 試合結果 + ② 行動ログ を同時保存
+  async saveMatchResult(data) {
+    try {
+      // match_results に保存（matchIdを取得してaction_logsに紐付け）
+      const matchRef = await addDoc(collection(db, 'match_results'), {
+        winner:              data.winner,
+        loser:               data.loser,
+        total_turns:         data.total_turns,
+        winner_remaining_hp: data.winner_remaining_hp,
+        crowd_on_fire_count: data.crowd_on_fire_count,
+        mode:                data.mode,
+        timestamp:           serverTimestamp(),
+      });
+
+      // action_logs に一括保存（通信量削減：試合中は蓄積、終了時に1ドキュメント）
+      if (data.actions && data.actions.length > 0) {
+        await addDoc(collection(db, 'action_logs'), {
+          match_id:  matchRef.id,
+          actions:   data.actions,
+          timestamp: serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      // ロギング失敗はゲームに影響させない（サイレント）
+      console.warn('[Logger] saveMatchResult failed:', e);
+    }
+  },
+
+  // ③ エラーログ手動送信（try...catch用）
+  async logError(msg, stack) {
+    try {
+      await addDoc(collection(db, 'error_logs'), {
+        error_message: msg,
+        stack_trace:   stack || '',
+        timestamp:     serverTimestamp(),
+      });
+    } catch (_) {}
+  },
+};
+
+// ===== OnlineManager =====
+(() => {
+  let _unsub         = null;  // マッチング監視（HOST用）
+  let _roomSub       = null;  // ルーム状態監視（両者ready検知用）
+  let _turnSub       = null;  // バトルターン監視
+  let _roomCode      = null;  // 現在のルームコード
+  let _battleStarted  = false; // 二重発火防止フラグ
+  let _expectedTurn      = 0;   // 現在待機中のターン番号（古いsnapshotを無視）
+  let _hostResultWritten = false; // ホストが今ターンの結果を書き込み済み
+  let _resultApplied     = false; // applyOnlineTurnResult 二重呼び出し防止
+  let _lastAppliedTurn   = -1;   // 適用済みの最後のターン番号（ゲスト無限ループ防止）
+
+  // UI ヘルパー
+  const show = id => document.getElementById(id).style.display = '';
+  const hide = id => document.getElementById(id).style.display = 'none';
+  const phases = ['online-menu','online-host-wait','online-guest-input','online-matched'];
+  function showPhase(id) { phases.forEach(p => p === id ? show(p) : hide(p)); }
+
+  // ===== ルーム監視（両者 ready → バトル開始）=====
+  function _watchRoom(code) {
+    if (_roomSub) { _roomSub(); _roomSub = null; }
+    _battleStarted = false;
+    _roomSub = onSnapshot(doc(db, 'rooms', code), (snap) => {
+      const data = snap.data();
+      if (!data || _battleStarted) return;
+      if (data.p1_ready && data.p2_ready) {
+        _battleStarted = true;
+        if (_roomSub) { _roomSub(); _roomSub = null; }
+        _startOnlineBattle(data);
+      }
+    });
+  }
+
+  // ===== バトル画面へ遷移 =====
+  function _startOnlineBattle(data) {
+    // 待機オーバーレイを閉じる
+    document.getElementById('online-wait-overlay').style.display = 'none';
+    const role = window.onlineRole;
+    // P1（ホスト）視点: myChar=p1, oppChar=p2
+    // P2（ゲスト）視点: myChar=p2, oppChar=p1
+    const myChar  = role === 'host' ? data.p1_char : data.p2_char;
+    const oppChar = role === 'host' ? data.p2_char : data.p1_char;
+    if (window.AudioManager) AudioManager.playSE('confirm');
+    window.startGame(myChar, oppChar);
+  }
+
+  // ===== マッチング成功 =====
+  function _onMatched(role) {
+    if (_unsub) { _unsub(); _unsub = null; }  // マッチング監視を止める
+    window.onlineRole = role;
+    // ルーム状態監視を開始（_roomCode はまだ有効）
+    _watchRoom(_roomCode);
+    // MATCHED 表示
+    showPhase('online-matched');
+    document.getElementById('online-role-label').textContent =
+      role === 'host' ? 'YOU ARE PLAYER 1' : 'YOU ARE PLAYER 2';
+    if (window.AudioManager) AudioManager.playSE('confirm');
+    // 1.5秒後にキャラ選択画面へ
+    setTimeout(() => {
+      window.gameMode = 'online';
+      window.goToSelect();
+    }, 1500);
+  }
+
+  window.OnlineManager = {
+
+    showMenu() { showPhase('online-menu'); },
+
+    // ===== HOST =====
+    async startHost() {
+      const code = String(1000 + Math.floor(Math.random() * 9000));
+      _roomCode = code;
+      showPhase('online-host-wait');
+      document.getElementById('online-room-code').textContent = code;
+      document.getElementById('online-wait-status').textContent = 'WAITING FOR GUEST...';
+      try {
+        await setDoc(doc(db, 'rooms', code), {
+          status: 'waiting',
+          timestamp: serverTimestamp(),
+        });
+        // ゲストが status を matched に更新するまで監視
+        _unsub = onSnapshot(doc(db, 'rooms', code), (snap) => {
+          if (snap.data()?.status === 'matched') _onMatched('host');
+        });
+      } catch (e) {
+        document.getElementById('online-wait-status').textContent = 'ERROR: ' + e.message;
+        console.warn('[OnlineManager] startHost failed:', e);
+      }
+    },
+
+    // ===== GUEST =====
+    async startGuest() {
+      showPhase('online-guest-input');
+      document.getElementById('online-code-input').focus();
+    },
+
+    async joinRoom() {
+      const code = document.getElementById('online-code-input').value.trim();
+      const errEl = document.getElementById('online-guest-error');
+      errEl.style.display = 'none';
+      if (!/^\d{4}$/.test(code)) {
+        errEl.textContent = '4桁の数字を入力してください'; errEl.style.display = ''; return;
+      }
+      try {
+        const roomSnap = await getDoc(doc(db, 'rooms', code));
+        if (!roomSnap.exists()) {
+          errEl.textContent = '部屋が見つかりません'; errEl.style.display = ''; return;
+        }
+        if (roomSnap.data().status !== 'waiting') {
+          errEl.textContent = 'この部屋はすでに使用中です'; errEl.style.display = ''; return;
+        }
+        await updateDoc(doc(db, 'rooms', code), { status: 'matched' });
+        _roomCode = code;
+        _onMatched('guest');
+      } catch (e) {
+        errEl.textContent = 'エラー: ' + e.message; errEl.style.display = '';
+        console.warn('[OnlineManager] joinRoom failed:', e);
+      }
+    },
+
+    // ===== キャラ確定（キャラ選択画面から呼ばれる）=====
+    async confirmCharOnline(charKey) {
+      if (!_roomCode) return;
+      // 選択を確定して待機オーバーレイ表示
+      document.getElementById('online-wait-overlay').style.display = 'flex';
+      try {
+        const field = window.onlineRole === 'host'
+          ? { p1_char: charKey, p1_ready: true }
+          : { p2_char: charKey, p2_ready: true };
+        await updateDoc(doc(db, 'rooms', _roomCode), field);
+        // _watchRoom の onSnapshot が両者 ready を検知したらバトル開始
+      } catch (e) {
+        document.getElementById('online-wait-overlay').style.display = 'none';
+        console.warn('[OnlineManager] confirmCharOnline failed:', e);
+      }
+    },
+
+    // ===== キャンセル（部屋作成待機中）=====
+    async cancelRoom() {
+      if (_unsub)   { _unsub();   _unsub   = null; }
+      if (_roomSub) { _roomSub(); _roomSub = null; }
+      if (_roomCode) {
+        await deleteDoc(doc(db, 'rooms', _roomCode)).catch(() => {});
+        _roomCode = null;
+      }
+      window.goToTitle();
+    },
+
+    // ===== キャンセル（キャラ選択待機中）=====
+    async cancelMatchmaking() {
+      document.getElementById('online-wait-overlay').style.display = 'none';
+      if (_roomSub) { _roomSub(); _roomSub = null; }
+      if (_roomCode) {
+        await deleteDoc(doc(db, 'rooms', _roomCode)).catch(() => {});
+        _roomCode = null;
+      }
+      _battleStarted = false;
+      window.goToTitle();
+    },
+
+    // ===== バトルターン開始（startGame & applyOnlineTurnResult から呼ばれる）=====
+    async startBattleTurn() {
+      if (!_roomCode) return;
+      _hostResultWritten = false;
+      _resultApplied     = false;
+      _expectedTurn      = window.turn;
+      // ★ P1（ホスト）のみFirestoreをクリア
+      //   await することで「クリア完了 → 監視開始」の順序を保証する
+      //   await しないと P2 が素早く送信した action/turn_ready を上書きしてしまう
+      if (window.onlineRole === 'host') {
+        try {
+          await updateDoc(doc(db, 'rooms', _roomCode), {
+            p1_action: null,    p1_turn_ready: false,
+            p2_action: null,    p2_turn_ready: false,
+            p1_ready:  false,   p2_ready:  false,   // キャラ選択フラグもリセット
+            turn_result: null,
+          });
+          console.log('[OnlineManager] clearTurn 完了 → _watchBattleTurn 開始');
+        } catch(e) {
+          console.warn('[OnlineManager] clearTurn failed:', e);
+        }
+      }
+      // タイマー起動（両端末で30秒カウント開始）
+      if (window.startTimer) window.startTimer();
+      // ターン監視開始
+      _watchBattleTurn();
+    },
+
+    // ===== コマンド送信（confirmAction から呼ばれる）=====
+    async submitAction(action) {
+      if (!_roomCode) return;
+      const field = window.onlineRole === 'host'
+        ? { p1_action: action, p1_turn_ready: true }
+        : { p2_action: action, p2_turn_ready: true };
+      console.log('[submitAction] 送信:', field);
+      try {
+        await updateDoc(doc(db, 'rooms', _roomCode), field);
+        console.log('[submitAction] 送信完了');
+      } catch(e) {
+        // 送信失敗時はオーバーレイを閉じて再選択できるようにする
+        document.getElementById('online-battle-overlay').style.display = 'none';
+        window.waitingResult = false;
+        console.warn('[OnlineManager] submitAction failed:', e);
+      }
+    },
+  };
+
+  // ===== バトルターン監視（内部関数）=====
+  function _watchBattleTurn() {
+    if (_turnSub) { _turnSub(); _turnSub = null; }
+    _turnSub = onSnapshot(doc(db, 'rooms', _roomCode), (snap) => {
+      const data = snap.data();
+      console.log("Room State:", data);
+      if (!data || _resultApplied) return;
+
+      // ① turn_result が届いたら両端末で適用
+      if (data.turn_result) {
+        const rt = data.turn_result.turn;
+        // ★ 同一ターンの二重適用を完全に遮断（ゲスト無限ループ防止）
+        if (rt === _lastAppliedTurn) {
+          console.log('[OnlineManager] 既適用ターン スキップ: turn=', rt);
+          return;
+        }
+        // ★ ターン番号不一致は古いキャッシュとして完全スキップ（強制適用廃止）
+        if (rt !== _expectedTurn) {
+          console.warn('[OnlineManager] 古いturn_resultをスキップ: result.turn=', rt, '_expectedTurn=', _expectedTurn);
+          return;
+        }
+        console.log('[OnlineManager] turn_result 受信 OK: turn=', rt);
+        // 適用前に記録（try-catchの外で確実に更新）
+        _lastAppliedTurn = rt;
+        _resultApplied = true;
+        if (_turnSub) { _turnSub(); _turnSub = null; }
+        // ★ オーバーレイを先に解除（applyOnlineTurnResult が例外を投げてもUIロック解除を保証）
+        document.getElementById('online-battle-overlay').style.display = 'none';
+        window.waitingResult = false;
+        try {
+          window.applyOnlineTurnResult(data.turn_result);
+        } catch(e) {
+          console.error('アニメーション処理エラー:', e, '\nStack:', e?.stack);
+        }
+        // ★ ホストはアニメーション適用直後に turn_result を即座に消去
+        //   startBattleTurn の await クリアより先に届けることでゲスト側の古いスナップを防止
+        if (window.onlineRole === 'host') {
+          updateDoc(doc(db, 'rooms', _roomCode), {
+            turn_result:    null,
+            p1_action:      null,  p1_turn_ready: false,
+            p2_action:      null,  p2_turn_ready: false,
+          }).catch(e => console.warn('[OnlineManager] hostCleanupTurn failed:', e));
+        }
+        return;
+      }
+
+      // ② ★ ホストのみ計算実行（ゲストは絶対にここを通らない）
+      //    両者コマンドが揃い、まだ結果を書き込んでいない場合のみ
+      if (window.onlineRole === 'host') {
+        console.log('計算発火チェック:', data.p1_turn_ready, data.p2_turn_ready,
+          '| turn_result:', !!data.turn_result, '| _hostResultWritten:', _hostResultWritten);
+      }
+      if (window.onlineRole === 'host'
+          && data.p1_turn_ready === true
+          && data.p2_turn_ready === true
+          && !data.turn_result
+          && !_hostResultWritten) {
+        _hostResultWritten = true;
+        // アクションが揃っているか確認
+        const p1Act = data.p1_action;
+        const p2Act = data.p2_action;
+        if (!p1Act || !p2Act) {
+          console.warn('[OnlineManager] actions missing:', p1Act, p2Act);
+          _hostResultWritten = false;
+          return;
+        }
+        try {
+          const result = window.hostComputeTurn(p1Act, p2Act);
+          updateDoc(doc(db, 'rooms', _roomCode), { turn_result: result })
+            .catch(e => console.error('[OnlineManager] writeTurnResult failed:', e));
+        } catch(e) {
+          console.error('[OnlineManager] hostComputeTurn FAILED:', e, '\nStack:', e?.stack);
+          _hostResultWritten = false; // エラー時はリトライ可能に
+        }
+      }
+    });
+  }
+})();
+
+// ===== PRELOAD ON STARTUP =====
+document.addEventListener('DOMContentLoaded', async () => {
+  const overlay = document.getElementById('loading-overlay');
+  // エラーが何であっても必ずオーバーレイを消す（ゲームが止まらないよう保証）
+  try {
+    const IMAGES = [
+      'assets/image/nexus7.PNG',
+      'assets/image/shadow.PNG',
+      'assets/image/nova.PNG',
+      'assets/image/titan.PNG',
+      'assets/image/lyra.PNG',
+      'assets/image/blaze.PNG',
+    ];
+    // AudioManager が管理する全音声パスを取得（パスの二重管理を避ける）
+    const SOUNDS = AudioManager.getAllAudioPaths();
+
+    const fill    = document.getElementById('loading-bar-fill');
+    const pctText = document.getElementById('loading-pct');
+    const total   = IMAGES.length + SOUNDS.length;
+    let done = 0;
+
+    function onProgress() {
+      done++;
+      const p = Math.round(done / total * 100);
+      if (fill)    fill.style.width = p + '%';
+      if (pctText) pctText.textContent = 'NOW LOADING... ' + p + '%';
+    }
+
+    // 画像：Image オブジェクトでブラウザキャッシュに乗せる
+    const imgLoads = IMAGES.map(url => new Promise(resolve => {
+      const img = new Image();
+      img.onload = img.onerror = resolve;
+      img.src = url;
+    }).finally(onProgress));
+
+    // 音声：fetch → ArrayBuffer を保存（デコードはユーザー操作後に行う）
+    // suspended状態での decodeAudioData 失敗を防ぐため、デコードは openingClick 後に実施
+    // encodeURI を使う：スペースは %20 にしつつカンマ等の安全な文字は変換しない
+    const sndLoads = SOUNDS.map(url => {
+      const encoded = encodeURI(url);
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 12000); // 12秒でタイムアウト
+      return fetch(encoded, { signal: controller.signal })
+        .then(r => r.arrayBuffer())
+        .then(ab => AudioManager.storeRaw(url, ab))
+        .catch(() => {})
+        .finally(() => { clearTimeout(tid); onProgress(); });
+    });
+
+    await Promise.all([...imgLoads, ...sndLoads]);
+  } catch(e) {
+    // ロード中のエラーは無視（音なしでゲームは動く）
+  } finally {
+    if (overlay) overlay.classList.add('hidden');
+  }
+});
+
+// 最終フォールバック：何があっても20秒後にはオーバーレイを強制非表示
+setTimeout(() => {
+  const ov = document.getElementById('loading-overlay');
+  if (ov && !ov.classList.contains('hidden')) ov.classList.add('hidden');
+}, 20000);
+
+// ③ グローバルエラー自動キャッチ
+window.addEventListener('error', (e) => {
+  window.Logger.logError(e.message, e.error?.stack || `${e.filename}:${e.lineno}:${e.colno}`);
+});
+window.addEventListener('unhandledrejection', (e) => {
+  window.Logger.logError('UnhandledRejection: ' + e.reason, e.reason?.stack || '');
+});
+</script>
+</body>
+</html>

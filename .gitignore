@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# テストデータ（大量スクリーンショット・CSVログ含む）
+テストデータgemma/
+テストデータビルトイン/
+
+# Claude Code ローカル設定
+.claude/
+
+# エディタ・OS
+Thumbs.db
+*.swp
+*.swo

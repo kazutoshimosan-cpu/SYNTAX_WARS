@@ -104,19 +104,64 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 }
 .fighter-panel-info { flex:1; min-width:0; }
 .fighter-name { font-size:11px; color:#a0f0ff; letter-spacing:2px; margin-bottom:4px; }
-.stat-bar-wrap { margin-bottom:4px; }
-.stat-label { font-size:9px; color:#506080; display:flex; justify-content:space-between; margin-bottom:2px; }
-.bar-bg { height:8px; background:#0a1520; border:1px solid #203040; }
+.stat-bar-wrap { margin-bottom:6px; }
+.stat-label { font-size:12px; color:#7090b0; display:flex; justify-content:space-between; margin-bottom:3px; font-weight:bold; letter-spacing:1px; }
+.stat-val { font-size:14px; color:#c0e8ff; font-weight:bold; }
+.bar-bg { height:12px; background:#0a1520; border:1px solid #203040; position:relative; }
 .bar-fill { height:100%; transition:width 0.4s; }
 .hp-fill { background: linear-gradient(90deg, var(--hp-color-dark,#0a8), var(--hp-color,#0f8)); }
 .hp-fill.mid { background:linear-gradient(90deg,#880,#ff0); }
 .hp-fill.low { background:linear-gradient(90deg,#800,#f00); }
 .gauge-fill { background:linear-gradient(90deg,#048,#08f); }
+
+/* 難易度別 目盛り（HARD用） */
+.bar-bg.ticks::after {
+  content:'';
+  position:absolute; top:0; left:0; right:0; bottom:0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0%, transparent calc(25% - 1px),
+    #1a2a3a calc(25% - 1px), #1a2a3a 25%
+  );
+  pointer-events:none;
+}
+
 .audience-wrap { margin:6px 8px 2px; }
 .audience-label { font-size:9px; color:#806020; display:flex; justify-content:space-between; margin-bottom:2px; }
 .audience-fill { background:linear-gradient(90deg,#a60,#ff0); }
 .crowd-on-fire { color:#ff4400; font-weight:bold; font-size:13px; text-align:center; animation:flicker 0.5s infinite alternate; }
 @keyframes flicker { from { opacity:1; } to { opacity:0.5; } }
+
+/* ===== 画面中央フラッシュ演出 ===== */
+#battle-flash {
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:none; z-index:500;
+}
+.flash-text {
+  font-family:'Courier New',monospace;
+  font-weight:bold; letter-spacing:4px; text-align:center;
+  opacity:0; transform:scale(0.7);
+  animation: flash-in 0.5s ease-out forwards;
+}
+.flash-text.success {
+  font-size:44px; color:#a0f0ff;
+  text-shadow:0 0 30px #a0f0ffcc, 0 0 60px #a0f0ff55;
+}
+.flash-text.counter {
+  font-size:52px; color:#ffaa00;
+  text-shadow:0 0 36px #ffaa00cc, 0 0 72px #ffaa0055;
+}
+.flash-text.miss {
+  font-size:32px; color:#405868;
+  letter-spacing:8px;
+}
+@keyframes flash-in {
+  0%   { opacity:0; transform:scale(0.6); }
+  30%  { opacity:1; transform:scale(1.08); }
+  60%  { opacity:1; transform:scale(1.0); }
+  100% { opacity:0; transform:scale(1.0); }
+}
 
 /* ===== DEV MODE ===== */
 .dev-badge { font-size:9px; color:#ff8800; border:1px solid #804000; padding:1px 5px; border-radius:2px; margin-left:8px; vertical-align:middle; letter-spacing:1px; }
@@ -200,41 +245,40 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 .tag.shimai { background:#001820; color:#0af; border-color:#0af4; }
 .tag.countpen { background:#201500; color:#f80; border-color:#f804; }
 
-.battle-bottom {
-  display:flex; gap:8px; flex:1; min-height:0;
-}
-.battle-left {
-  flex:1; display:flex; flex-direction:column; gap:6px; min-width:0;
-}
-.battle-right {
-  flex:1; display:flex; flex-direction:column; min-width:0;
-}
-.battle-log {
-  background:#050510; border:1px solid #203040; padding:8px 10px;
-  flex:1; min-height:200px; overflow-y:auto; font-size:13px; color:#8090b0; line-height:1.75;
-}
-.log-line { padding:1px 0; }
-.log-turn-group { margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #1a2a3a; }
-.log-line.hit { color:#f99; }
-.log-line.heal { color:#9f9; }
-.log-line.status { color:#ffd; }
-.log-line.system { color:#a0f0ff; font-weight:bold; }
-
-.turn-timer-row {
+/* ===== ターンバナー ===== */
+#turn-banner {
   display:flex; justify-content:space-between; align-items:center;
-  font-size:11px; color:#506080; letter-spacing:2px;
+  padding:4px 8px;
+  font-size:11px; color:#a0d0ff; letter-spacing:2px; font-weight:bold;
 }
+#turn-info { color:#e0f4ff; text-shadow:0 0 6px #a0d0ff88; }
 #timer-display { font-size:14px; font-weight:bold; color:#a0f0ff; }
 #timer-display.warn { color:#f84; animation:pulse 0.5s infinite alternate; }
 @keyframes pulse { from { opacity:1; } to { opacity:0.4; } }
 
-/* ===== ACTION BUTTONS ===== */
-.action-area { flex:1; overflow-y:auto; }
-.col-label { font-size:9px; color:#304060; letter-spacing:2px; margin-bottom:4px; text-align:center; }
-.btn-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px; }
+/* 直前ログ3行 */
+#last-log-bar {
+  min-height:20px; padding:2px 10px;
+  font-size:12px; background:#050510;
+  border-top:1px solid #151f2a; border-bottom:1px solid #151f2a;
+}
+#last-log-bar .log-line { padding:1px 0; color:#b0c8e0; letter-spacing:1px; }
+#last-log-bar .log-line.system { color:#70a0c0; font-style:italic; }
+#last-log-bar .log-line.log-action { color:#e8f0ff; font-weight:bold; letter-spacing:1px; }
+#last-log-bar .log-line.log-success { color:#a0f0ff; font-weight:bold; text-shadow:0 0 8px #a0f0ff55; }
+#last-log-bar .log-line.log-counter { color:#ffaa00; font-weight:bold; text-shadow:0 0 8px #ffaa0055; }
+#last-log-bar .log-line.log-miss    { color:#6080a0; font-style:italic; }
+#last-log-bar .log-line.hit   { color:#f99; font-weight:bold; }
+#last-log-bar .log-line.heal  { color:#9f9; }
+#last-log-bar .log-line.status { color:#ffe080; }
+
+/* ===== ACTION BUTTONS（全幅） ===== */
+.action-area { padding:0 4px; overflow-y:auto; }
+.col-label { font-size:9px; color:#70a8d0; letter-spacing:2px; margin-bottom:4px; margin-top:6px; text-align:center; font-weight:bold; }
+.btn-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:5px; margin-bottom:4px; }
 .action-btn {
-  background:#050510; border:1px solid #203040; color:#a0c0e0;
-  font-family:'Courier New',monospace; font-size:10px; padding:10px 4px;
+  background:#050510; border:1px solid #2a4060; color:#c0d8f0;
+  font-family:'Courier New',monospace; font-size:11px; padding:11px 4px;
   cursor:pointer; transition:all 0.12s; text-align:center; line-height:1.4;
 }
 .action-btn:hover { border-color:#a0f0ff; color:#fff; background:#0a1520; box-shadow:0 0 12px #a0f0ff88, 0 0 24px #a0f0ff33; }
@@ -244,11 +288,17 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 .action-btn .cost { font-size:8px; color:#506080; display:block; margin-top:2px; }
 .action-btn .cost.active { color:#08f; }
 
+/* EASYヒント */
+#easy-hint {
+  min-height:18px; padding:4px 10px;
+  font-size:11px; color:#f0a000; letter-spacing:1px; text-align:center;
+}
+
 /* READY button */
-#ready-area { text-align:center; margin:4px 0 8px; }
+#ready-area { text-align:center; margin:4px 8px; }
 #ready-btn {
   background:transparent; border:2px solid #ffaa00; color:#ffaa00;
-  font-family:'Courier New',monospace; font-size:14px; padding:10px 48px;
+  font-family:'Courier New',monospace; font-size:14px; padding:8px 48px;
   cursor:pointer; letter-spacing:3px; transition:all 0.15s;
   opacity:0.3; pointer-events:none;
 }
@@ -380,8 +430,18 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   padding:8px 12px; border-bottom:1px solid #203040; color:#a0f0ff; font-size:14px; font-weight:bold;
 }
 .result-log-body {
-  flex:1; overflow-y:auto; padding:8px 12px; font-size:12px; color:#8090b0; line-height:1.75;
+  flex:1; overflow-y:auto; padding:8px 12px; font-size:12px; color:#b0c8e0; line-height:1.75;
 }
+.result-log-body .log-line { color:#b0c8e0; }
+.result-log-body .log-line.log-action { color:#e8f0ff; font-weight:bold; }
+.result-log-body .log-line.system { color:#70a0c0; font-style:italic; }
+.result-log-body .log-line.log-success { color:#a0f0ff; font-weight:bold; }
+.result-log-body .log-line.log-counter { color:#ffaa00; font-weight:bold; }
+.result-log-body .log-line.log-miss    { color:#6080a0; font-style:italic; }
+.result-log-body .log-line.hit   { color:#f99; font-weight:bold; }
+.result-log-body .log-line.heal  { color:#9f9; }
+.result-log-body .log-line.status { color:#ffe080; }
+.result-log-body .log-line.dev   { color:#806040; font-size:9px; }
 
 /* ===== OPENING SCREEN ===== */
 /* ===== LOADING OVERLAY ===== */
@@ -491,25 +551,48 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 
 /* ===== INTERACTIVE TUTORIAL PANEL ===== */
 #itut-panel {
-  display:none; position:fixed; bottom:0; left:0; right:0;
-  background:rgba(2,8,18,0.97); border-top:2px solid #a0f0ff;
-  padding:12px 16px 16px; z-index:600;
-  font-family:'Courier New',monospace; max-height:55vh; overflow-y:auto;
+  display:none;
+  flex-direction:column;
+  gap:14px;
+  flex:1;
+  background:#040d18;
+  border:1px solid #a0f0ff;
+  box-shadow:0 0 20px #a0f0ff22;
+  padding:16px;
+  font-family:'Courier New',monospace;
+  overflow-y:auto;
+  min-height:200px;
 }
-#itut-panel.open { display:block; }
-#itut-step-num { font-size:10px; color:#506080; letter-spacing:2px; margin-bottom:6px; }
-#itut-msg { font-size:13px; color:#a0f0ff; line-height:1.7; margin-bottom:8px; white-space:pre-wrap; }
+#itut-panel.open {
+  display:flex;
+}
+#itut-step-num {
+  font-size:9px; color:#506080; letter-spacing:3px;
+}
+#itut-msg {
+  font-size:17px; color:#a0f0ff; line-height:1.6;
+  white-space:pre-wrap; font-weight:bold;
+  text-shadow:0 0 10px #a0f0ff55;
+}
+#itut-action-hint {
+  font-size:12px; color:#f0a000; letter-spacing:1px;
+  min-height:16px;
+}
 #itut-explain {
-  display:none; font-size:11px; color:#8090b0; line-height:1.8;
-  background:#050510; border:1px solid #203040; padding:8px 10px;
-  margin-bottom:8px; white-space:pre-wrap;
+  display:none;
+  font-size:13px; color:#c0d8e8; line-height:1.85;
+  border-left:3px solid #a0f0ff55;
+  padding:10px 14px; white-space:pre-wrap;
+  background:#080e18;
 }
 #itut-next-btn {
-  display:none; background:transparent; border:2px solid #a0f0ff; color:#a0f0ff;
-  font-family:'Courier New',monospace; font-size:13px; padding:10px 0;
-  cursor:pointer; letter-spacing:2px; width:100%; transition:all 0.15s;
+  display:none;
+  background:transparent; border:2px solid #a0f0ff; color:#a0f0ff;
+  font-family:'Courier New',monospace; font-size:14px;
+  padding:12px 0; cursor:pointer; letter-spacing:3px;
+  transition:all 0.15s; margin-top:auto;
 }
-#itut-next-btn:hover { background:#a0f0ff22; }
+#itut-next-btn:hover { background:#a0f0ff22; box-shadow:0 0 14px #a0f0ff44; }
 #itut-next-btn.show { display:block; }
 .action-btn.tut-force {
   border-color:#ffff00 !important; color:#ffff00 !important;
@@ -753,6 +836,9 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
           onclick="window.OnlineManager?.cancelMatchmaking()">✕ CANCEL</button>
 </div>
 
+<!-- 画面中央フラッシュ演出 -->
+<div id="battle-flash"></div>
+
 <!-- GAME -->
 <div id="game-screen" class="screen">
   <div class="fighter-row">
@@ -799,19 +885,27 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
     <div class="bar-bg"><div class="bar-fill audience-fill" id="audience-bar" style="width:0%"></div></div>
   </div>
 
-  <div class="battle-bottom">
-    <div class="battle-left">
-      <div class="turn-timer-row">
-        <div id="turn-info">TURN 1 — SELECT ACTION</div>
-        <div id="timer-display">30s</div>
-      </div>
-      <div class="battle-log" id="battle-log"></div>
-    </div>
-    <div class="battle-right">
-      <div id="ready-area">
-        <button id="ready-btn" onclick="confirmAction()">▶ READY</button>
-      </div>
-      <div class="action-area" id="action-area">
+  <!-- ターンバナー + 直前ログ1行 -->
+  <div id="turn-banner">
+    <span id="turn-info">TURN 1 — SELECT ACTION</span>
+    <span id="timer-display">30s</span>
+  </div>
+  <div id="last-log-bar"></div>
+
+  <!-- チュートリアルパネル（バナー直下） -->
+  <div id="itut-panel">
+    <div id="itut-step-num"></div>
+    <div id="itut-msg"></div>
+    <div id="itut-action-hint"></div>
+    <div id="itut-explain"></div>
+    <button id="itut-next-btn" onclick="InteractiveTutorial.next()">NEXT ▶</button>
+  </div>
+
+  <!-- アクションエリア（全幅） -->
+  <div id="ready-area">
+    <button id="ready-btn" onclick="confirmAction()">▶ READY</button>
+  </div>
+  <div class="action-area" id="action-area">
     <div class="col-label">NORMAL</div>
     <div class="btn-grid">
       <button class="action-btn" id="btn-weak" onclick="selectAction('weak')">
@@ -869,8 +963,9 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
       </button>
     </div>
   </div>
-    </div><!-- /.battle-right -->
-  </div><!-- /.battle-bottom -->
+
+  <!-- EASYヒント（ボタン下） -->
+  <div id="easy-hint"></div>
 
   <!-- DEV PANEL (dev mode only) -->
   <div class="dev-panel dev-only" id="dev-battle-panel" style="display:none">
@@ -900,14 +995,6 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
       </div>
     </div>
   </div>
-</div>
-
-<!-- INTERACTIVE TUTORIAL PANEL (position:fixed → ゲーム画面全体に重なる) -->
-<div id="itut-panel">
-  <div id="itut-step-num">STEP 0 — TUTORIAL</div>
-  <div id="itut-msg"></div>
-  <div id="itut-explain"></div>
-  <button id="itut-next-btn" onclick="InteractiveTutorial.next()">NEXT ▶</button>
 </div>
 
 <!-- RESULT -->
@@ -1305,25 +1392,31 @@ const InteractiveTutorial = (() => {
   let _dataIdx = 0;
 
   // --- UI ヘルパー ---
-  const _panel   = () => document.getElementById('itut-panel');
-  const _msgEl   = () => document.getElementById('itut-msg');
-  const _expEl   = () => document.getElementById('itut-explain');
-  const _nextBtn = () => document.getElementById('itut-next-btn');
+  const _panel     = () => document.getElementById('itut-panel');
+  const _msgEl     = () => document.getElementById('itut-msg');
+  const _expEl     = () => document.getElementById('itut-explain');
+  const _nextBtn   = () => document.getElementById('itut-next-btn');
+  const _hintEl    = () => document.getElementById('itut-action-hint');
 
-  function _showStep(label, msg) {
+  function _showStep(label, msg, hint) {
     document.getElementById('itut-step-num').textContent = label;
     _msgEl().textContent = msg;
+    _hintEl().textContent = hint || '';
     _expEl().style.display = 'none';
     _expEl().textContent = '';
     _nextBtn().classList.remove('show');
     _nextBtn().textContent = 'NEXT ▶';
+    // ログバーをクリア
+    const bar = document.getElementById('last-log-bar');
+    if (bar) { bar.textContent = ''; bar.className = ''; }
     _panel().classList.add('open');
   }
 
   function _showExplain(text, isLast) {
     _expEl().textContent = text;
     _expEl().style.display = 'block';
-    if (isLast) _nextBtn().textContent = 'TUTORIAL COMPLETE！タイトルへ ▶';
+    _hintEl().textContent = '';
+    if (isLast) _nextBtn().textContent = '▶ 実戦へ！';
     _nextBtn().classList.add('show');
   }
 
@@ -1340,107 +1433,75 @@ const InteractiveTutorial = (() => {
     if (r) r.classList.remove('active');
   }
 
-  // --- ステップ定義（CPU: SHADOW固定） ---
+  // -------------------------------------------------------
+  // STEPS — 「最初の60秒で読み合いと属性攻撃を体験する」設計
+  // STEP 0 からCPUが動く。idle ステップなし。
+  // -------------------------------------------------------
   const STEPS = [
     {
-      // STEP 0: 基本操作 UI説明 + 弱攻撃
-      label: 'STEP 0 — 基本操作：弱攻撃',
-      msg:   '①「弱」ボタンをタップして選択\n②「READY」ボタンを押して行動確定！\n\nまずは「弱」攻撃で基本操作を覚えよう！',
-      btn: 'weak', cpuAct: 'idle', cpuSpeed: 50,
-      explain: '「弱」攻撃は必中・8ダメ・ゲージ+15%。\nボタン選択→READYの2ステップで行動が確定する。\n序盤のゲージ稼ぎに欠かせない基本技だ。',
-    },
-    {
-      // STEP 1: 中攻撃
-      label: 'STEP 1 — 基本攻撃：中',
-      msg:   '次は「中」攻撃！弱よりダメージが大きいが\n命中率80%と少しリスクがある！',
-      btn: 'mid', cpuAct: 'idle', cpuSpeed: 50,
-      explain: '「中」攻撃は15ダメ・命中率80%・ゲージ+8%。\nダメージ効率が高いバランス技。',
-    },
-    {
-      // STEP 2: 強攻撃ミス（速度差）
-      label: 'STEP 2 — 速度差による空振り',
-      msg:   '強攻撃を試そう！…だが相手SPEED 75、こちら50。\n相手のSPEEDが自分より20以上高いと\n強攻撃は確定外れになる！',
-      btn: 'strong', cpuAct: 'idle', cpuSpeed: 75,
-      explain: '「強」攻撃が外れた！\n相手のSPEEDが自分より20以上高いと確定外れ（速度差回避）。\n→「速度特攻」で相手の高速を逆手に取るか、「加速」で対策しよう！',
-    },
-    {
-      // STEP 3: 速度特攻（NEW）
-      label: 'STEP 3 — 速度特攻',
-      msg:   '相手のSPEEDが高い！\n「速度特攻」を使おう！\nSPEEDが高い相手ほどボーナスダメージが大きい！',
-      btn: 'speedatk', cpuAct: 'idle', cpuSpeed: 75,
-      preSetup() {
-        pState.gauge = Math.max(pState.gauge, 30); // speedatk コスト 25% 保証
-      },
-      explain: '「速度特攻」がヒット！相手SPEED 75→ボーナス+14ダメ！\nSPEED 85ならボーナス+20、SPEED 70で+8。\nただし強攻撃はまだ当たらない。次は「加速」でスピードを上げよう！',
-    },
-    {
-      // STEP 4: 加速
-      label: 'STEP 4 — 加速でスピードアップ',
-      msg:   '「加速」でSPEEDを上げよう！\nFAST状態（SPEED 70以上）になれば\n速度アドバンテージが生まれる！',
-      btn: 'accel', cpuAct: 'idle', cpuSpeed: 75,
-      preSetup() {
-        pState.gauge = Math.max(pState.gauge, 20); // accel コスト 15% 保証
-      },
-      afterResolve() {
-        if (pState.speed < 78) pState.speed = 78; // STEP 5で確実ヒットするよう速度確保
-        pState.fast = pState.speed >= 70;
-        updateHUD();
-      },
-      explain: '「加速」でSPEEDが上昇！FAST状態（70以上）で速度アドバンテージ獲得。\nこれで強攻撃が当たるはずだ！',
-    },
-    {
-      // STEP 5: 強攻撃リベンジ
-      label: 'STEP 5 — 強攻撃リベンジ',
-      msg:   'スピードが追いついた！もう一度「強」攻撃だ！\n今度は当たるはず！',
-      btn: 'strong', cpuAct: 'idle', cpuSpeed: 75,
+      // STEP 0: いきなり防御体験 → 「読める」快感
+      label: 'STEP 1 / 6 — ガードしろ',
+      msg:   '相手が強攻撃で来る。\nガードしろ。',
+      hint:  '▶ 「ガード」を選んで READY',
+      btn: 'guard', cpuAct: 'strong', cpuSpeed: 55,
       forceHit: true,
-      explain: '「強」攻撃がヒット！ヒット時に相手SPEED-10の追加効果もある。\nスピード差を縮めてから強攻撃→これが読み合いの基本だ！',
+      explain: 'ジャストガード！\n強攻撃をガードするとダメージ 0 ＆ゲージ +20%。\n\n「相手の行動を読む」— これがこのゲームの全てだ。',
     },
     {
-      // STEP 6: ガード→ジャストガード（CPU初めて攻撃）
-      label: 'STEP 6 — ジャストガード',
-      msg:   '敵の「強」攻撃が来る！\n「ガード」を選べ！\n強攻撃をガードすると「ジャストガード」発動！',
-      btn: 'guard', cpuAct: 'strong', cpuSpeed: 65,
-      forceHit: true,  // CPU強攻撃ミスなし
-      explain: 'ジャストガード！強攻撃に対してガードするとダメージ0＆ゲージ+20%！\n観客が沸いた！（観客ゲージ+3）\n次は「カウンター」で反撃だ！',
+      // STEP 1: 弱攻撃でゲージを溜める体験
+      label: 'STEP 2 / 6 — 攻撃しろ',
+      msg:   '今度はこちらの番だ。\n弱攻撃でゲージを溜めろ。',
+      hint:  '▶ 「弱」を選んで READY',
+      btn: 'weak', cpuAct: 'guard', cpuSpeed: 55,
+      explain: '弱攻撃は必中・8ダメ・ゲージ +15%。\nゲージは属性攻撃や固有技に使う。\n確実に溜めるならこれだ。',
     },
     {
-      // STEP 7: カウンター（CPU強攻撃、ミスなし）
-      label: 'STEP 7 — カウンター',
-      msg:   '「カウンター」を選べ！\n次の攻撃を受けて同等ダメージを倍返しにする！\n相手は必ず「強」攻撃で来る！',
-      btn: 'counter', cpuAct: 'strong', cpuSpeed: 65,
-      forceHit: true,     // CPU強攻撃ミスなし（カウンター発動のため）
-      forceCounter: true, // カウンター成功確定
+      // STEP 2: 速度差 → 強攻撃が外れる
+      label: 'STEP 3 / 6 — 速度を見ろ',
+      msg:   '相手の SPEED が高い。\n強攻撃を試してみろ。',
+      hint:  '▶ 「強」を選んで READY',
+      btn: 'strong', cpuAct: 'idle', cpuSpeed: 78,
+      explain: '外れた。\n相手の SPEED が自分より 20 以上高いと\n強攻撃は確定で外れる。\n\nSPEED はただの「速さ」じゃない—\n読み合いの武器だ。',
+    },
+    {
+      // STEP 3: 速度特攻 → 速い相手ほど痛い属性攻撃
+      label: 'STEP 4 / 6 — 速度特攻',
+      msg:   '速い相手には速度特攻が刺さる。\nゲージ 25% を使って撃て。',
+      hint:  '▶ 「速度特攻」を選んで READY',
+      btn: 'speedatk', cpuAct: 'idle', cpuSpeed: 78,
       preSetup() {
-        pState.gauge = Math.max(pState.gauge, 30); // カウンター コスト 25% 保証
-        pState.counterConsecutive = 0;
+        pState.gauge = Math.max(pState.gauge, 30);
       },
-      explain: 'カウンター成功！相手の強攻撃ダメージをそのまま返した！\n観客が熱狂！（観客ゲージ+3）\n次は「ガード破壊」で観客をさらに盛り上げよう！',
+      explain: 'ヒット！\n相手 SPEED が高いほどボーナスダメージが増える。\n\n属性攻撃はゲージを消費するが必中。\nガードやカウンターは有効なので読み合いは続く。',
     },
     {
-      // STEP 8: ガード破壊→CROWD ON FIRE自然発動（NEW）
-      label: 'STEP 8 — ガード破壊で観客を熱狂させろ！',
-      msg:   '相手がガードしてきた！\n「ガード破壊」を使おう！\nガード中の相手に当てると観客ゲージが上がる！',
+      // STEP 4: カウンター体験
+      label: 'STEP 5 / 6 — カウンター',
+      msg:   '相手がまた強攻撃で来る。\n今度はカウンターで返せ。',
+      hint:  '▶ 「カウンター」を選んで READY',
+      btn: 'counter', cpuAct: 'strong', cpuSpeed: 65,
+      forceHit: true,
+      forceCounter: true,
+      preSetup() {
+        pState.gauge = Math.max(pState.gauge, 30);
+        pState.counterConsecutive = 0;
+        audienceGauge = 6; // 後のガード破壊でCROWDに届くよう設定
+      },
+      explain: 'カウンター成功！\n受けたダメージをそのまま返した。\n\nカウンターは SPEED を無視して割り込む—\n「読み勝ち」の最大の報酬だ。',
+    },
+    {
+      // STEP 5: ガード破壊 → CROWD ON FIRE → 固有技フィニッシュ
+      label: 'STEP 6 / 6 — フィニッシュ',
+      msg:   '相手がガードしてきた。\nガード破壊で観客を沸かせて\n固有技でとどめを刺せ。',
+      hint:  '▶ まず「ガード破壊」を選んで READY',
       btn: 'guardbk', cpuAct: 'guard', cpuSpeed: 65,
       preSetup() {
-        pState.gauge = Math.max(pState.gauge, 30); // guardbk コスト 25% 保証
-      },
-      explain: 'ガード破壊成功！ガード中の相手に命中→観客ゲージ+2！\n観客ゲージMAX到達→「CROWD ON FIRE」発動！！\n両者ゲージ+30%、キャラ固有ボーナス付与！\n次はゲージを使って固有技でとどめを刺そう！',
-    },
-    {
-      // STEP 9: CROWD ON FIRE中 → 固有技フィニッシュ
-      label: 'STEP 9 — 固有技でフィニッシュ！',
-      msg:   'CROWD ON FIRE中！\n貯まったゲージ（50%消費）で\n「固有技」を叩き込め！！',
-      btn: 'unique', cpuAct: 'idle', cpuSpeed: 65,
-      preSetup() {
-        // SHADOWのpendingDouble/extraTurnをリセット（チュートリアルでは余分な行動を防ぐ）
+        pState.gauge = Math.max(pState.gauge, 60);
         cState.pendingDouble = false;
         cState.extraTurn = false;
-        cState.hp = 40;                              // 固有技（45ダメ）で確実KO
-        pState.gauge = Math.max(pState.gauge, 55);   // 固有技コスト 50% 保証
-        updateHUD();
+        cState.hp = 30;
       },
-      explain: 'TUTORIAL COMPLETE！\n量子ビームで大ダメージ！KO！\n\nCROWD ON FIRE：両者ゲージ+30%＆固有ボーナス付与！\nNEXUS-7は「量子強化」が乗り、次の属性攻撃が無料で強化される！\nこれで基本操作はマスターだ。実戦で読み合いを楽しもう！',
+      explain: 'ガード破壊で観客ゲージが上がる。\nMAXになると CROWD ON FIRE 発動—\n両者ゲージ +30%、固有技が光る瞬間だ。\n\nあとは実戦で確かめろ。',
       isLast: true,
     },
   ];
@@ -1456,7 +1517,7 @@ const InteractiveTutorial = (() => {
     updateHUD();
     updateButtons(pState);
     document.getElementById('turn-info').textContent = s.label;
-    _showStep(s.label, s.msg);
+    _showStep(s.label, s.msg, s.hint);
     _lockAllButtons(s.btn);
   }
 
@@ -1480,9 +1541,10 @@ const InteractiveTutorial = (() => {
     pSelectedAction  = null;
     p2SelectedAction = null;
     selectionPhase   = 1;
-    logEl = document.getElementById('battle-log');
-    logEl.innerHTML = '';
     currentTurnGroup = null;
+    _logLines = [];
+    const bar = document.getElementById('last-log-bar');
+    if (bar) bar.innerHTML = '';
 
     document.getElementById('audience-bar').style.width = '0%';
     document.getElementById('audience-val').textContent = '0 / ' + AUDIENCE_MAX;
@@ -1998,6 +2060,20 @@ function setDifficulty(d) {
   });
 }
 
+// ===== 画面中央フラッシュ =====
+function showBattleFlash(text, type, delay = 0) {
+  setTimeout(() => {
+    const el = document.getElementById('battle-flash');
+    el.innerHTML = '';
+    const div = document.createElement('div');
+    div.className = 'flash-text ' + type;
+    div.textContent = text;
+    el.appendChild(div);
+    // アニメーション終了後に片付け
+    setTimeout(() => { el.innerHTML = ''; }, 700);
+  }, delay);
+}
+
 function addAudience(pts) {
   if (autoMode) {
     audienceGauge = Math.min(AUDIENCE_MAX, audienceGauge + pts);
@@ -2282,9 +2358,10 @@ function startGame(pKey, cKey) {
   pSelectedAction = null;
   p2SelectedAction = null;
   selectionPhase = 1;
-  logEl = document.getElementById('battle-log');
-  logEl.innerHTML = '';
   currentTurnGroup = null;
+  _logLines = [];
+  const bar = document.getElementById('last-log-bar');
+  if (bar) bar.innerHTML = '';
   document.getElementById('audience-bar').style.width = '0%';
   document.getElementById('audience-val').textContent = '0 / ' + AUDIENCE_MAX;
   showScreen('game-screen');
@@ -2426,12 +2503,36 @@ function updateHUD() {
 
 function updateFighterHUD(prefix, s) {
   const hpPct = Math.max(0, s.hp / s.maxHp * 100);
-  document.getElementById(`${prefix}-hp-val`).textContent = devMode ? Math.max(0,s.hp).toFixed(1) : Math.max(0, s.hp);
+
+  // 難易度別: HP・ゲージ数字表示
+  // easy/normal → 数字表示, hard → 非表示（目盛りバーのみ）, veryhard → バーのみ
+  const showNums = (difficulty === 'easy' || difficulty === 'normal');
+
+  const hpValEl    = document.getElementById(`${prefix}-hp-val`);
+  const gaugeValEl = document.getElementById(`${prefix}-gauge-val`);
+
+  if (showNums) {
+    hpValEl.textContent    = devMode ? Math.max(0,s.hp).toFixed(1) : Math.max(0, s.hp);
+    gaugeValEl.textContent = devMode ? s.gauge.toFixed(1) + '%' : Math.round(s.gauge) + '%';
+    hpValEl.style.display    = '';
+    gaugeValEl.style.display = '';
+  } else {
+    hpValEl.style.display    = 'none';
+    gaugeValEl.style.display = 'none';
+  }
+
+  // HARDは目盛り表示
+  const hpBg    = document.getElementById(`${prefix}-hp-bar`).parentElement;
+  const gaugeBg = document.getElementById(`${prefix}-gauge-bar`).parentElement;
+  const useTicks = (difficulty === 'hard');
+  hpBg.classList.toggle('ticks', useTicks);
+  gaugeBg.classList.toggle('ticks', useTicks);
+
   const bar = document.getElementById(`${prefix}-hp-bar`);
   bar.style.width = hpPct + '%';
   bar.className = 'bar-fill hp-fill' + (hpPct <= 25 ? ' low' : hpPct <= 50 ? ' mid' : '');
-  document.getElementById(`${prefix}-gauge-val`).textContent = devMode ? s.gauge.toFixed(1) + '%' : Math.round(s.gauge) + '%';
   document.getElementById(`${prefix}-gauge-bar`).style.width = Math.min(100, s.gauge) + '%';
+  // SPEEDは難易度問わず常に数字表示
   document.getElementById(`${prefix}-speed-val`).textContent = devMode ? s.speed.toFixed(1) : Math.round(s.speed);
   const tags = document.getElementById(`${prefix}-tags`);
   tags.innerHTML = '';
@@ -2569,28 +2670,36 @@ function mirrorOnlineLogText(text) {
 }
 
 // ===== ログ =====
+let _logLines = [];
+
 function addLog(text, cls='') {
-  // ★ SSOT: ホスト計算中はバッファに記録してDOMへの直接書き込みを抑制
-  //   ログはFirestoreのturn_resultを受信した時に両端末で一括再生する
   if (_onlineTurnLogCapture !== null) {
     _onlineTurnLogCapture.push({ text, cls });
     return;
   }
   if (autoMode) return;
-  const d = document.createElement('div');
-  d.className = `log-line ${cls}`;
-  d.textContent = text;
 
-  if (text.startsWith('=== TURN')) {
-    // 新ターン：グループを作って一番上に挿入
-    currentTurnGroup = document.createElement('div');
-    currentTurnGroup.className = 'log-turn-group';
-    currentTurnGroup.appendChild(d);
-    logEl.prepend(currentTurnGroup);
-  } else {
-    // ターン内：グループの末尾に追加（なければlogElに直接）
-    (currentTurnGroup || logEl).appendChild(d);
-  }
+  // リザルトLOG用に全件蓄積
+  if (!actionLogBuffer) actionLogBuffer = [];
+  if (typeof text === 'string') actionLogBuffer.push({ text, cls });
+
+  // バーに出さないもの
+  if (cls === 'dev') return;                        // devログ
+  if (text.startsWith('=== ')) return;              // === TURN / === TUTORIAL 等
+
+  // 3行まで保持して描画
+  _logLines.push({ text, cls });
+  if (_logLines.length > 3) _logLines.shift();
+  _renderLogBar();
+}
+
+function _renderLogBar() {
+  const bar = document.getElementById('last-log-bar');
+  if (!bar) return;
+  bar.innerHTML = _logLines.map(l => {
+    const c = l.cls ? ` ${l.cls}` : '';
+    return `<div class="log-line${c}">${l.text}</div>`;
+  }).join('');
 }
 
 // ===== ボタン更新 =====
@@ -2824,16 +2933,14 @@ function preSetDefenseStance(s, act) {
 
 // ===== 行動解決 =====
 function resolveActions(pAct, cAct) {
-  devSaveUndo(); // DEV: ターン開始前にステートを保存
+  devSaveUndo();
   waitingResult = true;
-  // アクションログ蓄積（非autoModeのみ）
-  if (!autoMode) {
-    actionLogBuffer.push({ turn, char: pState.name, action: pAct, is_ai: false });
-    actionLogBuffer.push({ turn, char: cState.name, action: cAct, is_ai: gameMode !== '2p' });
-  }
+  // ターン開始時にログをクリア
+  _logLines = [];
+  _renderLogBar();
   const p1Disp = pState.displayName || 'あなた';
   const p2Disp = cState.displayName || 'CPU';
-  addLog(`▶ ${p1Disp}: ${actionLabel(pAct, pState)} / ${p2Disp}: ${actionLabel(cAct, cState)}`, 'system');
+  addLog(`▶ ${p1Disp}: ${actionLabel(pAct, pState)} / ${p2Disp}: ${actionLabel(cAct, cState)}`, 'log-action');
 
   // オーバークロック：前ターンのpendingDoubleをextraTurnに変換（次ターン2回行動）
   if (pState.pendingDouble) { pState.pendingDouble = false; pState.extraTurn = true; }
@@ -2931,11 +3038,12 @@ function applyAction(attacker, defender, action) {
       // 全キャラ共通：相手SPEEDが自分より20以上高い場合、強攻撃は確定外れ
       // SHADOW絶影：速度差回避時にゲージ+20%ボーナス
       if (action === 'strong' && defender.speed - attacker.speed >= 20) {
-        addLog(`${aName}の強攻撃！…しかし速度差で外れた！`, '');
+        addLog(`– ${aName}の強攻撃…速度差で外れた`, 'log-miss');
+        showBattleFlash('MISS', 'miss');
         AudioManager.playSE('miss');
         addGauge(attacker, 5);
         if (attacker.primed) attacker.primed = false;
-        if (defender.counterStance) { defender.counterStance = false; addLog(`${dName}のカウンター！…しかし攻撃が届かず空振り！`, ''); }
+        if (defender.counterStance) { defender.counterStance = false; addLog(`– カウンター空振り（攻撃届かず）`, 'log-miss'); showBattleFlash('MISS', 'miss'); }
         if (defender.passive === 'shadow') {
           addGauge(defender, 20);
           addLog(`${dName}の絶影！速度差回避でゲージ+20%！`, 'status');
@@ -2947,11 +3055,12 @@ function applyAction(attacker, defender, action) {
       // 命中判定（弱は必中なのでスキップ。チュートリアル強制命中フラグ考慮）
       if (action !== 'weak' && !_tutForceHit && Math.random() * 100 > hitRate) {
         const gaugeOnMiss = action === 'strong' ? 5 : 8;
-        addLog(`${aName}の攻撃がはずれた！`, '');
+        addLog(`– ${aName}の攻撃がはずれた`, 'log-miss');
+        showBattleFlash('MISS', 'miss');
         AudioManager.playSE('miss');
         addGauge(attacker, gaugeOnMiss);
         if (attacker.primed) attacker.primed = false;
-        if (defender.counterStance) { defender.counterStance = false; addLog(`${dName}のカウンター！…しかし攻撃が届かず空振り！`, ''); }
+        if (defender.counterStance) { defender.counterStance = false; addLog(`– カウンター空振り（攻撃届かず）`, 'log-miss'); showBattleFlash('MISS', 'miss'); }
         break;
       }
 
@@ -3071,8 +3180,11 @@ function applyAction(attacker, defender, action) {
       if (attacker.passive === 'blaze') dmg = Math.round(dmg * 1.4);    // BLAZE 属性倍率
       const guardbkWasPrimed = attacker.primed;
       if (attacker.primed) attacker.primed = false;
-      addLog(`${aName}のガード破壊！（ガード無視）`, '');
-      if (defender.guardThisTurn) addAudience(2); // ガード中の相手に当たった時のみCROWDゲージ上昇
+      if (defender.guardThisTurn) {
+        addLog(`✨ ガード破壊成功！`, 'log-success');
+        showBattleFlash('GUARD BREAK', 'success');
+        addAudience(2);
+      }
       if (defender.counterStance) {
         applyCounter(defender, attacker, dmg); defender.counterStance = false;
       } else if (defender.shimaiNext) {
@@ -3251,12 +3363,13 @@ function applyCounter(counterUser, attacker, incomingDmg) {
   const selfMsg = selfDmg > 0 ? `（${cName}かすり -${selfDmg}）` : '（完全シャットアウト）';
   if (_tutForceCounter || Math.random() < 0.8) {
     AudioManager.playSE('counter');
-    addLog(`${cName}のカウンター！${atkName}に${incomingDmg}ダメージ返し！${selfMsg}`, 'hit');
+    addLog(`⚡ カウンター成功！${incomingDmg}ダメージ返し！${selfMsg}`, 'log-counter');
+    showBattleFlash('COUNTER', 'counter', 300);
     attacker.hp -= incomingDmg;
     counterUser.totalDmgDealt += incomingDmg;
     addAudience(3);
   } else {
-    addLog(`${cName}のカウンター！…しかし返しが外れた！${selfMsg}`, '');
+    addLog(`– カウンター空振り${selfMsg}`, 'log-miss');
   }
   counterUser.hp -= selfDmg;
   return selfDmg; // デバフ適用判定に使用（0=完全防御でデバフ無効）
@@ -3372,7 +3485,8 @@ function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
       finalDmg = 0;
       defender.gauge = Math.min(100, defender.gauge + 20);
       AudioManager.playSE('justGuard');
-      addLog(`✨ ${dName}のジャストガード！ダメージ0・ゲージ+20%！`, 'status');
+      addLog(`✨ ジャストガード！ダメージ0・ゲージ+20%！`, 'log-success');
+      showBattleFlash('JUST GUARD', 'success');
       addAudience(3);
     } else {
       finalDmg = Math.round(dmg * 0.5);
@@ -3534,8 +3648,14 @@ function closeResultLog() {
 }
 
 function showResult(outcome) {
-  // バトルログを保存（モーダル表示用）
-  if (logEl) savedBattleLogHTML = logEl.innerHTML;
+  // バトルログをactionLogBufferから生成して保存
+  if (actionLogBuffer && actionLogBuffer.length > 0) {
+    savedBattleLogHTML = actionLogBuffer
+      .map(e => `<div class="log-line ${e.cls||''}">${e.text}</div>`)
+      .join('');
+  } else {
+    savedBattleLogHTML = '<div style="color:#506080">ログなし</div>';
+  }
   // Firestore ロギング（非autoModeのみ）
   if (!autoMode && window.Logger) {
     const isWin  = outcome === 'win';

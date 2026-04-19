@@ -1,3 +1,6 @@
+# メディアアセット（画像・音声）
+assets/
+
 # macOS
 .DS_Store
 .AppleDouble

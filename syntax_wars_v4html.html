@@ -56,9 +56,15 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   background:#050510;
 }
 .char-card:hover, .char-card.selected { border-color:#a0f0ff; background:#0a1520; box-shadow:0 0 10px #a0f0ff44; }
-.char-name { font-size:13px; color:#a0f0ff; margin-bottom:4px; }
-.char-type { font-size:10px; color:#506080; margin-bottom:6px; }
-.char-stats { font-size:10px; color:#8090b0; line-height:1.6; }
+.char-card-inner { display:flex; align-items:center; gap:8px; }
+.char-card-img { width:44px; height:44px; border-radius:50%; object-fit:cover; flex-shrink:0; border:1px solid #304060; background:#0a0a1a; }
+.char-card-text { flex:1; min-width:0; }
+.char-name { font-size:13px; color:#a0f0ff; margin-bottom:2px; }
+.char-catchphrase { font-size:10px; color:#e0f0ff; margin-bottom:3px; letter-spacing:0.5px; }
+.char-type { font-size:10px; color:#506080; margin-bottom:4px; }
+.char-stats { font-size:10px; color:#4080a0; line-height:1.6; }
+.passive-keywords { font-size:10px; color:#6090b0; margin-bottom:4px; letter-spacing:0.5px; }
+#select-foot { position:fixed; bottom:0; left:0; right:0; padding:10px 16px 16px; display:flex; gap:8px; justify-content:center; background:linear-gradient(transparent, #0a0a0f 40%); z-index:100; }
 .char-detail {
   display:none; background:#050510; border:1px solid #304060;
   padding:12px; margin-bottom:12px; font-size:11px; line-height:1.8;
@@ -227,6 +233,35 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 .dmg-popup.big  { font-size:26px; color:#ff8800; text-shadow: 0 0 10px #ff6600, 0 0 24px #ff660066; }
 .dmg-popup.huge { font-size:32px; color:#ffdd00; text-shadow: 0 0 14px #ffaa00, 0 0 32px #ffaa0066; letter-spacing:2px; }
 .dmg-popup.heal { font-size:18px; color:#44ff88; text-shadow: 0 0 8px #00ff44, 0 0 18px #00ff4466; }
+
+/* ===== アクションポップラベル ===== */
+.action-pop {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Courier New', monospace; font-weight: bold; font-size: 13px;
+  pointer-events: none; z-index: 201;
+  animation: action-pop-anim 0.7s ease-out forwards;
+  white-space: nowrap; letter-spacing: 2px; text-align: center;
+}
+.action-pop.just-guard { color: #a0f0ff; text-shadow: 0 0 14px #a0f0ff; }
+.action-pop.guard-break { color: #a0f0ff; text-shadow: 0 0 14px #a0f0ff; }
+.action-pop.counter-pop { color: #ffaa00; text-shadow: 0 0 14px #ffaa00; }
+.action-pop.misread { color: #ff5555; font-size: 11px; text-shadow: 0 0 8px #ff555566; }
+@keyframes action-pop-anim {
+  0%   { opacity: 0; transform: translate(-50%, -65%); }
+  20%  { opacity: 1; transform: translate(-50%, -50%); }
+  75%  { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(-50%, -40%); }
+}
+
+/* ===== キャラ固有ヒントポップ ===== */
+@keyframes char-hint-anim {
+  0%  { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  75% { opacity: 1; }
+  100%{ opacity: 0; }
+}
+
 .speed-val { font-size:11px; color:#a0d0ff; margin-top:2px; }
 .status-tags { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; min-height:16px; }
 .tag {
@@ -810,11 +845,11 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 </div>
 
 <!-- CHAR SELECT -->
-<div id="select-screen" class="screen">
+<div id="select-screen" class="screen" style="padding-bottom:80px;">
   <div class="select-title">SELECT FIGHTER</div>
   <div class="char-grid" id="char-grid"></div>
   <div class="char-detail" id="char-detail"></div>
-  <div style="text-align:center; display:flex; gap:8px; justify-content:center;">
+  <div id="select-foot">
     <button class="btn" id="confirm-btn" onclick="confirmSelect()" style="opacity:0.4;pointer-events:none">FIGHT ▶</button>
     <button class="btn" id="select-back-btn" style="font-size:12px;padding:8px 20px;border-color:#304060;color:#506080;" onclick="goBackFromSelect()">← BACK</button>
   </div>
@@ -927,7 +962,7 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
         速度特攻<span class="cost" id="cost-speedatk">25%</span>
       </button>
       <button class="action-btn" id="btn-guardbk" onclick="selectAction('guardbk')">
-        ガード破壊<span class="cost" id="cost-guardbk">25%</span>
+        ガード貫通<span class="cost" id="cost-guardbk">25%</span>
       </button>
       <button class="action-btn" id="btn-sealatk" onclick="selectAction('sealatk')">
         回復封じ<span class="cost" id="cost-sealatk">25%</span>
@@ -965,7 +1000,10 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   </div>
 
   <!-- EASYヒント（ボタン下） -->
-  <div id="easy-hint"></div>
+  <div style="position:relative; min-height:18px;">
+    <div id="easy-hint"></div>
+    <button id="hint-toggle" onclick="toggleSubtext()" style="display:none; position:absolute; right:4px; top:1px; font-size:8px; background:transparent; border:1px solid #304060; color:#405060; padding:1px 5px; font-family:inherit; cursor:pointer; letter-spacing:1px;">HINT:ON</button>
+  </div>
 
   <!-- DEV PANEL (dev mode only) -->
   <div class="dev-panel dev-only" id="dev-battle-panel" style="display:none">
@@ -1485,15 +1523,15 @@ const InteractiveTutorial = (() => {
       preSetup() {
         pState.gauge = Math.max(pState.gauge, 30);
         pState.counterConsecutive = 0;
-        audienceGauge = 6; // 後のガード破壊でCROWDに届くよう設定
+        audienceGauge = 6; // 後のガード貫通でCROWDに届くよう設定
       },
       explain: 'カウンター成功！\n受けたダメージをそのまま返した。\n\nカウンターは SPEED を無視して割り込む—\n「読み勝ち」の最大の報酬だ。',
     },
     {
-      // STEP 5: ガード破壊 → CROWD ON FIRE → 固有技フィニッシュ
+      // STEP 5: ガード貫通 → CROWD ON FIRE → 固有技フィニッシュ
       label: 'STEP 6 / 6 — フィニッシュ',
-      msg:   '相手がガードしてきた。\nガード破壊で観客を沸かせて\n固有技でとどめを刺せ。',
-      hint:  '▶ まず「ガード破壊」を選んで READY',
+      msg:   '相手がガードしてきた。\nガード貫通で観客を沸かせて\n固有技でとどめを刺せ。',
+      hint:  '▶ まず「ガード貫通」を選んで READY',
       btn: 'guardbk', cpuAct: 'guard', cpuSpeed: 65,
       preSetup() {
         pState.gauge = Math.max(pState.gauge, 60);
@@ -1501,7 +1539,7 @@ const InteractiveTutorial = (() => {
         cState.extraTurn = false;
         cState.hp = 30;
       },
-      explain: 'ガード破壊で観客ゲージが上がる。\nMAXになると CROWD ON FIRE 発動—\n両者ゲージ +30%、固有技が光る瞬間だ。\n\nあとは実戦で確かめろ。',
+      explain: 'ガード貫通で観客ゲージが上がる。\nMAXになると CROWD ON FIRE 発動—\n両者ゲージ +30%、固有技が光る瞬間だ。\n\nあとは実戦で確かめろ。',
       isLast: true,
     },
   ];
@@ -1727,6 +1765,8 @@ const CHARS = {
     name:'NEXUS-7 🤖', type:'バランス型', hp:100, speed:50, gauge:30,
     dmgMod:1.0, hitMod:0, gaugeIncMod:1.0,
     themeColor:'#00ffff', emoji:'🤖', imgSrc:'assets/image/nexus7.PNG',
+    catchphrase:'学習して反撃する万能型',
+    passiveKeys:'属性学習で威力2倍 ／ 固有技被ダメ-20%',
     moves:{ weak:'ナノブレード', mid:'EMP波動', strong:'プラズマカノン', guard:'ガード', unique:'量子ビーム' },
     passive:'learning', uniqueName:'量子ビーム',
     passiveDesc:'アドバンスド・ラーニング：相手の属性攻撃がヒットすると学習済みフラグをセット。同じ属性を自分が使う時に威力×2.0（+100%）。発動までフラグを保持。全属性攻撃に固有×1.1バフあり。相手の固有技被ダメ-20%。',
@@ -1736,6 +1776,8 @@ const CHARS = {
     name:'SHADOW 🥷', type:'速度型', hp:100, speed:65, gauge:30,
     dmgMod:0.9, hitMod:10, gaugeIncMod:1.0,
     themeColor:'#ff003c', emoji:'🥷', imgSrc:'assets/image/shadow.PNG', imgPosition:'top',
+    catchphrase:'読んで避けて一撃必殺',
+    passiveKeys:'SPEED差30以上で強攻撃回避 ／ 回避でゲージ+25%',
     moves:{ weak:'クナイ投げ', mid:'鎖鎌', strong:'影斬り', guard:'ガード', unique:'影分身' },
     passive:'shadow', uniqueName:'影分身',
     passiveDesc:'絶影：SPEED差30以上で相手の強攻撃を確定回避。通常ダメージ-15%、速度特攻ボーナスはフルで入る。速度差回避でゲージ+25%。2回行動時の2撃目は確定クリティカル。SPEED自然回復なし。',
@@ -1745,6 +1787,8 @@ const CHARS = {
     name:'NOVA QUEEN 🔮', type:'属性型', hp:95, speed:50, gauge:30,
     dmgMod:1.0, hitMod:0, gaugeIncMod:1.0,
     themeColor:'#b026ff', emoji:'🔮', imgSrc:'assets/image/nova.PNG', imgPosition:'top',
+    catchphrase:'瀕死から逆転する女王',
+    passiveKeys:'HP減るほど星屑砲が強化 ／ CROWD ON FIRE時ゲージ吸収-60%',
     moves:{ weak:'エナジー弾', mid:'次元裂き', strong:'重力場', guard:'ガード', unique:'星屑砲' },
     passive:'nova', uniqueName:'星屑砲',
     passiveDesc:'コズミック・共鳴（瀕死の逆転王）：通常攻撃ゲージ×1.5。ゲージ60%以上で属性攻撃コスト10%。HP48以上で被ダメ-10%。HP38以下で被ダメ-25%・ゲージ+50%。CROWD ON FIRE時は星屑砲のゲージ吸収-60%に強化。',
@@ -1754,6 +1798,8 @@ const CHARS = {
     name:'TITAN 🦾', type:'パワー型', hp:100, speed:30, gauge:30,
     dmgMod:1.3, hitMod:-10, gaugeIncMod:1.0,
     themeColor:'#ffb000', emoji:'🦾', imgSrc:'assets/image/titan.PNG', imgPosition:'20% top',
+    catchphrase:'遅くて重い瀕死の怪物',
+    passiveKeys:'SLOW状態で被ダメ-15%＆与ダメ+10% ／ FAST状態でガード不可',
     moves:{ weak:'鉄拳', mid:'地震砕き', strong:'ギガントプレス', guard:'ガード', unique:'超電磁砲' },
     passive:'titan', uniqueName:'超電磁砲',
     passiveDesc:'不動の要塞：SLOW状態で被ダメ-15%＆与ダメ+10%（全キャラ共通のSLOWペナルティを無効化＋バフ）。FAST状態（オーバーヒート）で通常攻撃-10%・ガード不可。',
@@ -1763,6 +1809,8 @@ const CHARS = {
     name:'LYRA-X 🧬', type:'デバフ型', hp:100, speed:50, gauge:30,
     dmgMod:0.9, hitMod:0, gaugeIncMod:0.8,
     themeColor:'#39ff14', emoji:'🧬', imgSrc:'assets/image/lyra.PNG',
+    catchphrase:'戦いながら回復する持久型',
+    passiveKeys:'毎ターン+2HP自動回復 ／ SLOW相手に毎ターン腐食-3HP',
     moves:{ weak:'酸液噴射', mid:'変異爪', strong:'捕縛触手', guard:'ガード', unique:'細胞再生' },
     passive:'lyrax', uniqueName:'細胞再生',
     passiveDesc:'バイオ・エボリューション：毎ターン終了時+2HP自動回復。スロー・回復封じ効果が1ターン持続。SLOW状態の相手に毎ターン腐食-3HP。',
@@ -1772,11 +1820,46 @@ const CHARS = {
     name:'BLAZE 🔥', type:'爆発型', hp:100, speed:50, gauge:30,
     dmgMod:1.3, hitMod:0, gaugeIncMod:1.0,
     themeColor:'#ff5500', emoji:'🔥', imgSrc:'assets/image/blaze.PNG',
+    catchphrase:'準備すれば最大火力',
+    passiveKeys:'全攻撃+30% ／ 起爆準備で自爆回避＆火力UP',
     moves:{ weak:'ファイアボール', mid:'火炎放射', strong:'マグマストライク', guard:'起爆準備', unique:'爆裂拳' },
     passive:'blaze', uniqueName:'爆裂拳',
     passiveDesc:'エクスプローシブ：全攻撃+30%。属性攻撃は×1.4の専用倍率追加・固有技使用時は確定自爆（与ダメ20%反射、誘爆50%）。起爆準備で自爆回避＆確定クリティカル。',
     uniqueDesc:'爆裂拳：固定45ダメージ（起爆準備後は×1.3=58）。起爆準備なしは確定自爆。',
   },
+};
+
+// ===== コマンドサブテキスト =====
+const ACTION_SUBTEXT = {
+  speedatk: '弱攻撃・相手が速いほど威力UP',
+  guardbk:  '中攻撃・ガードを無視してダメージ',
+  sealatk:  '強攻撃・次ターンの回復と挑発を封じる',
+  counter:  '攻撃を等倍返し・連続使用でコスト増',
+  accel:    'SPEEDを上昇・FAST状態は速度特攻に注意',
+  slow:     '相手のSPEEDを1ターン低下・ダメージ-20%',
+  heal:     'HPを回復・回復封じ中は使用不可',
+  taunt:    '次の攻撃ダメージ+30%・回復封じ中は使用不可',
+  overclock:'ゲージ全消費・次ターン2回行動確定 / 3ターンゲージ増加50%減のリスクあり',
+};
+const UNIQUE_SUBTEXT = {
+  learning: '45ダメージ・命中でゲージ+25%＋次ターン属性コスト0 / 量子強化：威力+20%も付与',
+  shadow:   '次の攻撃を1回無効化 / ダメージも追加効果もすべて0に',
+  nova:     '40＋損失HP×0.5ダメージ・相手ゲージ-40% / 属性攻撃1ターン封じ',
+  titan:    'HP残量で威力変化・瀕死で最大55ダメージ',
+  lyrax:    '35ダメージ・与ダメの30%をHP吸収',
+  blaze:    '45ダメージ・自爆20% / 起爆準備後なら58ダメージ＆自爆なし',
+};
+let subtextEnabled = true;
+
+// ===== キャラ固有ヒント =====
+const _seenCharHints = new Set();
+const CHAR_HINTS = {
+  nexus:     '量子ビームを当てると次ターンが強くなる',
+  shadow:    '影分身は相手の攻撃を読んで合わせろ',
+  novaqueen: 'HPが減るほど星屑砲が強くなる',
+  titan:     '瀕死になるほど超電磁砲が強くなる',
+  lyrax:     '攻めながら回復できる持久戦向きキャラ',
+  blaze:     '起爆準備→爆裂拳で自爆なし一撃必殺',
 };
 
 // ===== グローバル状態 =====
@@ -1965,7 +2048,7 @@ const TUT_PAGES = [
       必中（速度差で外れない）。ガードやカウンターは有効。
 
       <div class="tut-row"><span class="tut-key">速度特攻</span><span class="tut-val">相手のSPEEDが高いほど追加ダメージ大。FASTな相手には特に有効</span></div>
-      <div class="tut-row"><span class="tut-key">ガード破壊</span><span class="tut-val">ガードを無視してダメージ。ガード多用の相手に</span></div>
+      <div class="tut-row"><span class="tut-key">ガード貫通</span><span class="tut-val">ガードを無視してダメージ。ガード多用の相手に</span></div>
       <div class="tut-row"><span class="tut-key">回復封じ</span><span class="tut-val">次ターンの相手の回復・挑発を封じる</span></div>
 
       <div class="tut-h">カウンター（ゲージ25%）</div>
@@ -2277,9 +2360,15 @@ function goToSelect() {
     div.className = 'char-card';
     div.dataset.key = key;
     div.innerHTML = `
-      <div class="char-name">${c.name}</div>
-      <div class="char-type">${c.type}</div>
-      <div class="char-stats">HP:${c.hp} SPD:${c.speed} DMG:${c.dmgMod>=1?'+':''}${Math.round((c.dmgMod-1)*100)}%</div>
+      <div class="char-card-inner">
+        <img class="char-card-img" src="${c.imgSrc}" alt="${c.name}" onerror="this.style.display='none'">
+        <div class="char-card-text">
+          <div class="char-name">${c.name}</div>
+          <div class="char-catchphrase">${c.catchphrase||''}</div>
+          <div class="char-type">${c.type}</div>
+          <div class="char-stats">HP:${c.hp} SPD:${c.speed} DMG:${c.dmgMod>=1?'+':''}${Math.round((c.dmgMod-1)*100)}%</div>
+        </div>
+      </div>
     `;
     div.onclick = () => {
       document.querySelectorAll('.char-card').forEach(d => d.classList.remove('selected'));
@@ -2292,6 +2381,7 @@ function goToSelect() {
       detail.innerHTML = `
         <div class="detail-section">
           <div class="detail-label">PASSIVE</div>
+          ${c.passiveKeys ? `<div class="passive-keywords">${c.passiveKeys}</div>` : ''}
           <div class="detail-text">${c.passiveDesc}</div>
         </div>
         <div class="detail-section">
@@ -2299,6 +2389,11 @@ function goToSelect() {
           <div class="detail-text">${c.uniqueDesc}</div>
         </div>
       `;
+      // キャラ固有ヒント（初回選択時のみ）
+      if (!_seenCharHints.has(key) && CHAR_HINTS[key]) {
+        _seenCharHints.add(key);
+        showCharHintPop(CHAR_HINTS[key]);
+      }
     };
     grid.appendChild(div);
   });
@@ -2365,6 +2460,9 @@ function startGame(pKey, cKey) {
   document.getElementById('audience-bar').style.width = '0%';
   document.getElementById('audience-val').textContent = '0 / ' + AUDIENCE_MAX;
   showScreen('game-screen');
+  // HINTトグル表示（EASYのみ）
+  const _htBtn = document.getElementById('hint-toggle');
+  if (_htBtn) _htBtn.style.display = difficulty === 'easy' ? 'block' : 'none';
   if (gameMode === '2p') {
     document.getElementById('p-name').textContent = pState.name + ' [P1]';
     document.getElementById('c-name').textContent = cState.name + ' [P2]';
@@ -2426,6 +2524,35 @@ function showDmgPopup(isPlayer, amount, type = 'normal') {
   popup.style.left = (30 + Math.random() * 40) + '%';
   panel.appendChild(popup);
   setTimeout(() => popup.remove(), 1200);
+}
+
+function showActionPop(isPlayer, text, cls) {
+  if (autoMode) return;
+  const panel = document.getElementById(isPlayer ? 'p-panel' : 'c-panel');
+  if (!panel) return;
+  const pop = document.createElement('div');
+  pop.className = 'action-pop ' + cls;
+  pop.textContent = text;
+  panel.appendChild(pop);
+  setTimeout(() => pop.remove(), 700);
+}
+
+function showCharHintPop(text) {
+  const pop = document.createElement('div');
+  pop.style.cssText = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(0); background:#0a1520; border:1px solid #4080c0; color:#a0d0ff; font-size:11px; padding:8px 14px; letter-spacing:1px; z-index:300; text-align:center; font-family:"Courier New",monospace; white-space:nowrap; animation:char-hint-anim 2.5s ease-out forwards;';
+  pop.textContent = '💡 ' + text;
+  document.body.appendChild(pop);
+  setTimeout(() => pop.remove(), 2500);
+}
+
+function toggleSubtext() {
+  subtextEnabled = !subtextEnabled;
+  const btn = document.getElementById('hint-toggle');
+  if (btn) btn.textContent = subtextEnabled ? 'HINT:ON' : 'HINT:OFF';
+  if (!subtextEnabled) {
+    const hintEl = document.getElementById('easy-hint');
+    if (hintEl) hintEl.textContent = '';
+  }
 }
 
 // ===== キャラクターテーマ適用 =====
@@ -2747,6 +2874,15 @@ function selectAction(action) {
   // READYボタン有効化
   const readyBtn = document.getElementById('ready-btn');
   readyBtn.classList.add('active');
+  // サブテキスト（EASYモード）
+  if (difficulty === 'easy' && subtextEnabled) {
+    const hintEl = document.getElementById('easy-hint');
+    if (hintEl) {
+      hintEl.textContent = action === 'unique'
+        ? (UNIQUE_SUBTEXT[pState?.passive] || '')
+        : (ACTION_SUBTEXT[action] || '');
+    }
+  }
 }
 
 function resetReadyBtn() {
@@ -3008,7 +3144,7 @@ function resolveActions(pAct, cAct) {
 function actionLabel(act, s) {
   const map = {
     weak: s.moves.weak, mid: s.moves.mid, strong: s.moves.strong, guard: s.moves.guard,
-    speedatk:'速度特攻', guardbk:'ガード破壊', sealatk:'回復封じ', counter:'カウンター',
+    speedatk:'速度特攻', guardbk:'ガード貫通', sealatk:'回復封じ', counter:'カウンター',
     accel:'加速', slow:'スロー', heal:'回復', taunt:'挑発', overclock:'オーバークロック',
     idle:'——（待機）',
     unique: s.uniqueName,
@@ -3181,8 +3317,10 @@ function applyAction(attacker, defender, action) {
       const guardbkWasPrimed = attacker.primed;
       if (attacker.primed) attacker.primed = false;
       if (defender.guardThisTurn) {
-        addLog(`✨ ガード破壊成功！`, 'log-success');
+        addLog(`✨ ガード貫通成功！`, 'log-success');
         showBattleFlash('GUARD BREAK', 'success');
+        showActionPop(attacker.isPlayer, 'GUARD BREAK 💥', 'guard-break');
+        showActionPop(defender.isPlayer, 'MISREAD', 'misread');
         addAudience(2);
       }
       if (defender.counterStance) {
@@ -3191,7 +3329,7 @@ function applyAction(attacker, defender, action) {
         defender.shimaiNext = false;
         addLog(`${dName}の身代わり！ダメージ無効！`, 'status');
       } else {
-        const finalDmg = dealDamage(attacker, defender, dmg, aName, dName, true); // ガード破壊：ガード無視
+        const finalDmg = dealDamage(attacker, defender, dmg, aName, dName, true); // ガード貫通：ガード無視
         if (attacker.passive === 'blaze' && !guardbkWasPrimed) applyBlazeJibaku(attacker, defender, finalDmg, aName, dName);
         if (defender.passive === 'learning') defender.learned = 'guardbk';
       }
@@ -3365,6 +3503,8 @@ function applyCounter(counterUser, attacker, incomingDmg) {
     AudioManager.playSE('counter');
     addLog(`⚡ カウンター成功！${incomingDmg}ダメージ返し！${selfMsg}`, 'log-counter');
     showBattleFlash('COUNTER', 'counter', 300);
+    showActionPop(counterUser.isPlayer, 'COUNTER ⚡', 'counter-pop');
+    showActionPop(attacker.isPlayer, 'MISREAD', 'misread');
     attacker.hp -= incomingDmg;
     counterUser.totalDmgDealt += incomingDmg;
     addAudience(3);
@@ -3487,6 +3627,8 @@ function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
       AudioManager.playSE('justGuard');
       addLog(`✨ ジャストガード！ダメージ0・ゲージ+20%！`, 'log-success');
       showBattleFlash('JUST GUARD', 'success');
+      showActionPop(defender.isPlayer, 'JUST GUARD ✨', 'just-guard');
+      showActionPop(attacker.isPlayer, 'MISREAD', 'misread');
       addAudience(3);
     } else {
       finalDmg = Math.round(dmg * 0.5);
@@ -3851,7 +3993,7 @@ function abSmartAct(s, opp) {
   if (opp.passive === 'titan' && s.gauge >= ccost) add('counter', 5); // TITAN相手はカウンター多用
   if (opp.passive === 'nova' && s.gauge >= atk25) add('sealatk', 6); // NOVA相手は回復封じを最優先
   if (opp.passive === 'shadow' && opp.fast && s.gauge >= atk25) add('speedatk', 8); // SHADOW FAST時は速度特攻
-  if (opp.passive === 'shadow' && opp.slow && s.gauge >= atk25) { add('guardbk', 8); add('sealatk', 8); } // SHADOW SLOW中はガード破壊＋回復封じで畳み込む
+  if (opp.passive === 'shadow' && opp.slow && s.gauge >= atk25) { add('guardbk', 8); add('sealatk', 8); } // SHADOW SLOW中はガード貫通＋回復封じで畳み込む
   if (opp.primed) {
     if (s.gauge >= 50 && s.gauge >= ccost) add('counter',3);
     else { add('guard',3); if (s.gauge >= 30) add('slow',2); }
@@ -3870,7 +4012,7 @@ function abSmartAct(s, opp) {
     // カウンターが多い→攻撃チャンスが増える（カウンター後は無防備）
     if (count('counter') >= 2) { add('mid', 3); add('strong', 3); if (s.gauge >= atk25) add('guardbk', 3); }
 
-    // ガードが多い→ガード破壊で崩す
+    // ガードが多い→ガード貫通で崩す
     if (count('guard') >= 2 && s.gauge >= atk25) add('guardbk', 5);
 
     // 加速が多い→速度特攻で迎え撃つ

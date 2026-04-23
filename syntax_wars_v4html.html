@@ -60,10 +60,13 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 .char-card-img { width:44px; height:44px; border-radius:50%; object-fit:cover; flex-shrink:0; border:1px solid #304060; background:#0a0a1a; }
 .char-card-text { flex:1; min-width:0; }
 .char-name { font-size:13px; color:#a0f0ff; margin-bottom:2px; }
-.char-catchphrase { font-size:10px; color:#e0f0ff; margin-bottom:3px; letter-spacing:0.5px; }
+.char-catchphrase {
+  font-size:10px; color:#e0f0ff; margin-bottom:3px; letter-spacing:0.5px;
+  line-height:1.35; word-break:keep-all; overflow-wrap:anywhere;
+}
 .char-type { font-size:10px; color:#506080; margin-bottom:4px; }
 .char-stats { font-size:10px; color:#4080a0; line-height:1.6; }
-.passive-keywords { font-size:10px; color:#6090b0; margin-bottom:4px; letter-spacing:0.5px; }
+.passive-keywords { font-size:11px; color:#c0e8ff; margin-bottom:4px; letter-spacing:0.5px; font-weight:600; }
 #select-foot { position:fixed; bottom:0; left:0; right:0; padding:10px 16px 16px; display:flex; gap:8px; justify-content:center; background:linear-gradient(transparent, #0a0a0f 40%); z-index:100; }
 .char-detail {
   display:none; background:#050510; border:1px solid #304060;
@@ -71,8 +74,8 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 }
 .char-detail.active { display:block; }
 .detail-section { margin-bottom:8px; }
-.detail-label { color:#a0f0ff; font-size:10px; letter-spacing:2px; margin-bottom:3px; }
-.detail-text { color:#8090b0; }
+.detail-label { color:#a0f0ff; font-size:10px; letter-spacing:2px; margin-bottom:4px; font-weight:700; border-bottom:1px solid #1a3050; padding-bottom:2px; }
+.detail-text { color:#e0c87a; font-size:11px; }
 
 /* ===== GAME SCREEN ===== */
 #game-screen { padding:8px; min-height:100vh; display:flex; flex-direction:column; gap:8px; }
@@ -109,7 +112,10 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   50%      { box-shadow: 0 0 18px var(--panel-color,#203040), 0 0 36px var(--panel-color-dim,#203040), 0 0 56px var(--panel-color-dim,#203040); }
 }
 .fighter-panel-info { flex:1; min-width:0; }
-.fighter-name { font-size:11px; color:#a0f0ff; letter-spacing:2px; margin-bottom:4px; }
+.fighter-name {
+  font-size:10px; color:#a0f0ff; letter-spacing:0.5px; margin-bottom:4px;
+  max-width:100%; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
 .stat-bar-wrap { margin-bottom:6px; }
 .stat-label { font-size:12px; color:#7090b0; display:flex; justify-content:space-between; margin-bottom:3px; font-weight:bold; letter-spacing:1px; }
 .stat-val { font-size:14px; color:#c0e8ff; font-weight:bold; }
@@ -132,10 +138,115 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   pointer-events:none;
 }
 
-.audience-wrap { margin:6px 8px 2px; }
-.audience-label { font-size:9px; color:#806020; display:flex; justify-content:space-between; margin-bottom:2px; }
-.audience-fill { background:linear-gradient(90deg,#a60,#ff0); }
+.audience-wrap { margin:8px 8px 4px; }
+.audience-label { font-size:11px; color:#ffb060; display:flex; justify-content:space-between; margin-bottom:4px; font-weight:700; letter-spacing:1px; text-shadow:0 0 10px #ff660044; }
+.audience-title { animation: audience-label-glow 2.2s ease-in-out infinite; }
+@keyframes audience-label-glow {
+  0%,100% { opacity:1; text-shadow:0 0 8px #ff880055; }
+  50%     { opacity:1; text-shadow:0 0 16px #ffcc0088; }
+}
+.audience-track-outer { transition: filter 0.2s, transform 0.2s; }
+.audience-wrap.audience-gain-bump .audience-track-outer {
+  animation: audience-bump 0.55s ease-out;
+}
+@keyframes audience-bump {
+  0%   { transform: scale(1); filter: brightness(1); }
+  35%  { transform: scale(1.03); filter: brightness(1.35) drop-shadow(0 0 12px #ffaa00aa); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+.audience-wrap .audience-bar-bg {
+  height: 14px;
+  border: 1px solid #6a3510;
+  box-shadow: inset 0 0 10px #00000055, 0 0 12px #ff660033;
+  position: relative;
+}
+.audience-fill {
+  background: linear-gradient(90deg, #a40, #e80, #ffcc40, #fff6a0);
+  background-size: 220% 100%;
+  animation: audience-shimmer 5s linear infinite;
+  box-shadow: 0 0 14px #ffaa0066;
+}
+@keyframes audience-shimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+.audience-wrap.audience-hot .audience-fill {
+  animation: audience-shimmer-fast 1.1s linear infinite;
+  box-shadow: 0 0 20px #ffdd0088, 0 0 32px #ff440055;
+}
+@keyframes audience-shimmer-fast {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+.audience-wrap.audience-ignite .audience-track-outer {
+  animation: audience-ignite-ring 1.4s ease-out 2;
+}
+@keyframes audience-ignite-ring {
+  0%   { filter: brightness(1) drop-shadow(0 0 0 transparent); }
+  40%  { filter: brightness(1.5) drop-shadow(0 0 20px #ff4400cc); }
+  100% { filter: brightness(1) drop-shadow(0 0 0 transparent); }
+}
 .crowd-on-fire { color:#ff4400; font-weight:bold; font-size:13px; text-align:center; animation:flicker 0.5s infinite alternate; }
+
+/* キャラ直下スロット：通常は AUDIENCE / CROWD 発動中はバッジ帯で置換 */
+.battle-context-strip {
+  display: flex; justify-content: space-between; align-items: stretch;
+  gap: 8px; padding: 6px 6px 2px; min-height: 36px;
+}
+.context-badge {
+  display: none; flex: 1; align-items: center; justify-content: center;
+  font-family: 'Courier New', monospace; font-weight: 800; letter-spacing: 1px;
+  font-size: 11px; text-align: center; line-height: 1.25;
+  border-radius: 4px; padding: 6px 8px;
+  animation: context-badge-pulse 1.8s ease-in-out infinite;
+}
+.context-badge.is-on { display: flex; }
+.context-badge.context-crowd {
+  color: #ffeedd;
+  background: linear-gradient(135deg, #3a1508, #6a2010);
+  border: 1px solid #ff6600;
+  box-shadow: 0 0 16px #ff440055, inset 0 0 20px #ff220022;
+}
+.context-badge.context-simul {
+  color: #e0f4ff;
+  background: linear-gradient(135deg, #102040, #183060);
+  border: 1px solid #40a0ff;
+  box-shadow: 0 0 14px #2080ff44, inset 0 0 16px #10408022;
+}
+@keyframes context-badge-pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%     { opacity: 0.92; transform: scale(1.02); }
+}
+
+/* パネル内「お祭り」チップ（CROWD 特典・2回行動） */
+.fighter-festival {
+  margin-top: 6px;
+  display: flex; flex-direction: column; flex-wrap: wrap; gap: 4px;
+  min-height: 0;
+}
+.festival-chip {
+  font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
+  padding: 5px 8px; border-radius: 4px; line-height: 1.2;
+  text-align: center;
+}
+.festival-chip.fest-double {
+  color: #ffdd88;
+  background: linear-gradient(90deg, #301808, #502010);
+  border: 1px solid #ff8800;
+  box-shadow: 0 0 12px #ff660044;
+}
+.festival-chip.fest-crowd {
+  color: #ffe8c0;
+  background: linear-gradient(90deg, #281a08, #4a3010);
+  border: 1px solid #cc7722;
+  box-shadow: 0 0 10px #ffaa0033;
+}
+.festival-chip.fest-crowd-active {
+  color: #fff;
+  background: linear-gradient(90deg, #204010, #408028);
+  border: 1px solid #66ff88;
+  box-shadow: 0 0 14px #44ff6644;
+}
 @keyframes flicker { from { opacity:1; } to { opacity:0.5; } }
 
 /* ===== 画面中央フラッシュ演出 ===== */
@@ -148,24 +259,33 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   font-family:'Courier New',monospace;
   font-weight:bold; letter-spacing:4px; text-align:center;
   opacity:0; transform:scale(0.7);
-  animation: flash-in 0.5s ease-out forwards;
+  animation: flash-in-hold 1.05s ease-out forwards;
 }
 .flash-text.success {
   font-size:44px; color:#a0f0ff;
   text-shadow:0 0 30px #a0f0ffcc, 0 0 60px #a0f0ff55;
+  animation-duration:1.85s;
 }
 .flash-text.counter {
   font-size:52px; color:#ffaa00;
   text-shadow:0 0 36px #ffaa00cc, 0 0 72px #ffaa0055;
+  animation-duration:2s;
+}
+.flash-text.crowd {
+  font-size:36px; color:#ff6600;
+  letter-spacing:3px;
+  text-shadow:0 0 28px #ff4400cc, 0 0 56px #ff660055;
+  animation-duration:2.5s;
 }
 .flash-text.miss {
   font-size:32px; color:#405868;
   letter-spacing:8px;
+  animation-duration:0.95s;
 }
-@keyframes flash-in {
+@keyframes flash-in-hold {
   0%   { opacity:0; transform:scale(0.6); }
-  30%  { opacity:1; transform:scale(1.08); }
-  60%  { opacity:1; transform:scale(1.0); }
+  12%  { opacity:1; transform:scale(1.08); }
+  72%  { opacity:1; transform:scale(1.0); }
   100% { opacity:0; transform:scale(1.0); }
 }
 
@@ -238,19 +358,20 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 .action-pop {
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  font-family: 'Courier New', monospace; font-weight: bold; font-size: 13px;
+  font-family: 'Courier New', monospace; font-weight: 900; font-size: 18px;
   pointer-events: none; z-index: 201;
-  animation: action-pop-anim 0.7s ease-out forwards;
-  white-space: nowrap; letter-spacing: 2px; text-align: center;
+  animation: action-pop-anim 1s ease-out forwards;
+  white-space: nowrap; letter-spacing: 2.5px; text-align: center;
 }
-.action-pop.just-guard { color: #a0f0ff; text-shadow: 0 0 14px #a0f0ff; }
-.action-pop.guard-break { color: #a0f0ff; text-shadow: 0 0 14px #a0f0ff; }
-.action-pop.counter-pop { color: #ffaa00; text-shadow: 0 0 14px #ffaa00; }
-.action-pop.misread { color: #ff5555; font-size: 11px; text-shadow: 0 0 8px #ff555566; }
+.action-pop.just-guard  { color: #a0f0ff; text-shadow: 0 0 18px #a0f0ff, 0 0 36px #a0f0ff55; animation-duration: 2.6s; }
+.action-pop.guard-break { color: #a0f0ff; text-shadow: 0 0 18px #a0f0ff, 0 0 36px #a0f0ff55; animation-duration: 2.6s; }
+.action-pop.counter-pop { color: #ffaa00; text-shadow: 0 0 18px #ffaa00, 0 0 36px #ffaa0055; animation-duration: 2.8s; }
+.action-pop.misread     { color: #ff5555; font-size: 16px; text-shadow: 0 0 14px #ff5555, 0 0 30px #ff555555; animation-duration: 2.2s; }
+.action-pop.defended    { color: #7080a0; font-size: 15px; text-shadow: 0 0 10px #708090aa; animation-duration: 1.7s; }
 @keyframes action-pop-anim {
   0%   { opacity: 0; transform: translate(-50%, -65%); }
-  20%  { opacity: 1; transform: translate(-50%, -50%); }
-  75%  { opacity: 1; transform: translate(-50%, -50%); }
+  10%  { opacity: 1; transform: translate(-50%, -50%); }
+  82%  { opacity: 1; transform: translate(-50%, -50%); }
   100% { opacity: 0; transform: translate(-50%, -40%); }
 }
 
@@ -263,22 +384,24 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 }
 
 .speed-val { font-size:11px; color:#a0d0ff; margin-top:2px; }
-.status-tags { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; min-height:16px; }
+.status-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; min-height:18px; }
 .tag {
-  font-size:9px; padding:1px 5px; border-radius:2px;
+  font-size: 12px; font-weight: 800; padding: 4px 9px; border-radius: 4px;
+  letter-spacing: 0.5px;
   background:#203040; color:#a0d0ff; border:1px solid #304050;
+  box-shadow: 0 0 8px #6080a033;
 }
-.tag.fast { background:#102020; color:#0ff; border-color:#0ff4; }
-.tag.slow { background:#100020; color:#80f; border-color:#80f4; }
-.tag.seal { background:#200010; color:#f08; border-color:#f084; }
-.tag.counter { background:#201000; color:#fa0; border-color:#fa04; }
-.tag.taunt { background:#001020; color:#08f; border-color:#08f4; }
-.tag.primed { background:#200000; color:#f44; border-color:#f444; }
-.tag.learned { background:#002010; color:#0f8; border-color:#0f84; }
-.tag.quantum { background:#001020; color:#4ff; border-color:#4ff4; }
-.tag.corrode { background:#100800; color:#a80; border-color:#a804; }
-.tag.shimai { background:#001820; color:#0af; border-color:#0af4; }
-.tag.countpen { background:#201500; color:#f80; border-color:#f804; }
+.tag.fast { background:#102020; color:#0ff; border-color:#0ff4; box-shadow: 0 0 12px #00ffff44; }
+.tag.slow { background:#100020; color:#80f; border-color:#80f4; box-shadow: 0 0 12px #aa66ff44; }
+.tag.seal { background:#200010; color:#f08; border-color:#f084; box-shadow: 0 0 12px #ff008844; }
+.tag.counter { background:#201000; color:#fa0; border-color:#fa04; box-shadow: 0 0 12px #ffaa0044; }
+.tag.taunt { background:#001020; color:#08f; border-color:#08f4; box-shadow: 0 0 12px #0088ff44; }
+.tag.primed { background:#200000; color:#f44; border-color:#f444; box-shadow: 0 0 12px #ff444488; }
+.tag.learned { background:#002010; color:#0f8; border-color:#0f84; box-shadow: 0 0 12px #00ff8844; }
+.tag.quantum { background:#001020; color:#4ff; border-color:#4ff4; box-shadow: 0 0 12px #44ffff44; }
+.tag.corrode { background:#100800; color:#a80; border-color:#a804; box-shadow: 0 0 12px #cc772244; }
+.tag.shimai { background:#001820; color:#0af; border-color:#0af4; box-shadow: 0 0 12px #00aaff44; }
+.tag.countpen { background:#201500; color:#f80; border-color:#f804; box-shadow: 0 0 12px #ff880044; }
 
 /* ===== ターンバナー ===== */
 #turn-banner {
@@ -323,11 +446,48 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 .action-btn .cost { font-size:8px; color:#506080; display:block; margin-top:2px; }
 .action-btn .cost.active { color:#08f; }
 
-/* EASYヒント */
+/* 戦闘ヒント（EASY/NORMAL・HARD非表示） */
+#battle-hint-wrap { margin: 0 4px; }
+#battle-hint-wrap.hint-off #easy-hint { opacity: 0.45; }
 #easy-hint {
   min-height:18px; padding:4px 10px;
-  font-size:11px; color:#f0a000; letter-spacing:1px; text-align:center;
+  font-size:14px; font-weight:700; color:#f0a000; letter-spacing:1px; text-align:center;
+  white-space: pre-line;
+  margin: 6px 8px 10px;
+  background: linear-gradient(180deg, rgba(15,20,35,0.95), rgba(5,5,16,0.85));
+  border: 1px solid #704a00;
+  border-radius: 6px;
+  box-shadow: 0 0 14px #ffb00033, 0 0 30px #00000055;
 }
+#easy-hint.mode-normal {
+  color:#9fd8ff;
+  border-color:#2a5080;
+  box-shadow: 0 0 12px #4080c022;
+  font-size:13px;
+}
+
+/* リザルト拡張（CROWD・キャラ固有折りたたみ） */
+.result-extra { margin-top:14px; padding-top:12px; border-top:1px solid #203040; text-align:left; max-width:420px; }
+.result-crowd-summary {
+  font-size:11px; line-height:1.65; color:#8090b0; margin-bottom:10px;
+  background:#080c14; border:1px solid #304060; border-radius:6px; padding:10px 12px;
+}
+.result-crowd-summary .rc-title { color:#ffaa66; font-weight:bold; letter-spacing:2px; margin-bottom:6px; font-size:10px; }
+.result-rules-toggle {
+  cursor:pointer; user-select:none;
+  font-size:11px; color:#a0d0ff; padding:8px 10px; border:1px solid #304060; border-radius:6px;
+  background:#0a1020; display:flex; justify-content:space-between; align-items:center; gap:8px;
+}
+.result-rules-toggle:hover { border-color:#5080a0; color:#c8e8ff; }
+.result-rules-kw { font-size:10px; color:#7088a8; font-weight:normal; flex:1; text-align:right; }
+.result-rules-body {
+  display:none; margin-top:6px; padding:10px 12px; font-size:10px; line-height:1.75;
+  color:#8090b0; border:1px solid #283448; border-radius:6px; background:#050810;
+  max-height:220px; overflow-y:auto;
+}
+.result-rules-body .rr-h { color:#70b0e0; font-size:10px; margin:8px 0 4px; letter-spacing:1px; }
+.result-rules-body .rr-h:first-child { margin-top:0; }
+.result-hard-stats { margin-top:10px; padding-top:8px; border-top:1px dashed #304050; color:#90a0b8; font-size:10px; }
 
 /* READY button */
 #ready-area { text-align:center; margin:4px 8px; }
@@ -668,6 +828,8 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 
 <!-- OPENING -->
 <div id="opening-screen" class="screen active" onclick="openingClick()" ontouchstart="openingClick(); event.preventDefault()">
+  <!-- iOS：ユーザージェスチャの同一スタックで play() するため Web Audio より先に使う（openingClick 内で制御） -->
+  <audio id="opening-inline-bgm" preload="auto" loop playsinline webkit-playsinline style="position:absolute;width:0;height:0;opacity:0;pointer-events:none" src="assets/sound/system%2Cbgm/system/opening.mp3"></audio>
   <div class="op-container">
     <div class="op-header">[ SYNTAX WARS / TERMINAL v1.0 ]&nbsp;&nbsp;████████ SECURE CONNECTION</div>
     <pre id="op-text"></pre><span id="op-cursor"></span>
@@ -803,11 +965,13 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
     </div>
   </div>
 
-  <div style="display:flex;gap:6px;margin-bottom:6px;">
-    <button class="btn" id="ab-run-btn" onclick="abStart()" style="flex:1;font-size:12px;">▶ 全キャラ総当たり</button>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;">
+    <button class="btn" id="ab-run-btn" onclick="abStart()" style="flex:1;min-width:140px;font-size:12px;">▶ 全キャラ総当たり</button>
     <button class="btn" id="ab-csv-btn" onclick="abSaveCsv()" style="flex:0;padding:8px 14px;font-size:11px;border-color:#203050;color:#405070;" disabled>💾 CSV</button>
-    <button class="btn" id="ab-detail-csv-btn" onclick="abSaveDetailCsv()" style="flex:0;padding:8px 14px;font-size:11px;border-color:#203050;color:#405070;" disabled>📋 詳細</button>
+    <button class="btn" id="ab-detail-csv-btn" onclick="abSaveDetailCsv()" style="flex:0;padding:8px 14px;font-size:11px;border-color:#203050;color:#405070;" disabled>📋 詳細（全）</button>
+    <button class="btn" id="ab-detail-nova-lyra-btn" onclick="abSaveDetailCsvNovaLyra()" style="flex:0;padding:8px 10px;font-size:11px;border-color:#304060;color:#c8b8ff;" disabled title="NOVA QUEEN ⟷ LYRA-X のターン行だけCSV出力（苦戦要因の分析用）">📋 NOVA×LYRA</button>
   </div>
+  <div style="font-size:9px;color:#506080;margin-bottom:6px;">※ 詳細CSVは直近の総当たり結果から出力。NOVA対LYRAだけ抜き出す場合は「NOVA×LYRA」を使う（全30マッチのうち該当2ペア×試合数）。</div>
   <div id="ab-progress" style="font-size:10px;color:#506080;min-height:16px;margin-bottom:6px;"></div>
 
   <div id="ab-results" style="display:none">
@@ -894,6 +1058,7 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
       </div>
       <div class="speed-val">SPEED: <span id="p-speed-val">50</span></div>
       <div class="status-tags" id="p-tags"></div>
+      <div class="fighter-festival" id="p-festival"></div>
     </div>
     <div class="fighter-panel" id="c-panel">
       <div class="fighter-panel-top">
@@ -912,12 +1077,21 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
       </div>
       <div class="speed-val">SPEED: <span id="c-speed-val">50</span></div>
       <div class="status-tags" id="c-tags"></div>
+      <div class="fighter-festival" id="c-festival"></div>
     </div>
   </div>
 
-  <div class="audience-wrap">
-    <div class="audience-label"><span>🔥 AUDIENCE</span><span id="audience-val">0 / 10</span></div>
-    <div class="bar-bg"><div class="bar-fill audience-fill" id="audience-bar" style="width:0%"></div></div>
+  <div class="audience-wrap" id="audience-wrap">
+    <div class="audience-label"><span class="audience-title">🔥 AUDIENCE</span><span id="audience-val">0 / 10</span></div>
+    <div class="audience-track-outer" id="audience-track-outer">
+      <div class="bar-bg audience-bar-bg"><div class="bar-fill audience-fill" id="audience-bar" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- CROWD ON FIRE / 次ターン両者同時行動（CROWD中は AUDIENCE と同じスロットに表示） -->
+  <div class="battle-context-strip" id="battle-context-strip" aria-live="polite">
+    <div id="context-crowd-badge" class="context-badge context-crowd">🔥 CROWD ON FIRE</div>
+    <div id="context-simul-badge" class="context-badge context-simul">⚡ 次ターン両者同時行動</div>
   </div>
 
   <!-- ターンバナー + 直前ログ1行 -->
@@ -939,6 +1113,12 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   <!-- アクションエリア（全幅） -->
   <div id="ready-area">
     <button id="ready-btn" onclick="confirmAction()">▶ READY</button>
+  </div>
+
+  <!-- 戦闘ヒント（CPU: EASY/NORMAL表示・HARD非表示） -->
+  <div id="battle-hint-wrap" style="position:relative; min-height:18px;">
+    <div id="easy-hint"></div>
+    <button id="hint-toggle" onclick="toggleSubtext()" style="display:none; position:absolute; right:4px; top:1px; font-size:8px; background:transparent; border:1px solid #304060; color:#405060; padding:1px 5px; font-family:inherit; cursor:pointer; letter-spacing:1px;">HINT:ON</button>
   </div>
   <div class="action-area" id="action-area">
     <div class="col-label">NORMAL</div>
@@ -997,12 +1177,6 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
         <span id="btn-unique-name">固有技</span><span class="cost" id="cost-unique">50%</span>
       </button>
     </div>
-  </div>
-
-  <!-- EASYヒント（ボタン下） -->
-  <div style="position:relative; min-height:18px;">
-    <div id="easy-hint"></div>
-    <button id="hint-toggle" onclick="toggleSubtext()" style="display:none; position:absolute; right:4px; top:1px; font-size:8px; background:transparent; border:1px solid #304060; color:#405060; padding:1px 5px; font-family:inherit; cursor:pointer; letter-spacing:1px;">HINT:ON</button>
   </div>
 
   <!-- DEV PANEL (dev mode only) -->
@@ -1185,11 +1359,11 @@ const AudioManager = (() => {
   // プリロード用：fetch で取得した ArrayBuffer を AudioBuffer にデコードして保存
   // iOS Safari は Promise 版 decodeAudioData に非対応の場合があるためコールバック版で包む
   function decodeAndStore(path, arrayBuffer) {
-    if (!audioCtx) return Promise.resolve();
+    if (!audioCtx) return Promise.resolve(false);
     return new Promise(resolve => {
       let settled = false;
-      const ok  = buf => { if (!settled) { settled = true; buffers[path] = buf; resolve(); } };
-      const err = ()  => { if (!settled) { settled = true; resolve(); } };
+      const ok  = buf => { if (!settled) { settled = true; buffers[path] = buf; resolve(true); } };
+      const err = ()  => { if (!settled) { settled = true; resolve(false); } };
       try {
         const result = audioCtx.decodeAudioData(arrayBuffer.slice(0), ok, err);
         // モダンブラウザは Promise も返すので両方サポート
@@ -1206,7 +1380,7 @@ const AudioManager = (() => {
       const fileEl = document.getElementById('loading-file');
       if (type === 'loaded' && fileEl) fileEl.textContent = '> ' + name;
       if (typeof DbgPanel !== 'undefined') {
-        const labels = { loaded:'LOADED', decoded:'DECODED', unlocked:'UNLOCKED', bgm_play:'BGM PLAY', bgm_nobuf:'BGM NO BUF' };
+        const labels = { loaded:'LOADED', decoded:'DECODED', decode_fail:'DECODE FAIL', unlocked:'UNLOCKED', bgm_play:'BGM PLAY', bgm_nobuf:'BGM NO BUF' };
         DbgPanel.log(type, '[' + (labels[type] || type.toUpperCase()) + '] ' + name);
         DbgPanel.updateState(buffers, rawBuffers);
       }
@@ -1218,6 +1392,13 @@ const AudioManager = (() => {
     return [...Object.values(SE), ...BGM_BATTLE, ...Object.values(BGM_MAP)];
   }
 
+  // fetch / <audio> / new Audio() 用。フォルダ名 `system,bgm` のカンマが Safari で
+  // `system/bgm` と誤解釈され 404 になるため、セグメントごとに encode する（論理パスは従来キーのまま）
+  function urlForRequest(path) {
+    if (!path) return path;
+    try { return path.split('/').map(encodeURIComponent).join('/'); } catch(e) { return path; }
+  }
+
   // プリロード時：ArrayBuffer を保存するだけ（デコードはユーザー操作後に行う）
   function storeRaw(path, ab) {
     rawBuffers[path] = ab;
@@ -1226,13 +1407,15 @@ const AudioManager = (() => {
 
   // 指定パスのデコードを開始（未デコードなら即開始、進行中なら同一Promiseを返す）
   function decodeOne(path) {
-    if (buffers[path])    return Promise.resolve();
+    if (buffers[path])    return Promise.resolve(true);
     if (decodeQ[path])    return decodeQ[path];
-    if (!rawBuffers[path]) return Promise.resolve();
+    if (!rawBuffers[path]) return Promise.resolve(false);
     const ab = rawBuffers[path];
     delete rawBuffers[path]; // 解放
-    decodeQ[path] = decodeAndStore(path, ab).then(() => {
-      _audioLog('decoded', path);
+    decodeQ[path] = decodeAndStore(path, ab).then((ok) => {
+      if (ok) _audioLog('decoded', path);
+      else _audioLog('decode_fail', path);
+      return ok;
     }).finally(() => { delete decodeQ[path]; });
     return decodeQ[path];
   }
@@ -1264,13 +1447,18 @@ const AudioManager = (() => {
   function playSE(key, vol = 1.0) {
     if (!audioCtx) return;
     if (typeof autoMode !== 'undefined' && autoMode) return;
+    // オンライン: ホスト計算中はSEを鳴らさずキャプチャ → turn_result で両端末が同じ音を鳴らす
+    if (typeof _onlineAudioCapture !== 'undefined' && _onlineAudioCapture !== null) {
+      _onlineAudioCapture.push({ key, vol });
+      return;
+    }
     const path = SE[key];
     if (!path) return;
     if (buffers[path]) {
       _playBuffer(path, vol, false);
     } else {
       // フォールバック：バッファなしなら <audio> 要素で単発再生
-      try { const a = new Audio(path); a.volume = vol; a.play().catch(() => {}); } catch(e) {}
+      try { const a = new Audio(urlForRequest(path)); a.volume = vol; a.play().catch(() => {}); } catch(e) {}
     }
   }
 
@@ -1316,7 +1504,7 @@ const AudioManager = (() => {
       _audioLog('bgm_nobuf', path);
       _dbg('NO BUFFER → <audio> fallback');
       try {
-        const audio = new Audio(path);
+        const audio = new Audio(urlForRequest(path));
         audio.loop = loop;
         audio.volume = 0.5;
         audio.stop = function() { try { this.pause(); this.currentTime = 0; } catch(e) {} };
@@ -1333,16 +1521,24 @@ const AudioManager = (() => {
     if (key === 'opening') setTimeout(() => { if (myGen === bgmGen) stopBGM(); }, 16000);
   }
 
+  function stopOpeningInline() {
+    try {
+      const el = document.getElementById('opening-inline-bgm');
+      if (el) { el.pause(); el.currentTime = 0; }
+    } catch(e) {}
+  }
+
   function stopBGM() {
+    stopOpeningInline();
     if (bgmSource) {
       try { bgmSource.stop(0); } catch(e) {}
+      try { if (typeof bgmSource.pause === 'function') bgmSource.pause(); } catch(e) {}
       bgmSource = null;
     }
   }
 
   // audioCtx.resume() を呼び、running 状態になったら resolve する
-  // iOS Safari では resume() の Promise がハングすることがあるため
-  // statechange イベント + 500ms タイムアウトで確実に解決する
+  // suspended のまま decodeAudioData すると iOS で失敗しやすいため、running を待ってから後続のデコードへ進む
   function unlock() {
     if (!audioCtx) return Promise.resolve();
     if (audioCtx.state === 'running') {
@@ -1352,23 +1548,33 @@ const AudioManager = (() => {
     audioCtx.resume().catch(() => {});
     return new Promise(resolve => {
       let done = false;
+      let pollIv = null;
+      let tmax = null;
+      const cleanup = () => {
+        audioCtx.removeEventListener('statechange', onState);
+        if (pollIv) clearInterval(pollIv);
+        if (tmax) clearTimeout(tmax);
+      };
       const finish = () => {
         if (done) return;
         done = true;
-        audioCtx.removeEventListener('statechange', onState);
+        cleanup();
         _audioLog('unlocked', 'AudioContext(' + audioCtx.state + ')');
         resolve();
       };
       const onState = () => { if (audioCtx.state === 'running') finish(); };
       audioCtx.addEventListener('statechange', onState);
-      // iOS Safari ハング対策：500ms で強制 resolve
-      setTimeout(finish, 500);
+      pollIv = setInterval(() => {
+        if (audioCtx.state === 'running') finish();
+        else try { audioCtx.resume().catch(() => {}); } catch(e) {}
+      }, 50);
+      tmax = setTimeout(finish, 4000);
     });
   }
 
   const warmupAll = unlock; // openingClick から呼ばれる互換エイリアス
 
-  return { storeRaw, decodeOne, decodeAll, decodeAndStore, getAllAudioPaths, playSE, playAttackSE, playBGM, stopBGM, unlock, warmupAll };
+  return { storeRaw, decodeOne, decodeAll, decodeAndStore, getAllAudioPaths, playSE, playAttackSE, playBGM, stopBGM, stopOpeningInline, unlock, warmupAll };
 })();
 
 // ===== DEBUG PANEL =====
@@ -1703,6 +1909,21 @@ function openingClick() {
   if (!_opStarted) {
     // 初回クリック：resume() 完了を待ってから BGM＋タイピング開始
     _opStarted = true;
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    // iOS / WebKit：unlock().then(...) 内の play() はユーザージェスチャが切れ NotSupportedError になりやすい。
+    // 同一ターンの最初に <audio playsinline> を同期 play し、Web Audio 側の opening は掛けない（他BGMは従来どおり）。
+    if (isIOS) {
+      const inline = document.getElementById('opening-inline-bgm');
+      if (inline) {
+        try {
+          inline.volume = 0.5;
+          inline.loop = true; // PC の Web Audio と同様（opening は ~16s で stopOpeningInline）
+          inline.currentTime = 0;
+          inline.play().catch(e => { try { DbgPanel.log('error', '[OP] inline play: ' + (e && e.message)); } catch(_) {} });
+        } catch(e) { try { DbgPanel.log('error', '[OP] inline: ' + e.message); } catch(_) {} }
+      }
+      setTimeout(() => { try { AudioManager.stopOpeningInline(); } catch(_) {} }, 16000);
+    }
     document.getElementById('op-start').style.display = 'none';
     // タイピングアニメーションは即座に開始（音声待ちにしない）
     // iOS Safari では audioCtx.resume() の Promise がハングする場合があるため
@@ -1719,7 +1940,8 @@ function openingClick() {
       ].map(p => AudioManager.decodeOne(p)));
       DbgPanel.log('info', '[OP] decode done → playBGM');
       AudioManager.decodeAll();
-      AudioManager.playBGM('opening');
+      if (!isIOS) AudioManager.playBGM('opening');
+      else DbgPanel.log('info', '[OP] iOS: opening = inline <audio>（Web Audio の opening はスキップ）');
     }).catch(e => { DbgPanel.log('error', '[OP] ERROR: ' + e.message); });
     return;
   }
@@ -1765,89 +1987,130 @@ const CHARS = {
     name:'NEXUS-7 🤖', type:'バランス型', hp:100, speed:50, gauge:30,
     dmgMod:1.0, hitMod:0, gaugeIncMod:1.0,
     themeColor:'#00ffff', emoji:'🤖', imgSrc:'assets/image/nexus7.PNG',
-    catchphrase:'学習して反撃する万能型',
+    catchphrase:'被弾で解析　同属性で破砕',
     passiveKeys:'属性学習で威力2倍 ／ 固有技被ダメ-20%',
     moves:{ weak:'ナノブレード', mid:'EMP波動', strong:'プラズマカノン', guard:'ガード', unique:'量子ビーム' },
     passive:'learning', uniqueName:'量子ビーム',
     passiveDesc:'アドバンスド・ラーニング：相手の属性攻撃がヒットすると学習済みフラグをセット。同じ属性を自分が使う時に威力×2.0（+100%）。発動までフラグを保持。全属性攻撃に固有×1.1バフあり。相手の固有技被ダメ-20%。',
-    uniqueDesc:'量子ビーム：45ダメージ。命中時ゲージ+25%＆次の属性攻撃コスト0%＋威力+20%（量子強化）付与。',
+    uniqueDesc:'量子ビーム：45ダメージ・命中でゲージ+25%＋次ターン属性コスト0＆威力+20%',
   },
   shadow: {
     name:'SHADOW 🥷', type:'速度型', hp:100, speed:65, gauge:30,
     dmgMod:0.9, hitMod:10, gaugeIncMod:1.0,
     themeColor:'#ff003c', emoji:'🥷', imgSrc:'assets/image/shadow.PNG', imgPosition:'top',
-    catchphrase:'読んで避けて一撃必殺',
+    catchphrase:'超速で回避　反撃で処理',
     passiveKeys:'SPEED差30以上で強攻撃回避 ／ 回避でゲージ+25%',
-    moves:{ weak:'クナイ投げ', mid:'鎖鎌', strong:'影斬り', guard:'ガード', unique:'影分身' },
-    passive:'shadow', uniqueName:'影分身',
+    moves:{ weak:'クナイ投げ', mid:'鎖鎌', strong:'影斬り', guard:'ガード', unique:'分身斬り' },
+    passive:'shadow', uniqueName:'分身斬り',
     passiveDesc:'絶影：SPEED差30以上で相手の強攻撃を確定回避。通常ダメージ-15%、速度特攻ボーナスはフルで入る。速度差回避でゲージ+25%。2回行動時の2撃目は確定クリティカル。SPEED自然回復なし。',
-    uniqueDesc:'影分身：次の相手の攻撃を1回身代わりで無効化（ダメージ・追加効果0）。',
+    uniqueDesc:'分身斬り：ゲージ35%・影斬り×2.0ダメージ＋次の相手の攻撃を1回無効化（ダメージ・追加効果0）',
   },
   novaqueen: {
     name:'NOVA QUEEN 🔮', type:'属性型', hp:95, speed:50, gauge:30,
     dmgMod:1.0, hitMod:0, gaugeIncMod:1.0,
     themeColor:'#b026ff', emoji:'🔮', imgSrc:'assets/image/nova.PNG', imgPosition:'top',
-    catchphrase:'瀕死から逆転する女王',
-    passiveKeys:'HP減るほど星屑砲が強化 ／ CROWD ON FIRE時ゲージ吸収-60%',
+    catchphrase:'溜めて連打　臨界で撃ち抜く',
+    passiveKeys:'HP減るほど星屑砲が強化 ／ CROWD ON FIRE時ゲージ吸収強化',
     moves:{ weak:'エナジー弾', mid:'次元裂き', strong:'重力場', guard:'ガード', unique:'星屑砲' },
     passive:'nova', uniqueName:'星屑砲',
-    passiveDesc:'コズミック・共鳴（瀕死の逆転王）：通常攻撃ゲージ×1.5。ゲージ60%以上で属性攻撃コスト10%。HP48以上で被ダメ-10%。HP38以下で被ダメ-25%・ゲージ+50%。CROWD ON FIRE時は星屑砲のゲージ吸収-60%に強化。',
-    uniqueDesc:'星屑砲：基礎40ダメ＋損失HP×0.5の追加ダメ。相手ゲージ-40%（CROWD時-60%）＆属性攻撃1ターン封じ。使用後自ゲージ+20%。',
+    passiveDesc:'コズミック・共鳴（瀕死の逆転王）：通常攻撃ゲージ×1.2。ゲージ80%以上で属性攻撃コスト15%。HP48以上で被ダメ-5%。HP40%以下で被ダメ-20%・ゲージ+20%。CROWD ON FIRE時は星屑砲のゲージ吸収が強化。',
+    uniqueDesc:'星屑砲：35＋損失HP×0.4ダメージ・相手ゲージ-20%＋属性封じ1ターン',
   },
   titan: {
     name:'TITAN 🦾', type:'パワー型', hp:100, speed:30, gauge:30,
     dmgMod:1.3, hitMod:-10, gaugeIncMod:1.0,
     themeColor:'#ffb000', emoji:'🦾', imgSrc:'assets/image/titan.PNG', imgPosition:'20% top',
-    catchphrase:'遅くて重い瀕死の怪物',
+    catchphrase:'遅いほど強い　押して潰す',
     passiveKeys:'SLOW状態で被ダメ-15%＆与ダメ+10% ／ FAST状態でガード不可',
     moves:{ weak:'鉄拳', mid:'地震砕き', strong:'ギガントプレス', guard:'ガード', unique:'超電磁砲' },
     passive:'titan', uniqueName:'超電磁砲',
     passiveDesc:'不動の要塞：SLOW状態で被ダメ-15%＆与ダメ+10%（全キャラ共通のSLOWペナルティを無効化＋バフ）。FAST状態（オーバーヒート）で通常攻撃-10%・ガード不可。',
-    uniqueDesc:'超電磁砲：残HP50以上→30、30〜49→45、29以下→55ダメージ。瀕死ほど強い逆転の一撃。',
+    uniqueDesc:'超電磁砲：残HP50以上→30、30〜49→45、29以下→55ダメージ',
   },
   lyrax: {
     name:'LYRA-X 🧬', type:'デバフ型', hp:100, speed:50, gauge:30,
     dmgMod:0.9, hitMod:0, gaugeIncMod:0.8,
     themeColor:'#39ff14', emoji:'🧬', imgSrc:'assets/image/lyra.PNG',
-    catchphrase:'戦いながら回復する持久型',
-    passiveKeys:'毎ターン+2HP自動回復 ／ SLOW相手に毎ターン腐食-3HP',
+    catchphrase:'slowで腐食　持久で削れ',
+    passiveKeys:'毎ターン+4HP自動回復 ／ SLOW相手に毎ターン腐食-3HP（TITANは-2）',
     moves:{ weak:'酸液噴射', mid:'変異爪', strong:'捕縛触手', guard:'ガード', unique:'細胞再生' },
     passive:'lyrax', uniqueName:'細胞再生',
-    passiveDesc:'バイオ・エボリューション：毎ターン終了時+2HP自動回復。スロー・回復封じ効果が1ターン持続。SLOW状態の相手に毎ターン腐食-3HP。',
-    uniqueDesc:'細胞再生：35ダメージ＆与ダメの30%をHP吸収。',
+    passiveDesc:'バイオ・エボリューション：毎ターン終了時+4HP自動回復。スロー・回復封じ効果が1ターン持続。SLOW状態の相手に毎ターン腐食-3HP（TITANは-2）。',
+    uniqueDesc:'細胞再生：35ダメージ・与ダメの30%をHP吸収',
   },
   blaze: {
     name:'BLAZE 🔥', type:'爆発型', hp:100, speed:50, gauge:30,
     dmgMod:1.3, hitMod:0, gaugeIncMod:1.0,
     themeColor:'#ff5500', emoji:'🔥', imgSrc:'assets/image/blaze.PNG',
-    catchphrase:'準備すれば最大火力',
+    catchphrase:'起爆して煽れ　ドカンと決めろ',
     passiveKeys:'全攻撃+30% ／ 起爆準備で自爆回避＆火力UP',
     moves:{ weak:'ファイアボール', mid:'火炎放射', strong:'マグマストライク', guard:'起爆準備', unique:'爆裂拳' },
     passive:'blaze', uniqueName:'爆裂拳',
     passiveDesc:'エクスプローシブ：全攻撃+30%。属性攻撃は×1.4の専用倍率追加・固有技使用時は確定自爆（与ダメ20%反射、誘爆50%）。起爆準備で自爆回避＆確定クリティカル。',
-    uniqueDesc:'爆裂拳：固定45ダメージ（起爆準備後は×1.3=58）。起爆準備なしは確定自爆。',
+    uniqueDesc:'爆裂拳：45ダメージ・自爆20%／起爆準備後は58ダメージ＆自爆なし',
   },
 };
 
-// ===== コマンドサブテキスト =====
+function formatCatchphrase(s) {
+  const str = (s || '').trim();
+  if (!str) return '';
+  if (str.includes('<br')) return str;
+  if (str.includes('　')) return str.replace('　', '<br>');
+  return str;
+}
+
+/** 固有技のゲージコスト%（BLAZE起爆準備中は0、SHADOW分身斬り35、その他50） */
+function uniqueGaugeCost(s) {
+  if (!s) return 50;
+  if (s.passive === 'blaze' && s.primed) return 0;
+  if (s.passive === 'shadow') return 35;
+  return 50;
+}
+/** 固有技を選択可能か（BLAZE起爆中はコスト0扱い） */
+function canUseUnique(s) {
+  return Boolean(s.passive === 'blaze' && s.primed) || s.gauge >= uniqueGaugeCost(s);
+}
+
+// ===== コマンドサブテキスト（効果説明＋【重さ】＝GDD 8-3：初心者向けコマンド説明） =====
 const ACTION_SUBTEXT = {
-  speedatk: '弱攻撃・相手が速いほど威力UP',
-  guardbk:  '中攻撃・ガードを無視してダメージ',
-  sealatk:  '強攻撃・次ターンの回復と挑発を封じる',
-  counter:  '攻撃を等倍返し・連続使用でコスト増',
-  accel:    'SPEEDを上昇・FAST状態は速度特攻に注意',
-  slow:     '相手のSPEEDを1ターン低下・ダメージ-20%',
-  heal:     'HPを回復・回復封じ中は使用不可',
-  taunt:    '次の攻撃ダメージ+30%・回復封じ中は使用不可',
-  overclock:'ゲージ全消費・次ターン2回行動確定 / 3ターンゲージ増加50%減のリスクあり',
+  weak:     '確実命中・低火力でゲージ+15%\n【重さ】安定枠。読み勝ちは少ないが削りは遅い',
+  mid:      '80%命中・標準ダメージ\n【重さ】バランス型。外れたターンは隙あり',
+  strong:   '70%命中・ヒット時相手SPEED-10（ガード相手はジャスト扱い）\n【重さ】ハイリスク。相手よりSPEED+20以上低いと確定外れ',
+  guard:    '被ダメ半減／相手の強攻撃はジャストでさらに軽減（BLAZEは「起爆準備」扱い）\n【重さ】相手の強・属性を読めた時に価値が跳ねる',
+  speedatk: '弱攻撃・相手が速いほど威力UP（必中）\n【重さ】相手加速・FASTへの牽制。ガード・カウンターは有効',
+  guardbk:  '中攻撃・ガードを無視してダメージ（必中）\n【重さ】ガード癖へのカウンター。ゲージ25%の投資',
+  sealatk:  '強攻撃・次ターンの回復と挑発を封じる（必中）\n【重さ】回復待ちを潰す。外れないがコストあり',
+  counter:  '攻撃を等倍返し・連続使用でコスト増\n【重さ】読み勝ちの報酬。攻撃されないと空振り',
+  accel:    'SPEEDを上昇・FAST状態は速度特攻に注意\n【重さ】以降の帯が変わる。相手の速度特攻を誘発しうる',
+  slow:     '相手のSPEEDを1ターン低下・ダメージ-20%\n【重さ】後手を作る。LYRA相手では腐食とも絡む',
+  heal:     'HPを回復・回復封じ中は使用不可\n【重さ】ゲージ30%のリカバ。封じられていると詰む',
+  taunt:    '次の攻撃ダメージ+30%・回復封じ中は使用不可\n【重さ】次の一撃に賭ける。起爆準備（BLAZE）とも相性',
+  overclock:'ゲージ全消費・次ターン2回行動確定 / 3ターンゲージ増加50%減のリスクあり\n【重さ】大技。3ターンの減衰を覚悟',
 };
 const UNIQUE_SUBTEXT = {
-  learning: '45ダメージ・命中でゲージ+25%＋次ターン属性コスト0 / 量子強化：威力+20%も付与',
-  shadow:   '次の攻撃を1回無効化 / ダメージも追加効果もすべて0に',
-  nova:     '40＋損失HP×0.5ダメージ・相手ゲージ-40% / 属性攻撃1ターン封じ',
-  titan:    'HP残量で威力変化・瀕死で最大55ダメージ',
-  lyrax:    '35ダメージ・与ダメの30%をHP吸収',
-  blaze:    '45ダメージ・自爆20% / 起爆準備後なら58ダメージ＆自爆なし',
+  learning: '45ダメージ・命中でゲージ+25%＋次ターン属性コスト0 / 量子強化：威力+20%も付与\n【重さ】当てれば次ターンが大きく伸びる',
+  shadow:   '次の攻撃を1回無効化 / ダメージも追加効果もすべて0に\n【重さ】ゲージ35%。相手の大技を1回だけ潰す保険',
+  nova:     '35＋損失HP×0.4ダメージ・相手ゲージ-20% / 属性攻撃1ターン封じ\n【重さ】ゲージ50%。瀕死ほど火力が跳ねる',
+  titan:    'HP残量で威力変化・瀕死で最大55ダメージ\n【重さ】残HPテーブル。ガード不可のFAST時は注意',
+  lyrax:    '35ダメージ・与ダメの30%をHP吸収\n【重さ】CROWD中は吸収率アップ（キャラボーナス）',
+  blaze:    '45ダメージ・自爆20% / 起爆準備後なら58ダメージ＆自爆なし\n【重さ】起爆後はリスク激減で一気に決まる',
+};
+// EASYナビ用：一行の「重さ」ラベル（NORMALのナビには出さない）
+const ACTION_WEIGHT_NAV = {
+  weak: '【安定】',
+  mid: '【標準】',
+  strong: '【ハイリスク】',
+  guard: '【受け】',
+  speedatk: '【牽制・機雷】',
+  guardbk: '【ガード崩し】',
+  sealatk: '【抑制】',
+  counter: '【読み勝ち】',
+  accel: '【整地】',
+  slow: '【妨害】',
+  heal: '【回復】',
+  taunt: '【煽り】',
+  overclock: '【大技】',
+  unique: '【固有】',
 };
 let subtextEnabled = true;
 
@@ -1855,7 +2118,7 @@ let subtextEnabled = true;
 const _seenCharHints = new Set();
 const CHAR_HINTS = {
   nexus:     '量子ビームを当てると次ターンが強くなる',
-  shadow:    '影分身は相手の攻撃を読んで合わせろ',
+  shadow:    '分身斬りは相手の攻撃を読んで合わせろ',
   novaqueen: 'HPが減るほど星屑砲が強くなる',
   titan:     '瀕死になるほど超電磁砲が強くなる',
   lyrax:     '攻めながら回復できる持久戦向きキャラ',
@@ -1870,12 +2133,128 @@ let audienceGauge = 0;
 let crowdOnFireCount = 0;     // CROWD ON FIRE 発生回数（試合単位）
 let actionLogBuffer = [];     // 行動ログ蓄積バッファ（試合終了時に一括送信）
 let _onlineTurnLogCapture = null; // ホスト計算中のログキャプチャ（null=無効）
+let _onlineCombatFxCapture = null; // ホスト計算中の戦闘VFX（シェイク等）— turn_result.fx へ
+let _onlineAudioCapture = null; // ホスト計算中のSEキャプチャ — turn_result.se へ（両端末で同じ音）
 let _onlineHostComputing  = false; // ホスト計算中フラグ（endOfTurnの副作用を抑制）
 const AUDIENCE_MAX = 10;
 let crowdOnFireNext = false;
 let autoMode = false;
 let autoResults = null;
-let abDetailLogs = []; // turn-by-turn logs for first 5 battles
+let abDetailLogs = []; // turn-by-turn logs for ALL battles (auto battle detail CSV)
+
+/** リザルト用：試合中のみ加算（GDD 8-3 HARD計測・腐食など） */
+let matchStats = { pCounterSuccess: 0, cCounterSuccess: 0, pCorrosionDmg: 0, cCorrosionDmg: 0 };
+
+let _easyCpuTendencyText = '';
+
+function getEasyCpuFlavorText() {
+  if (difficulty !== 'easy') return '';
+  if (gameMode !== 'cpu') return '';
+  const passive = cState?.passive;
+  const map = {
+    learning: '▶ CPU特徴: 属性を受けると同属性で返しやすい',
+    shadow:   '▶ CPU特徴: 加速と強で揺さぶり / 回避と迎撃を狙う',
+    nova:     '▶ CPU特徴: 溜めて属性を回す / 瀕死は星屑砲が怖い',
+    titan:    '▶ CPU特徴: 遅くても止まらない / 受けて返す重圧型',
+    lyrax:    '▶ CPU特徴: slowで腐食 / じわじわ削る持久型',
+    blaze:    '▶ CPU特徴: 挑発から起爆 / 爆裂で畳みにくる',
+  };
+  return map[passive] || '';
+}
+
+function getEasyCpuTendencyLabel() {
+  if (difficulty !== 'easy') return '';
+  if (gameMode !== 'cpu') return '';
+  const hist = (cState && Array.isArray(cState.actionHistory)) ? cState.actionHistory : [];
+  if (hist.length < 3) return '▶ CPU傾向: 測定中';
+  const counts = Object.create(null);
+  for (const a of hist) counts[a] = (counts[a] || 0) + 1;
+  const n = hist.length;
+  const atk = (counts.weak||0)+(counts.mid||0)+(counts.strong||0)+(counts.speedatk||0)+(counts.guardbk||0)+(counts.sealatk||0)+(counts.unique||0);
+  const def = (counts.guard||0)+(counts.counter||0)+(counts.heal||0);
+  const prep = (counts.accel||0)+(counts.slow||0)+(counts.taunt||0)+(counts.overclock||0);
+  const attr = (counts.speedatk||0)+(counts.guardbk||0)+(counts.sealatk||0);
+  const uniq = (counts.unique||0);
+
+  let label = 'バランス';
+  if (uniq / n >= 0.34) label = '固有寄り';
+  else if (attr / n >= 0.34) label = '属性寄り';
+  else if (def / n >= 0.45) label = '守り寄り';
+  else if (prep / n >= 0.40) label = '準備寄り';
+  else if (atk / n >= 0.55) label = '攻め寄り';
+
+  const name = a => ({
+    weak:'弱', mid:'中', strong:'強', guard:'ガード',
+    speedatk:'速度特攻', guardbk:'貫通', sealatk:'封じ', counter:'カウンター',
+    accel:'加速', slow:'スロー', heal:'回復', taunt:'挑発', overclock:'OC',
+    unique:'固有',
+  }[a] || a);
+  const recent = hist.slice(-4).map(name).join('→');
+  return `▶ CPU傾向: ${label} / 直近: ${recent}`;
+}
+
+/** 盤面の事実のみ（次手示唆なし・NORMALナビ用） */
+function buildNormalBattleHintLines() {
+  if (!pState || !cState) return [];
+  const lines = [];
+  const d = pState.speed - cState.speed;
+  lines.push(`SPEED差（あなた−相手）: ${d > 0 ? '+' : ''}${d}`);
+  if (pState.sealTurns > 0) lines.push(`回復封じ 残り ${pState.sealTurns} ターン`);
+  if (pState.slow) lines.push('SLOW：与ダメ-20%・後手になりやすい');
+  if (cState.passive === 'lyrax' && pState.slow) lines.push('腐食：LYRA相手かつSLOW中はターン終了時 -3HP/回');
+  if (crowdOnFireNext) lines.push('CROWD ON FIRE：このターンは同時解決（SPEED差の先手キル無効）');
+  if (pState.crowdBonusActive) lines.push('CROWDボーナス：あなたにキャラ固有1T強化適用中');
+  if (cState.crowdBonusActive) lines.push('CROWDボーナス：相手にキャラ固有1T強化適用中');
+  return lines;
+}
+
+function renderBattleHint(selectedAction) {
+  // オンラインホスト計算中はDOMに触らない（SSOT）
+  if (_onlineTurnLogCapture !== null) return;
+  const wrap = document.getElementById('battle-hint-wrap');
+  const hintEl = document.getElementById('easy-hint');
+  if (!hintEl) return;
+  hintEl.classList.remove('mode-normal');
+  if (wrap) wrap.classList.toggle('hint-off', !subtextEnabled);
+
+  if (gameMode !== 'cpu' || difficulty === 'hard') {
+    hintEl.textContent = '';
+    if (wrap) wrap.style.display = 'none';
+    return;
+  }
+  if (wrap) wrap.style.display = '';
+
+  if (difficulty === 'normal') {
+    if (!subtextEnabled) {
+      hintEl.textContent = '';
+      return;
+    }
+    hintEl.classList.add('mode-normal');
+    const lines = buildNormalBattleHintLines();
+    hintEl.textContent = lines.length ? `▶ 盤面\n${lines.join('\n')}` : '▶ 盤面（特記なし）';
+    return;
+  }
+
+  // EASY
+  const flavor = getEasyCpuFlavorText();
+  _easyCpuTendencyText = getEasyCpuTendencyLabel();
+  let sub = '';
+  let weightLine = '';
+  if (subtextEnabled && selectedAction) {
+    sub = selectedAction === 'unique'
+      ? (UNIQUE_SUBTEXT[pState?.passive] || '')
+      : (ACTION_SUBTEXT[selectedAction] || '');
+    const wk = selectedAction === 'unique' ? 'unique' : selectedAction;
+    const wl = ACTION_WEIGHT_NAV[wk];
+    if (wl) weightLine = `${wl} ${selectedAction === 'unique' ? (pState?.uniqueName || '固有技') : ''}`.trim();
+  }
+  const parts = [];
+  if (flavor) parts.push(flavor);
+  if (_easyCpuTendencyText) parts.push(_easyCpuTendencyText);
+  if (weightLine) parts.push(weightLine);
+  if (sub) parts.push(sub);
+  hintEl.textContent = parts.join('\n');
+}
 let devMode = false;
 let devSaved = null;  // undo用ステート
 
@@ -2030,7 +2409,7 @@ const TUT_PAGES = [
       <div class="tut-h">通常行動（ゲージ不要）</div>
       <div class="tut-row"><span class="tut-key">弱攻撃</span><span class="tut-val">8ダメ / 必中 / ゲージ+15%　確実に当たる基本技</span></div>
       <div class="tut-row"><span class="tut-key">中攻撃</span><span class="tut-val">15ダメ / 命中率80% / ゲージ+8%　バランス型</span></div>
-      <div class="tut-row"><span class="tut-key">強攻撃</span><span class="tut-val">22ダメ / 命中率70% / ゲージ+5%　ヒットで相手SPEED-10</span></div>
+      <div class="tut-row"><span class="tut-key">強攻撃</span><span class="tut-val">22ダメ / 命中率70% / ゲージ+5%　ヒット時（ジャスト除く）相手SPEED-10</span></div>
       <div class="tut-row"><span class="tut-key">ガード</span><span class="tut-val">被ダメを半分にする。強攻撃をガードするとジャストガード（被ダメ0・ゲージ+20%）</span></div>
 
       <div class="tut-h">ゲージとは？</div>
@@ -2082,10 +2461,10 @@ const TUT_PAGES = [
   {
     title: '⑤ 固有技 ＆ キャラ特性',
     html: `
-      <div class="tut-h">固有技（ゲージ50%消費・必中）</div>
+      <div class="tut-h">固有技（キャラによりゲージ消費が異なる・例：SHADOW35%／多くのキャラ50%。必中）</div>
       <div class="tut-row"><span class="tut-key">NEXUS-7 🤖</span><span class="tut-val">量子ビーム：40ダメ＆ゲージ+25%。相手の属性攻撃を学習して同じ技の威力+70%</span></div>
-      <div class="tut-row"><span class="tut-key">SHADOW 🥷</span><span class="tut-val">影分身：次の攻撃を身代わりで無効化（ダメージ・効果ゼロ）</span></div>
-      <div class="tut-row"><span class="tut-key">NOVA QUEEN 🔮</span><span class="tut-val">星屑砲：相手ゲージ-40%＆次の属性攻撃を封じる</span></div>
+      <div class="tut-row"><span class="tut-key">SHADOW 🥷</span><span class="tut-val">分身斬り：強相当の斬撃＋次の攻撃を身代わりで無効化</span></div>
+      <div class="tut-row"><span class="tut-key">NOVA QUEEN 🔮</span><span class="tut-val">星屑砲：相手ゲージ-20%＆次の属性攻撃を封じる</span></div>
       <div class="tut-row"><span class="tut-key">TITAN 🦾</span><span class="tut-val">超電磁砲：残HP少ないほど威力アップ（29以下で55ダメ）</span></div>
       <div class="tut-row"><span class="tut-key">LYRA-X 🧬</span><span class="tut-val">細胞再生：35ダメ＆与ダメの30%をHP吸収</span></div>
       <div class="tut-row"><span class="tut-key">BLAZE 🔥</span><span class="tut-val">爆裂拳：固定45ダメ。使うと自爆（与ダメ×0.2）。「起爆準備」で自爆回避＆×1.3</span></div>
@@ -2145,15 +2524,24 @@ function setDifficulty(d) {
 
 // ===== 画面中央フラッシュ =====
 function showBattleFlash(text, type, delay = 0) {
+  const displayMs =
+    type === 'miss' ? 1000
+    : type === 'counter' ? 2300
+    : type === 'crowd' ? 3000
+    : 2000; // success（JUST GUARD / GUARD BREAK 等）
+  if (_onlineCombatFxCapture !== null) {
+    _onlineCombatFxCapture.push({ t: 'flash', text, type, delay });
+    return;
+  }
   setTimeout(() => {
     const el = document.getElementById('battle-flash');
+    if (!el) return;
     el.innerHTML = '';
     const div = document.createElement('div');
     div.className = 'flash-text ' + type;
     div.textContent = text;
     el.appendChild(div);
-    // アニメーション終了後に片付け
-    setTimeout(() => { el.innerHTML = ''; }, 700);
+    setTimeout(() => { el.innerHTML = ''; }, displayMs);
   }, delay);
 }
 
@@ -2165,39 +2553,81 @@ function addAudience(pts) {
       crowdOnFireNext = true;
       crowdOnFireCount++;
       pState.crowdBonusPending = true; cState.crowdBonusPending = true;
-      if (pState.passive === 'shadow') pState.pendingDouble = true;
-      if (cState.passive === 'shadow') cState.pendingDouble = true;
+      if (pState.passive === 'shadow') {
+        const wasP = pState.pendingDouble;
+        pState.pendingDouble = true;
+        if (!wasP) pState.doubleFromOverclock = false;
+      }
+      if (cState.passive === 'shadow') {
+        const wasC = cState.pendingDouble;
+        cState.pendingDouble = true;
+        if (!wasC) cState.doubleFromOverclock = false;
+      }
       addGauge(pState, 30); addGauge(cState, 30);
       audienceGauge = 0;
     }
     return;
   }
+  // オンラインホスト計算中はDOMに触らない（結果適用側で再生する）
+  const suppressUI = (_onlineTurnLogCapture !== null);
+  if (!suppressUI && pts > 0) {
+    const aw = document.getElementById('audience-wrap');
+    if (aw) {
+      aw.classList.remove('audience-gain-bump');
+      void aw.offsetWidth;
+      aw.classList.add('audience-gain-bump');
+      setTimeout(() => aw.classList.remove('audience-gain-bump'), 600);
+    }
+  }
   audienceGauge = Math.min(AUDIENCE_MAX, audienceGauge + pts);
   AudioManager.playSE('crowdGauge', 0.5);
-  document.getElementById('audience-bar').style.width = (audienceGauge / AUDIENCE_MAX * 100) + '%';
-  document.getElementById('audience-val').textContent = audienceGauge + ' / ' + AUDIENCE_MAX;
+  if (!suppressUI) {
+    document.getElementById('audience-bar').style.width = (audienceGauge / AUDIENCE_MAX * 100) + '%';
+    document.getElementById('audience-val').textContent = audienceGauge + ' / ' + AUDIENCE_MAX;
+    syncAudienceChrome();
+  }
   if (audienceGauge >= AUDIENCE_MAX) {
     AudioManager.playSE('crowdOnFire');
-    addLog('🔥 CROWD ON FIRE! 🔥 両者ゲージ+30%！次ターン同時解決！', 'system');
+    addLog('🔥 CROWD ON FIRE! 🔥 両者ゲージ+30%！次ターン両者同時行動！', 'system');
+    showBattleFlash('CROWD ON FIRE', 'crowd');
+    if (!suppressUI) {
+      const aw = document.getElementById('audience-wrap');
+      if (aw) {
+        aw.classList.add('audience-ignite');
+        setTimeout(() => aw.classList.remove('audience-ignite'), 1500);
+      }
+    }
     crowdOnFireNext = true;
     crowdOnFireCount++;
     // キャラ固有ボーナス付与（次ターン頭でactiveに変換）
     pState.crowdBonusPending = true;
     cState.crowdBonusPending = true;
     // SHADOW: 次ターン2回行動確定（pendingDouble経由）
-    if (pState.passive === 'shadow') { pState.pendingDouble = true; addLog('⭐ SHADOW：絶影の極み！次ターン2回行動確定！', 'status'); }
-    if (cState.passive === 'shadow') { cState.pendingDouble = true; addLog('⭐ SHADOW：絶影の極み！次ターン2回行動確定！', 'status'); }
+    if (pState.passive === 'shadow') {
+      const wasP = pState.pendingDouble;
+      pState.pendingDouble = true;
+      if (!wasP) pState.doubleFromOverclock = false;
+      addLog('⭐ SHADOW：絶影の極み！次ターン2回行動確定！', 'status');
+    }
+    if (cState.passive === 'shadow') {
+      const wasC = cState.pendingDouble;
+      cState.pendingDouble = true;
+      if (!wasC) cState.doubleFromOverclock = false;
+      addLog('⭐ SHADOW：絶影の極み！次ターン2回行動確定！', 'status');
+    }
     // 他キャラのボーナスログ
     [pState, cState].forEach(s => {
-      const msg = { nova:'⭐ NOVA QUEEN：星屑砲ゲージ吸収-60%！', blaze:'⭐ BLAZE：次の自爆ダメ0！無双モード！', titan:'⭐ TITAN：超電磁砲1段階強化！', lyrax:'⭐ LYRA-X：細胞再生吸収50%！', learning:'⭐ NEXUS-7：量子強化威力+20%UP！属性攻撃強化！' }[s.passive];
+      const msg = { nova:'⭐ NOVA QUEEN：星屑砲ゲージ吸収強化！', blaze:'⭐ BLAZE：次の自爆ダメ0！無双モード！', titan:'⭐ TITAN：超電磁砲1段階強化！', lyrax:'⭐ LYRA-X：細胞再生吸収50%！', learning:'⭐ NEXUS-7：量子強化威力+20%UP！属性攻撃強化！' }[s.passive];
       if (msg) addLog(msg, 'status');
     });
     addGauge(pState, 30);
     addGauge(cState, 30);
     audienceGauge = 0;
-    document.getElementById('audience-bar').style.width = '0%';
-    document.getElementById('audience-val').textContent = '0 / ' + AUDIENCE_MAX;
-    updateHUD();
+    if (!suppressUI) {
+      document.getElementById('audience-bar').style.width = '0%';
+      document.getElementById('audience-val').textContent = '0 / ' + AUDIENCE_MAX;
+      updateHUD();
+    }
   }
 }
 
@@ -2214,10 +2644,13 @@ function makeState(charKey, isPlayer) {
     fast: false, slow: false,
     sealTurns: 0,
     counterStance: false,
+    counterParriesLeft: 0, // SHADOW同士×CROWD同時解決時のみ2（1ヒットごとに減算）
     counterConsecutive: 0,   // 連続カウンターカウント
+    counterForce: false,     // SHADOW：絶影の反撃（次のカウンター必中）
     lastAction: null,
     taunt: false,
     primed: false,
+    shadowSureHitNext: false, // SHADOW：速度差回避後、次の中/強/カウンターが必中
     learned: null,
     quantum: false,
     corrode: false,
@@ -2225,8 +2658,10 @@ function makeState(charKey, isPlayer) {
     overclockCooldown: 0,
     extraTurn: false,
     pendingDouble: false,  // オーバークロック／絶影の極み：次ターン2回行動フラグ
+    doubleFromOverclock: false, // 直近の2回行動がOC起因（絶影・CROWD由来ではfalse）
     totalDmgDealt: 0,
     guardThisTurn: false,
+    guardJustCharges: 0, // ガード中：ジャスト成功で1減、0でガード解除。OC同士2回行動ターンは2で開始
     crowdBonusActive: false,
     crowdBonusPending: false, // CROWD ON FIRE発動ターン末→次ターン頭でactiveに変換
     actionHistory: [],  // 直近5ターンの行動履歴
@@ -2361,10 +2796,10 @@ function goToSelect() {
     div.dataset.key = key;
     div.innerHTML = `
       <div class="char-card-inner">
-        <img class="char-card-img" src="${c.imgSrc}" alt="${c.name}" onerror="this.style.display='none'">
+        <img class="char-card-img" src="${c.imgSrc}" alt="${c.name}" style="object-position:${c.imgPosition||'center'}" onerror="this.style.display='none'">
         <div class="char-card-text">
           <div class="char-name">${c.name}</div>
-          <div class="char-catchphrase">${c.catchphrase||''}</div>
+          <div class="char-catchphrase">${formatCatchphrase(c.catchphrase||'')}</div>
           <div class="char-type">${c.type}</div>
           <div class="char-stats">HP:${c.hp} SPD:${c.speed} DMG:${c.dmgMod>=1?'+':''}${Math.round((c.dmgMod-1)*100)}%</div>
         </div>
@@ -2382,7 +2817,6 @@ function goToSelect() {
         <div class="detail-section">
           <div class="detail-label">PASSIVE</div>
           ${c.passiveKeys ? `<div class="passive-keywords">${c.passiveKeys}</div>` : ''}
-          <div class="detail-text">${c.passiveDesc}</div>
         </div>
         <div class="detail-section">
           <div class="detail-label">SPECIAL MOVE</div>
@@ -2449,6 +2883,7 @@ function startGame(pKey, cKey) {
   audienceGauge = 0;
   crowdOnFireNext = false;
   crowdOnFireCount = 0;
+  matchStats = { pCounterSuccess: 0, cCounterSuccess: 0, pCorrosionDmg: 0, cCorrosionDmg: 0 };
   actionLogBuffer = [];
   pSelectedAction = null;
   p2SelectedAction = null;
@@ -2459,10 +2894,14 @@ function startGame(pKey, cKey) {
   if (bar) bar.innerHTML = '';
   document.getElementById('audience-bar').style.width = '0%';
   document.getElementById('audience-val').textContent = '0 / ' + AUDIENCE_MAX;
+  {
+    const aw = document.getElementById('audience-wrap');
+    if (aw) aw.classList.remove('audience-hot', 'audience-gain-bump', 'audience-ignite');
+  }
   showScreen('game-screen');
-  // HINTトグル表示（EASYのみ）
+  // HINTトグル（CPU・EASY/NORMAL。内容のON/OFF用）
   const _htBtn = document.getElementById('hint-toggle');
-  if (_htBtn) _htBtn.style.display = difficulty === 'easy' ? 'block' : 'none';
+  if (_htBtn) _htBtn.style.display = (difficulty === 'easy' || difficulty === 'normal') ? 'block' : 'none';
   if (gameMode === '2p') {
     document.getElementById('p-name').textContent = pState.name + ' [P1]';
     document.getElementById('c-name').textContent = cState.name + ' [P2]';
@@ -2497,7 +2936,10 @@ function startGame(pKey, cKey) {
 // ===== ヒットエフェクト =====
 function screenShake(isPlayer, intensity = 'normal') {
   if (autoMode) return;
-  if (_onlineTurnLogCapture !== null) return; // ホスト計算中は抑制（SSOT）
+  if (_onlineCombatFxCapture !== null) {
+    _onlineCombatFxCapture.push({ t: 'shake', isPlayer, intensity });
+    return;
+  }
   const el = document.getElementById(isPlayer ? 'p-panel' : 'c-panel');
   el.classList.remove('shake');
   void el.offsetWidth; // アニメーション再スタート用リフロー
@@ -2507,7 +2949,10 @@ function screenShake(isPlayer, intensity = 'normal') {
 
 function showDmgPopup(isPlayer, amount, type = 'normal') {
   if (autoMode || amount <= 0) return;
-  if (_onlineTurnLogCapture !== null) return; // ホスト計算中は抑制（SSOT）
+  if (_onlineCombatFxCapture !== null) {
+    _onlineCombatFxCapture.push({ t: 'dmg', isPlayer, amount, dmgType: type });
+    return;
+  }
   const panel = document.getElementById(isPlayer ? 'p-panel' : 'c-panel');
   const popup = document.createElement('div');
   let cls = 'dmg-popup';
@@ -2528,13 +2973,24 @@ function showDmgPopup(isPlayer, amount, type = 'normal') {
 
 function showActionPop(isPlayer, text, cls) {
   if (autoMode) return;
+  if (_onlineCombatFxCapture !== null) {
+    _onlineCombatFxCapture.push({ t: 'pop', isPlayer, text, cls });
+    return;
+  }
   const panel = document.getElementById(isPlayer ? 'p-panel' : 'c-panel');
   if (!panel) return;
   const pop = document.createElement('div');
   pop.className = 'action-pop ' + cls;
   pop.textContent = text;
   panel.appendChild(pop);
-  setTimeout(() => pop.remove(), 700);
+  const dur =
+    cls === 'just-guard'  ? 2600 :
+    cls === 'guard-break' ? 2600 :
+    cls === 'counter-pop' ? 2800 :
+    cls === 'misread'     ? 2200 :
+    cls === 'defended'    ? 1700 :
+    2300;
+  setTimeout(() => pop.remove(), dur);
 }
 
 function showCharHintPop(text) {
@@ -2549,10 +3005,7 @@ function toggleSubtext() {
   subtextEnabled = !subtextEnabled;
   const btn = document.getElementById('hint-toggle');
   if (btn) btn.textContent = subtextEnabled ? 'HINT:ON' : 'HINT:OFF';
-  if (!subtextEnabled) {
-    const hintEl = document.getElementById('easy-hint');
-    if (hintEl) hintEl.textContent = '';
-  }
+  renderBattleHint(null);
 }
 
 // ===== キャラクターテーマ適用 =====
@@ -2620,12 +3073,70 @@ function updateTimerDisplay() {
   el.className = timerSeconds <= 10 ? 'warn' : '';
 }
 
+function syncAudienceChrome() {
+  if (autoMode) return;
+  const w = document.getElementById('audience-wrap');
+  if (!w) return;
+  const bar = document.getElementById('audience-bar');
+  const val = document.getElementById('audience-val');
+  if (bar) bar.style.width = (audienceGauge / AUDIENCE_MAX * 100) + '%';
+  if (val) val.textContent = audienceGauge + ' / ' + AUDIENCE_MAX;
+  w.classList.toggle('audience-hot', audienceGauge >= 7 && audienceGauge < AUDIENCE_MAX);
+}
+
+function updateBattleContextStrip() {
+  if (autoMode) return;
+  const L = document.getElementById('context-crowd-badge');
+  const R = document.getElementById('context-simul-badge');
+  const strip = document.getElementById('battle-context-strip');
+  const aw = document.getElementById('audience-wrap');
+  if (!L || !R || !strip) return;
+  const on = !!crowdOnFireNext;
+  L.classList.toggle('is-on', on);
+  R.classList.toggle('is-on', on);
+  strip.style.display = on ? 'flex' : 'none';
+  if (aw) aw.style.display = on ? 'none' : '';
+}
+
+function crowdFestivalLabel(passive, phase) {
+  const P = {
+    nova:     ['★ 星屑砲 準備',     '★ 星屑砲 強化中'],
+    blaze:    ['★ 無双 準備',       '★ 無双 発動'],
+    titan:    ['★ 超電磁 準備',     '★ 超電磁 強化中'],
+    lyrax:    ['★ 再生 準備',       '★ 再生 強化中'],
+    learning: ['★ 量子強化 準備',   '★ 量子強化 中'],
+  };
+  const row = P[passive];
+  if (!row) return null;
+  return phase === 'pending' ? row[0] : row[1];
+}
+
+function updateFighterFestivalChips(prefix, s) {
+  const el = document.getElementById(`${prefix}-festival`);
+  if (!el) return;
+  const parts = [];
+  if (s.pendingDouble) {
+    parts.push('<span class="festival-chip fest-double">★ 次ターン 2回行動</span>');
+  }
+  if (s.crowdBonusPending) {
+    const lab = crowdFestivalLabel(s.passive, 'pending');
+    if (lab) parts.push(`<span class="festival-chip fest-crowd">${lab}</span>`);
+  }
+  if (s.crowdBonusActive) {
+    const lab = crowdFestivalLabel(s.passive, 'active');
+    if (lab) parts.push(`<span class="festival-chip fest-crowd-active">${lab}</span>`);
+  }
+  el.innerHTML = parts.join('');
+}
+
 // ===== HUD更新 =====
 function updateHUD() {
   if (autoMode) return;
   if (_onlineTurnLogCapture !== null) return; // ホスト計算中は抑制（SSOT）
   updateFighterHUD('p', pState);
   updateFighterHUD('c', cState);
+  syncAudienceChrome();
+  updateBattleContextStrip();
 }
 
 function updateFighterHUD(prefix, s) {
@@ -2674,6 +3185,7 @@ function updateFighterHUD(prefix, s) {
   if (s.quantum) addTag(tags, '量子強化', 'quantum');
   if (s.corrode) addTag(tags, '腐食', 'corrode');
   if (s.shimaiNext) addTag(tags, '身代わり', 'shimai');
+  updateFighterFestivalChips(prefix, s);
 }
 
 // ===== オンライン用 ステートシリアライズ =====
@@ -2686,7 +3198,10 @@ function serializeState(s) {
     fast: s.fast, slow: s.slow,
     sealTurns: s.sealTurns,
     counterStance: s.counterStance,
+    counterParriesLeft: s.counterParriesLeft,
     counterConsecutive: s.counterConsecutive,
+    counterForce: s.counterForce,
+    shadowSureHitNext: s.shadowSureHitNext,
     lastAction: s.lastAction,
     taunt: s.taunt,
     primed: s.primed,
@@ -2697,8 +3212,10 @@ function serializeState(s) {
     overclockCooldown: s.overclockCooldown,
     extraTurn: s.extraTurn,
     pendingDouble: s.pendingDouble,
+    doubleFromOverclock: s.doubleFromOverclock,
     totalDmgDealt: s.totalDmgDealt,
     guardThisTurn: s.guardThisTurn,
+    guardJustCharges: s.guardJustCharges,
     crowdBonusActive: s.crowdBonusActive,
     crowdBonusPending: s.crowdBonusPending,
     actionHistory: s.actionHistory ? [...s.actionHistory] : [],
@@ -2706,32 +3223,68 @@ function serializeState(s) {
 }
 function applySerializedState(s, data) {
   const keys = ['hp','maxHp','speed','baseSpeed','gauge','dmgMod','hitMod','fast','slow',
-    'sealTurns','counterStance','counterConsecutive','lastAction','taunt','primed',
+    'sealTurns','counterStance','counterParriesLeft','counterConsecutive','counterForce','lastAction','taunt','primed','shadowSureHitNext',
     'learned','quantum','corrode','shimaiNext','overclockCooldown','extraTurn',
-    'pendingDouble','totalDmgDealt','guardThisTurn','crowdBonusActive','crowdBonusPending'];
+    'pendingDouble','doubleFromOverclock','totalDmgDealt','guardThisTurn','guardJustCharges','crowdBonusActive','crowdBonusPending'];
   keys.forEach(k => { if (data[k] !== undefined) s[k] = data[k]; });
   if (data.actionHistory) s.actionHistory = [...data.actionHistory];
+}
+
+// ===== オンライン: ホストが記録した戦闘VFXを両端末で再生 =====
+// fx の isPlayer は「ホスト計算時の P1=true / P2=false」。ゲストは pState=P2（左YOU）なので左右を反転する。
+function replayOnlineCombatFx(fxList, isHost) {
+  if (!Array.isArray(fxList) || fxList.length === 0) return;
+  const mapPanel = (p1Left) => (isHost ? p1Left : !p1Left);
+  for (const ev of fxList) {
+    if (!ev || typeof ev.t !== 'string') continue;
+    switch (ev.t) {
+      case 'shake':
+        screenShake(mapPanel(ev.isPlayer), ev.intensity || 'normal');
+        break;
+      case 'dmg':
+        showDmgPopup(mapPanel(ev.isPlayer), ev.amount, ev.dmgType || 'normal');
+        break;
+      case 'pop':
+        showActionPop(mapPanel(ev.isPlayer), ev.text, ev.cls);
+        break;
+      case 'flash':
+        showBattleFlash(ev.text, ev.type, ev.delay || 0);
+        break;
+      default:
+        break;
+    }
+  }
 }
 
 // ===== オンラインバトル ターン処理 =====
 // ホスト: resolveActionsを実行し結果をキャプチャして返す
 window.hostComputeTurn = function(p1Act, p2Act) {
   _onlineTurnLogCapture = [];
+  _onlineCombatFxCapture = [];
+  _onlineAudioCapture = [];
   _onlineHostComputing  = true;
-  resolveActions(p1Act, p2Act);
-  _onlineHostComputing  = false;
-  const pDead = pState.hp <= 0, cDead = cState.hp <= 0;
-  const result = {
-    turn: turn,
-    p1State: serializeState(pState),
-    p2State: serializeState(cState),
-    logs: _onlineTurnLogCapture.slice(),
-    audienceGauge,
-    crowdOnFireNext,
-    gameOver: pDead || cDead,
-    winner: (pDead && cDead) ? 'draw' : cDead ? 'p1' : pDead ? 'p2' : null,
-  };
-  _onlineTurnLogCapture = null;
+  let result;
+  try {
+    resolveActions(p1Act, p2Act);
+    const pDead = pState.hp <= 0, cDead = cState.hp <= 0;
+    result = {
+      turn: turn,
+      p1State: serializeState(pState),
+      p2State: serializeState(cState),
+      logs: _onlineTurnLogCapture.slice(),
+      fx: _onlineCombatFxCapture.slice(),
+      se: _onlineAudioCapture.slice(),
+      audienceGauge,
+      crowdOnFireNext,
+      gameOver: pDead || cDead,
+      winner: (pDead && cDead) ? 'draw' : cDead ? 'p1' : pDead ? 'p2' : null,
+    };
+  } finally {
+    _onlineHostComputing = false;
+    _onlineCombatFxCapture = null;
+    _onlineAudioCapture = null;
+    _onlineTurnLogCapture = null;
+  }
   return result;
 };
 
@@ -2739,6 +3292,14 @@ window.hostComputeTurn = function(p1Act, p2Act) {
 window.applyOnlineTurnResult = function(data) {
   // ★ let onlineRole はwindowプロパティにならないため window.onlineRole を使用
   const isHost = (window.onlineRole === 'host');
+  try {
+    if (typeof devMode !== 'undefined' && devMode && typeof DbgPanel !== 'undefined') {
+      const fxN = Array.isArray(data?.fx) ? data.fx.length : 0;
+      const seN = Array.isArray(data?.se) ? data.se.length : 0;
+      const lgN = Array.isArray(data?.logs) ? data.logs.length : 0;
+      DbgPanel.log('info', `[ON] apply turn=${data?.turn} | host=${isHost ? 1 : 0} | logs=${lgN} fx=${fxN} se=${seN}`);
+    }
+  } catch(_) {}
   // ★ステート適用: P1(host)視点 pState=P1/cState=P2、P2(guest)視点 pState=P2/cState=P1
   //   p1State は常にhostキャラ、p2State は常にguestキャラ
   if (isHost) {
@@ -2752,12 +3313,23 @@ window.applyOnlineTurnResult = function(data) {
   crowdOnFireNext  = data.crowdOnFireNext;
   // ★ SSOT: ホスト・ゲスト両方ともFirestoreのturn_resultからログを再生
   //   ゲストはホスト視点のYOU/OPPONENTを反転してから描画する
+  let hadCrowdFireLog = false;
   if (Array.isArray(data.logs)) {
     data.logs.forEach(({ text, cls }) => {
       addLog(isHost ? text : mirrorOnlineLogText(text), cls);
+      if ((text || '').includes('CROWD ON FIRE')) hadCrowdFireLog = true;
     });
   }
+  // 旧クライアント互換: fx 無しのときのみゲスト向けに CROWD 中央フラッシュをログから補完
+  if ((!Array.isArray(data.fx) || data.fx.length === 0) && !isHost && hadCrowdFireLog) {
+    showBattleFlash('CROWD ON FIRE', 'crowd');
+  }
   updateHUD();
+  replayOnlineCombatFx(data.fx, isHost);
+  // オンライン: ホスト計算でキャプチャしたSEを両端末で再生（ホスト側の二重再生を防ぐため capture中は無音）
+  if (Array.isArray(data.se)) {
+    data.se.forEach(({ key, vol }) => AudioManager.playSE(key, (typeof vol === 'number' ? vol : 1.0)));
+  }
   // UI完全リセット（両端末）
   document.getElementById('online-battle-overlay').style.display = 'none';
   resetReadyBtn();
@@ -2814,9 +3386,9 @@ function addLog(text, cls='') {
   if (cls === 'dev') return;                        // devログ
   if (text.startsWith('=== ')) return;              // === TURN / === TUTORIAL 等
 
-  // 3行まで保持して描画
+  // 直近のみ保持（OC二段・SPEED追撃・多段ヒットで埋まるため6行）
   _logLines.push({ text, cls });
-  if (_logLines.length > 3) _logLines.shift();
+  if (_logLines.length > 6) _logLines.shift();
   _renderLogBar();
 }
 
@@ -2836,8 +3408,10 @@ function updateButtons(s = pState) {
   document.getElementById('lbl-strong').textContent = s.moves.strong + '（強）';
   document.getElementById('lbl-guard').textContent = s.moves.guard;
   document.getElementById('btn-unique-name').textContent = s.uniqueName;
+  // 固有技コスト表示：BLAZE起爆準備中0%、SHADOW35%、他50%
+  document.getElementById('cost-unique').textContent = `${uniqueGaugeCost(s)}%`;
 
-  const atk25 = (s.passive === 'nova' && s.gauge >= 60) ? 10 : 25;
+  const atk25 = (s.passive === 'nova' && s.gauge >= 80) ? 15 : 25;
   const counterCost = s.counterConsecutive > 0 ? 50 : atk25;
 
   document.getElementById('cost-speedatk').textContent = (s.quantum ? 0 : atk25) + '%';
@@ -2855,7 +3429,7 @@ function updateButtons(s = pState) {
   document.getElementById('btn-heal').classList.toggle('disabled', s.gauge < 30 || s.sealTurns > 0);
   document.getElementById('btn-taunt').classList.toggle('disabled', s.gauge < 30 || s.sealTurns > 0);
   document.getElementById('btn-overclock').classList.toggle('disabled', s.gauge < 100);
-  document.getElementById('btn-unique').classList.toggle('disabled', s.gauge < 50);
+  document.getElementById('btn-unique').classList.toggle('disabled', !canUseUnique(s));
 }
 
 // ===== プレイヤー行動選択（2ステップ） =====
@@ -2875,14 +3449,7 @@ function selectAction(action) {
   const readyBtn = document.getElementById('ready-btn');
   readyBtn.classList.add('active');
   // サブテキスト（EASYモード）
-  if (difficulty === 'easy' && subtextEnabled) {
-    const hintEl = document.getElementById('easy-hint');
-    if (hintEl) {
-      hintEl.textContent = action === 'unique'
-        ? (UNIQUE_SUBTEXT[pState?.passive] || '')
-        : (ACTION_SUBTEXT[action] || '');
-    }
-  }
+  renderBattleHint(action);
 }
 
 function resetReadyBtn() {
@@ -2892,6 +3459,7 @@ function resetReadyBtn() {
   document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('selected'));
   const readyBtn = document.getElementById('ready-btn');
   readyBtn.classList.remove('active');
+  renderBattleHint(null);
 }
 
 function confirmAction() {
@@ -2919,6 +3487,7 @@ function confirmAction() {
       readyBtn.classList.remove('active');
       readyBtn.textContent = '▶ READY (P2)';
       p2SelectedAction = null;
+      renderBattleHint(null);
       document.getElementById('turn-info').textContent = `TURN ${turn} — P2: SELECT ACTION`;
       updateButtons(cState);
     } else {
@@ -2946,10 +3515,48 @@ function confirmAction() {
 }
 
 // ===== CPU AI =====
+/** 抽選プール用：解決時にゲージ・封じ等で無言スキップにならない行動か（全難易度の CPU プール最終ガードに使用） */
+function cpuPoolAffordable(s, opp, act) {
+  if (!act || act === 'weak' || act === 'mid' || act === 'guard' || act === 'idle') return true;
+  if (!opp) return true;
+  const novaVsLyra = s.passive === 'nova' && opp.passive === 'lyrax';
+  const atk25 = (s.passive === 'nova' && s.gauge >= 80) ? 15 : 25;
+  const counterCost = s.counterConsecutive > 0 ? 50 : atk25;
+  switch (act) {
+    case 'strong':
+      if (opp.passive === 'shadow') return false;
+      if (s.passive === 'lyrax' && turn <= 2) return false;
+      return true;
+    case 'speedatk':
+      if (novaVsLyra) return false;
+      return !!(s.quantum || s.gauge >= atk25);
+    case 'guardbk':
+    case 'sealatk':
+      return !!(s.quantum || s.gauge >= atk25);
+    case 'counter':
+      return s.gauge >= counterCost;
+    case 'accel':
+      return s.gauge >= 15;
+    case 'slow':
+      return s.gauge >= 30 && opp.passive !== 'titan' && !novaVsLyra;
+    case 'heal':
+      return s.sealTurns === 0 && s.gauge >= 30;
+    case 'taunt':
+      return s.sealTurns === 0 && s.gauge >= 30;
+    case 'overclock':
+      return s.gauge >= 100;
+    case 'unique':
+      return canUseUnique(s);
+    default:
+      return true;
+  }
+}
+
 function chooseCpuAction() {
   const s = cState;
   const opp = pState;
-  const atk25 = (s.passive === 'nova' && s.gauge >= 60) ? 10 : 25;
+  const novaVsLyra = s.passive === 'nova' && opp.passive === 'lyrax';
+  const atk25 = (s.passive === 'nova' && s.gauge >= 80) ? 15 : 25;
   const counterCost = s.counterConsecutive > 0 ? 50 : atk25;
 
   // weighted pool
@@ -2957,56 +3564,329 @@ function chooseCpuAction() {
   const add = (a, w) => { for (let i = 0; i < w; i++) pool.push(a); };
 
   if (difficulty === 'easy') {
-    // ほぼランダム
-    const avail = ['weak','mid','strong','guard'];
-    if (s.gauge >= atk25) avail.push('speedatk','guardbk','sealatk');
-    if (s.gauge >= counterCost) avail.push('counter');
-    if (s.gauge >= 15) avail.push('accel');
-    if (s.gauge >= 30) { avail.push('slow'); if (s.sealTurns===0) avail.push('heal','taunt'); }
-    if (s.gauge >= 100) avail.push('overclock');
-    if (s.gauge >= 50) avail.push('unique');
-    return avail[Math.floor(Math.random() * avail.length)];
+    // EASY: 相手状況は見ない（自分状況 + キャラの持ち味 + 短いフェーズ）
+    const phase = (turn % 3); // 0:圧 1:整地 2:ゲージ
+    const can = {
+      atk25,
+      counterCost,
+      speedatk: !!(s.quantum || s.gauge >= atk25),
+      guardbk:  !!(s.quantum || s.gauge >= atk25),
+      sealatk:  !!(s.quantum || s.gauge >= atk25),
+      counter:  s.gauge >= counterCost,
+      accel:    s.gauge >= 15,
+      slow:     s.gauge >= 30 && opp.passive !== 'titan' && !novaVsLyra,
+      heal:     turn >= 3 && s.gauge >= 30 && s.sealTurns === 0,
+      taunt:    s.gauge >= 30 && s.sealTurns === 0,
+      overclock:s.gauge >= 100,
+      unique:   canUseUnique(s),
+    };
+
+    // phase base
+    add('weak', 3); add('mid', 3); add('guard', 2);
+    if (phase === 0) { add('mid', 2); add('strong', 2); add('guard', 1); }
+    if (phase === 1) { add('guard', 3); if (can.accel) add('accel', 3); if (can.heal) add('heal', 2); if (can.slow) add('slow', 2); if (can.taunt) add('taunt', 2); }
+    if (phase === 2) {
+      if (can.speedatk && !novaVsLyra) add('speedatk', 3); // CPU NOVA×LYRAは速度特攻を積まない
+      if (can.guardbk) add('guardbk', 3); if (can.sealatk) add('sealatk', 3); if (can.unique) add('unique', 2);
+    }
+
+    // character flavor
+    switch (s.passive) {
+      case 'learning': { // NEXUS: 通常＋ガード、属性を喰らったら返す（learned優先）
+        add('guard', 2);
+        add('weak', 2);
+        if (can.counter) add('counter', 1);
+        // learnedがあるなら対応属性を返す
+        if (s.learned) {
+          if (s.learned === 'speedatk' && can.speedatk) add('speedatk', 8);
+          if (s.learned === 'guardbk'  && can.guardbk)  add('guardbk', 8);
+          if (s.learned === 'sealatk'  && can.sealatk)  add('sealatk', 8);
+        }
+        // 速度系は薄め
+        break;
+      }
+      case 'shadow': { // SHADOW: 弱で貯めつつ、ゲージ帯で属性・固有に枝を増やす（EASY）
+        // NEXUS（learning）のみ短ターン圧＋分身斬り（身代わり）を意識。他対面は従来の非束ねり基準線。
+        const vsNexus = opp.passive === 'learning';
+        add('weak', vsNexus ? 6 : 9);
+        if (can.speedatk && s.gauge >= atk25) add('speedatk', vsNexus ? 4 : 3);
+        if (s.gauge >= 40) add('mid', vsNexus ? 4 : 2);
+        if (can.accel) add('accel', 1); // 加速は最終手段（命中上昇でFASTに寄せる）
+        add('strong', 2);
+        if (vsNexus) add('strong', 1);
+        if (s.speed >= 60) {
+          add('strong', 1);
+          if (can.guardbk) add('guardbk', vsNexus ? 3 : 2);
+          if (can.counter) add('counter', 1);
+        }
+        if (can.heal) add('heal', 1);
+        if (can.unique) {
+          add('unique', canUseUnique(s) ? (vsNexus ? 22 : 16) : (vsNexus ? 5 : 3));
+        if (vsNexus && s.lastAction === 'counter' && canUseUnique(s)) add('unique', 12);
+        if (vsNexus && opp.lastAction === 'unique' && canUseUnique(s)) add('unique', 8);
+        }
+        if (vsNexus && s.lastAction === 'counter' && !canUseUnique(s)) { add('mid', 2); add('strong', 1); }
+        if (can.sealatk) add('sealatk', vsNexus ? 3 : 2);
+        if (opp.gauge >= 50 && vsNexus) { add('guard', 2); if (can.unique) add('unique', 6); }
+        if (opp.passive === 'blaze' && opp.primed) add('guard', 3);
+
+        // 対NEXUS：ビーム直後／学習済み＋ゲージあり → 受け（guard/counter）or 分身斬りで1ターン守る
+        if (vsNexus && (opp.lastAction === 'unique' || (opp.learned && opp.gauge >= 50))) {
+          const opts = [];
+          if (can.counter && s.gauge >= counterCost) opts.push('counter');
+          opts.push('guard');
+          if (canUseUnique(s)) opts.push('unique');
+          return opts[Math.floor(Math.random() * opts.length)] || 'guard';
+        }
+        break;
+      }
+      case 'nova': { // NOVA: 匂わせ少なめ、3ターン目以降に回復を少し混ぜる
+        if (can.speedatk && !novaVsLyra) add('speedatk', 2); // LYRA戦は速度特攻を積まない
+        if (can.guardbk)  add('guardbk', 2);
+        if (can.sealatk)  add('sealatk', 2);
+        if (can.unique && s.hp <= 45) add('unique', 4);
+        if (turn >= 3 && can.heal) add('heal', 2);
+        break;
+      }
+      case 'titan': { // TITAN: 遅い(=SLOW寄り)時は強を薄くしてカウンター多め、速い時は中強増
+        if (can.counter) add('counter', 5);
+        if (s.speed >= 40) { add('mid', 3); add('strong', 3); }
+        else { add('mid', 3); add('guard', 2); } // strongは増やさない
+        if (can.unique && s.hp <= 49) add('unique', 3);
+        // 対NOVA/NEXUS：受け過多にならないよう、少しだけ能動的に殴る（天敵以外の偏りを薄める）
+        if (opp.passive === 'nova' || opp.passive === 'learning') {
+          add('mid', 2);
+          if (can.speedatk && s.gauge >= atk25) add('speedatk', 2);
+          if (can.guardbk && s.gauge >= atk25) add('guardbk', 2);
+        }
+        // 対NOVA：星屑砲（ゲージ50%以上）圏内は、受け（guard/counter）に寄せてテンポを切る
+        if (opp.passive === 'nova' && opp.gauge >= 50) {
+          add('guard', 3);
+          if (can.counter) add('counter', 3);
+        }
+        // 対NEXUS/SHADOW：速度特攻はTITANの主武器。速い相手ほど刺さるので優先（学習されても痛くなりにくい）
+        if ((opp.passive === 'learning' || opp.passive === 'shadow') && can.speedatk && s.gauge >= atk25) {
+          if (opp.speed >= 70) add('speedatk', 10);
+          else if (opp.speed >= 60) add('speedatk', 7);
+          else add('speedatk', 3);
+        }
+        break;
+      }
+      case 'lyrax': { // LYRA: slow厚め＋ガード少し、回復封じも混ぜる
+        if (can.slow) add('slow', 7);
+        add('guard', 2);
+        if (can.sealatk) add('sealatk', 3);
+        if (can.heal) add('heal', 1);
+        if (can.unique) add('unique', 1);
+        // 対TITAN：腐食が入ってる（=相手SLOWでcorrode）間は属性で畳む or 少し貯めて固有（細胞再生）
+        if (opp.passive === 'titan' && opp.corrode) {
+          if (can.guardbk) add('guardbk', 4);
+          if (can.speedatk) add('speedatk', 4);
+          if (can.unique) add('unique', 3);
+        }
+        break;
+      }
+      case 'blaze': { // BLAZE: 挑発→起爆→爆裂を「たまに」狙う
+        // 方針（EASY）：
+        // - 起爆準備（guard）はゲージを貯めてから（目安：50%以上）
+        // - 起爆後（primed）は属性/固有に寄せ、たまにguardでフェイント
+        const vsNexus = opp.passive === 'learning';
+        const vsLyra = opp.passive === 'lyrax';
+        if (s.primed) {
+          // 起爆後（primed）は「痛い攻撃3択＋フェイント」の4択に固定（対人HARDの歯応え優先）
+          const opts = [];
+          if (can.unique) { opts.push('unique','unique','unique','unique','unique','unique'); }
+          if (can.guardbk) { opts.push('guardbk','guardbk','guardbk'); }
+          if (can.sealatk) { opts.push('sealatk','sealatk','sealatk'); }
+          opts.push('guard','guard'); // フェイント（起爆準備の連続）＝読み合いを作る
+          const primedEz = opts.filter(a => cpuPoolAffordable(s, opp, a));
+          return primedEz[Math.floor(Math.random() * primedEz.length)] || 'guard';
+        } else {
+          if (s.gauge >= 50) add('guard', 28); // 起爆準備（BLAZEのguard）: 50%以上は高確率で起爆に入る
+          else if (!s.taunt && can.taunt) add('taunt', 6);
+        }
+        if (vsNexus && s.gauge >= atk25) { if (can.sealatk) add('sealatk', 2); if (can.guardbk) add('guardbk', 2); }
+        if (vsLyra && s.slow && can.accel) add('accel', 8); // SLOWに落ちたら腐食レースを避ける
+        if (can.guardbk) add('guardbk', 1);
+        break;
+      }
+    }
+
+    const avail = pool.filter(a => cpuPoolAffordable(s, opp, a));
+    return (avail.length ? avail : ['weak'])[Math.floor(Math.random() * (avail.length || 1))];
   }
 
   // HARD: abSmartActと共通ロジック
   if (difficulty === 'hard') return abSmartAct(s, opp);
 
 
-  // NORMAL / HARD: キャラ別ウェイト
-  add('weak', 2); add('mid', 3); add('strong', 3); add('guard', 2);
-  if (s.gauge >= atk25) { add('speedatk',2); add('guardbk',2); add('sealatk',2); }
+  // NORMAL: strong/midは事故が起きやすいので控えめ。weakでゲージを溜め、属性/固有へ寄せる。
+  add('weak', 6); add('mid', 2); add('strong', 1); add('guard', novaVsLyra ? 1 : 2);
+  if (s.gauge >= atk25) {
+    if (!novaVsLyra) add('speedatk', 2);
+    add('guardbk', 2); add('sealatk', 2);
+  }
   if (s.gauge >= counterCost) add('counter', 2);
   if (s.gauge >= 15) add('accel', 2);
-  if (s.gauge >= 30) {
+  if (s.gauge >= 30 && opp.passive !== 'titan' && !novaVsLyra) {
     add('slow', 2);
-    if (s.sealTurns === 0) { add('heal', 1); add('taunt', 2); }
+    if (turn >= 3 && s.sealTurns === 0) { add('heal', 1); add('taunt', 2); }
   }
   if (s.gauge >= 100) add('overclock', 1);
-  if (s.gauge >= 50) add('unique', 2);
+  if (canUseUnique(s)) add('unique', 2);
+
+  // ===== 対NOVA（全キャラ共通：NORMALでも発動）=====
+  // 目的：回復封じでテンポを奪い、星屑砲→80%到達→属性連打の入口を遅らせる。
+  // SHADOWは案B：同メタを掛けない（軽量が封じ・貫通に寄りすぎて固有まで届かないため）
+  if (gameMode === 'cpu' && opp.passive === 'nova' && s.gauge >= atk25 && s.passive !== 'shadow') {
+    // 1〜3Tは早めに回復封じを狙う（ユーザー体感で刺さりやすい）
+    if (turn <= 3) add('sealatk', 6);
+    // 回復タイミングに重ねる（次の回復を封じる圧）
+    if (opp.lastAction === 'heal') add('sealatk', 6);
+    // 星屑砲（固有）圏内は、封じ＋ガード貫通でテンポを取りやすい
+    if (opp.gauge >= 50) { add('sealatk', 4); add('guardbk', 3); }
+  }
 
   // キャラ固有ウェイト調整
   switch(s.passive) {
+    case 'shadow': {
+      if (opp.passive === 'learning') {
+        add('weak', 4);
+        add('mid', 3);
+        add('strong', 3);
+        if (s.gauge >= atk25) add('speedatk', 6);
+        if (s.gauge >= atk25) { add('guardbk', 2); add('sealatk', 3); }
+        if (canUseUnique(s)) add('unique', 16);
+        if (s.fast && s.gauge >= counterCost) add('counter', 3);
+        if (s.lastAction === 'counter' && canUseUnique(s)) add('unique', 14);
+        if (s.lastAction === 'counter' && !canUseUnique(s)) { add('mid', 4); add('strong', 3); }
+        if (opp.lastAction === 'unique') { // ビーム直後は「守る/分身斬り/カウンター」で1ターンを作る
+          add('guard', 10);
+          if (s.gauge >= counterCost) add('counter', 10);
+          if (canUseUnique(s)) add('unique', 14);
+        }
+        if (opp.learned && opp.gauge >= 50) { // 学習済み＋ゲージありは強い属性が飛ぶ前提で受けに寄せる
+          add('guard', 8);
+          if (s.gauge >= counterCost) add('counter', 8);
+          if (canUseUnique(s)) add('unique', 10);
+        }
+        if (opp.learned === 'speedatk' && s.gauge >= atk25) { add('guardbk', 4); add('sealatk', 3); add('mid', 2); }
+        if (opp.learned === 'guardbk' && s.gauge >= atk25) { add('speedatk', 4); add('sealatk', 3); add('mid', 2); }
+        if (opp.learned === 'sealatk' && s.gauge >= atk25) { add('speedatk', 4); add('guardbk', 3); add('mid', 2); }
+        if (opp.quantum && s.gauge >= atk25) {
+          add('sealatk', 3);
+          if (canUseUnique(s)) add('unique', 10);
+          add('guard', 2);
+        }
+        if (opp.gauge >= 50) {
+          add('guard', 2);
+          if (canUseUnique(s)) add('unique', 10);
+        }
+      } else {
+        add('weak', 5);
+        add('mid', 2);
+        add('strong', 3);
+        if (s.gauge >= atk25) add('speedatk', 5);
+        if (s.fast && s.gauge >= counterCost) add('counter', 3);
+      }
+      if (opp.passive === 'blaze' && opp.primed) add('guard', 3);
+      // 対NOVA共通メタはSHADOW除外。ここは「削り＋固有」寄りに軽く残す
+      if (opp.passive === 'nova' && s.gauge >= atk25) {
+        add('guardbk', 3);
+        add('sealatk', 3);
+        if (s.gauge >= counterCost) add('counter', 1);
+        if (canUseUnique(s)) add('unique', 9);
+      }
+      break;
+    }
+    case 'learning':
+      add('weak', 8);
+      add('mid', 1);
+      add('strong', 1);
+      if (opp.passive === 'nova') {
+        if (canUseUnique(s)) add('unique', 4);
+        if (s.gauge >= atk25) add('sealatk', 6);
+        if (s.gauge >= atk25) add('guardbk', 3);
+      }
+      break;
     case 'titan':
       // 加速を封印、カウンター・中・強を強化
       const titanPool = pool.filter(a => a !== 'accel');
-      add('counter', 3); add('mid', 2); add('strong', 2);
+      add('weak', 10);
+      add('mid', 1);
+      add('strong', 0);
+      add('counter', 2);
       if (difficulty === 'hard') {
         // HP低いほど超電磁砲を狙う
-        if (s.hp <= 49 && s.gauge >= 50) add('unique', 6);
+        if (s.hp <= 49 && canUseUnique(s)) add('unique', 6);
       }
-      return titanPool.concat(pool.slice(pool.indexOf('counter'))).filter(a => a !== 'accel')[Math.floor(Math.random() * (pool.filter(a => a !== 'accel').length))];
+      // 対NOVA/NEXUS：受けに寄りすぎると吸われやすいので、属性/中を少し増やす
+      if (opp.passive === 'nova' || opp.passive === 'learning') {
+        if (s.gauge >= atk25) { add('speedatk', 3); add('guardbk', 3); add('sealatk', 2); }
+        add('mid', 2);
+      }
+      // 対NOVA：星屑砲圏内（ゲージ50%以上）は、受け（guard/counter）に寄せてテンポを切る
+      if (opp.passive === 'nova' && opp.gauge >= 50) {
+        add('guard', 4);
+        add('counter', 4);
+      }
+      // 対NEXUS/SHADOW：速度特攻はTITANの主武器。相手が速いほど優先
+      if ((opp.passive === 'learning' || opp.passive === 'shadow') && s.gauge >= atk25) {
+        if (opp.speed >= 70) add('speedatk', 10);
+        else if (opp.speed >= 60) add('speedatk', 7);
+        else add('speedatk', 3);
+      }
+      const titanPickNorm = titanPool.concat(pool.slice(pool.indexOf('counter'))).filter(a => a !== 'accel').filter(a => cpuPoolAffordable(s, opp, a));
+      return titanPickNorm[Math.floor(Math.random() * titanPickNorm.length)] || 'mid';
     case 'blaze':
       // 挑発→起爆→爆裂拳コンボを強化
-      if (s.primed && s.gauge >= 50) add('unique', 8);
-      else if (s.taunt && !s.primed) add('guard', 4); // 起爆準備（BLAZEのguard）
-      else if (!s.taunt && s.gauge >= 30 && s.sealTurns === 0) add('taunt', 4);
+      add('weak', 8);
+      // 方針（NORMAL）：
+      // - 起爆準備（guard）はゲージ50%以上を目安に（30で即起爆しない）
+      // - 起爆後（primed）は属性/固有に寄せ、たまにguardでフェイント
+      const vsNexus = opp.passive === 'learning';
+      const vsLyra = opp.passive === 'lyrax';
+      if (s.primed) {
+        // 起爆後（primed）は「痛い攻撃3択＋フェイント」の4択に固定（対人HARDの歯応え優先）
+        const opts = [];
+        if (canUseUnique(s)) { opts.push('unique','unique','unique','unique','unique','unique'); }
+        if (s.gauge >= atk25) { opts.push('guardbk','guardbk','guardbk'); opts.push('sealatk','sealatk','sealatk'); }
+        opts.push('guard','guard'); // フェイント
+        const primedNm = opts.filter(a => cpuPoolAffordable(s, opp, a));
+        return primedNm[Math.floor(Math.random() * primedNm.length)] || 'guard';
+      } else {
+        if (s.gauge >= 50) add('guard', 30); // 起爆準備（BLAZEのguard）: 50%以上は高確率で起爆に入る
+        if (!s.taunt && s.gauge >= 30 && s.sealTurns === 0) add('taunt', 4);
+      }
+      if (vsNexus && s.gauge >= atk25) { add('sealatk', 2); add('guardbk', 2); }
+      if (vsLyra && s.slow && s.gauge >= 15) add('accel', 6);
+      break;
+    case 'nova':
+      // NORMAL：NOVAは上の共通poolのみだったが、LYRA戦×腐食時は属性・固有の枝を足す（相手SLOWは優先度を上げない）
+      if (novaVsLyra && s.corrode) {
+        if (s.gauge >= atk25) { add('sealatk', 8); add('guardbk', 7); }
+        if (canUseUnique(s)) add('unique', 6);
+        add('weak', 2);
+      }
+      break;
+    case 'lyrax':
+      add('weak', 8);
+      add('mid', 1);
+      if (turn >= 3) add('strong', 1); // 序盤の強はミスりやすいので抑える
       break;
   }
 
   if (difficulty === 'hard') {
     // プレイヤーのゲージ50%以上→70%でガード/カウンター、30%で逆読み攻撃（ファジー行動）
     if (opp.gauge >= 50) {
-      if (Math.random() < 0.7) {
+      if (novaVsLyra) {
+        // NOVA vs LYRA：スローは腐食メタと噛み合わずゲージの無駄になりやすいのでガード厚盛りも抑える
+        add('counter', 3);
+        add('guard', 1);
+        if (s.gauge >= atk25) { add('sealatk', 2); add('guardbk', 2); }
+        if (s.corrode && s.gauge >= atk25) { add('sealatk', 6); add('guardbk', 5); }
+        if (s.corrode && canUseUnique(s)) add('unique', 5);
+      } else if (Math.random() < 0.7) {
         add('guard', 4); add('counter', 4);  // 最適解：固有技警戒
       } else {
         add('mid', 4); add('strong', 4);  // 逆読み：相手は様子見と読んで強気に攻撃
@@ -3018,11 +3898,11 @@ function chooseCpuAction() {
         add('weak', 10);  // 確実なトドメ
       } else {
         if (s.gauge >= 25) add('guardbk', 6);  // カウンター持ちを崩す
-        if (s.gauge >= 30) add('slow', 4);      // タイミングずらし
+        if (s.gauge >= 30 && opp.passive !== 'titan' && !novaVsLyra) add('slow', 4);      // タイミングずらし（TITAN相手には使わない）
       }
     }
     // プレイヤーがオーバークロック使用直後→スローで妨害
-    if (opp.lastAction === 'overclock' && s.gauge >= 30) add('slow', 8);
+    if (opp.lastAction === 'overclock' && s.gauge >= 30 && opp.passive !== 'titan' && !novaVsLyra) add('slow', 8);
     // 自分がSLOW→加速優先
     if (s.slow && s.gauge >= 15) add('accel', 8);
     // 相手が起爆準備状態→次ターン爆裂拳警戒（BLAZEメタ）
@@ -3032,19 +3912,39 @@ function chooseCpuAction() {
         add('counter', 3);
       } else {
         // ゲージ不足→ガードorスローで被害を抑える
-        add('guard', 3);
-        if (s.gauge >= 30) add('slow', 2);
+        add('guard', novaVsLyra ? 1 : 3);
+        if (s.gauge >= 30 && opp.passive !== 'titan' && !novaVsLyra) add('slow', 2);
       }
     }
   }
 
-  return pool[Math.floor(Math.random() * pool.length)];
+  // 対SHADOW：強攻撃は当たりにくいので常に禁止（全キャラ共通）／NOVA×LYRAはslowをプールから除外
+  let filtered = (opp.passive === 'shadow') ? pool.filter(a => a !== 'strong') : pool.slice();
+  if (novaVsLyra) filtered = filtered.filter(a => a !== 'slow' && a !== 'speedatk');
+  filtered = filtered.filter(a => cpuPoolAffordable(s, opp, a));
+  if (!filtered.length) filtered = ['weak'];
+  return filtered[Math.floor(Math.random() * filtered.length)];
 }
 
 // ===== 防御スタンス先行設定（同時選択システム） =====
 // カウンター・ガードは同時選択のため、速度順解決の前にフラグを確定させる
-function preSetDefenseStance(s, act) {
-  const atk25 = (s.passive === 'nova' && s.gauge >= 60) ? 10 : 25;
+function clearCounterStance(s) {
+  if (!s) return;
+  s.counterStance = false;
+  s.counterParriesLeft = 0;
+  s.counterForce = false;
+}
+
+/** カウンター命中後：SHADOW鏡×CROWD同時ターンは2ヒット分まで構え維持 */
+function resolveCounterStanceAfterHit(defender) {
+  if (!defender || !defender.counterStance) return;
+  const left = defender.counterParriesLeft | 0;
+  if (left <= 1) clearCounterStance(defender);
+  else defender.counterParriesLeft = left - 1;
+}
+
+function preSetDefenseStance(s, act, shadowMirrorCrowdSimul = false, ohkMirrorTurn = false) {
+  const atk25 = (s.passive === 'nova' && s.gauge >= 80) ? 15 : 25;
   const aName = s.displayName || (s.isPlayer ? 'あなた' : (gameMode === '2p' ? s.name : 'CPU'));
   if (act === 'counter') {
     const cost = s.counterConsecutive > 0 ? 50 : atk25;
@@ -3052,6 +3952,13 @@ function preSetDefenseStance(s, act) {
       s.gauge -= cost;
       if (s.quantum) s.quantum = false;
       s.counterStance = true;
+      s.counterParriesLeft = shadowMirrorCrowdSimul ? 2 : 1;
+      // SHADOW：速度差回避ボーナスの「次の一手必中」をカウンターにも適用
+      if (s.passive === 'shadow' && s.shadowSureHitNext) {
+        s.counterForce = true;
+        s.shadowSureHitNext = false;
+        addLog(`⭐ 絶影の反撃！次のカウンターは必中`, 'status');
+      }
       const penMsg = s.counterConsecutive > 0 ? '（連続ペナルティ：コスト50%）' : '';
       addLog(`${aName}がカウンター構え！${penMsg}`, 'status');
     }
@@ -3062,6 +3969,7 @@ function preSetDefenseStance(s, act) {
       addLog(`${aName}が起爆準備！`, 'status');
     } else {
       s.guardThisTurn = true;
+      s.guardJustCharges = ohkMirrorTurn ? 2 : 1;
       addLog(`${aName}がガード構え`, '');
     }
   }
@@ -3081,15 +3989,26 @@ function resolveActions(pAct, cAct) {
   // オーバークロック：前ターンのpendingDoubleをextraTurnに変換（次ターン2回行動）
   if (pState.pendingDouble) { pState.pendingDouble = false; pState.extraTurn = true; }
   if (cState.pendingDouble) { cState.pendingDouble = false; cState.extraTurn = true; }
+  const pHadDoubleThisResolve = !!pState.extraTurn;
+  const cHadDoubleThisResolve = !!cState.extraTurn;
 
   // CROWD ON FIRE 同時解決フラグ
   const forceSim = crowdOnFireNext;
   crowdOnFireNext = false;
-  if (forceSim) addLog('⚡ CROWD ON FIRE！SPEED差無視・同時解決！', 'system');
+  if (forceSim) addLog('⚡ CROWD ON FIRE！SPEED差無視・両者同時行動！', 'system');
+  const shadowMirrorCrowdSimul = forceSim && pState.passive === 'shadow' && cState.passive === 'shadow';
+  const ohkMirrorTurn = !!(pState.extraTurn && cState.extraTurn &&
+    pState.doubleFromOverclock && cState.doubleFromOverclock);
 
   // 防御スタンスを速度順解決前に先行設定（同時選択の整合性）
-  preSetDefenseStance(pState, pAct);
-  preSetDefenseStance(cState, cAct);
+  preSetDefenseStance(pState, pAct, shadowMirrorCrowdSimul, ohkMirrorTurn);
+  preSetDefenseStance(cState, cAct, shadowMirrorCrowdSimul, ohkMirrorTurn);
+  if (ohkMirrorTurn && (pAct === 'guard' || cAct === 'guard')) {
+    addLog('⚡ オーバークロック同士ターン：ガードのジャスト枠が各自2回まで', 'status');
+  }
+  if (shadowMirrorCrowdSimul && (pAct === 'counter' || cAct === 'counter')) {
+    addLog('⭐ 双影：CROWD同時ターン — カウンター側の構えは2ヒット分まで（コストはその1回）', 'status');
+  }
 
   const speedDiff = pState.speed - cState.speed;
   const absSpeedDiff = Math.abs(speedDiff);
@@ -3113,20 +4032,24 @@ function resolveActions(pAct, cAct) {
   if (!forceSim && absSpeedDiff >= 70) {
     if (pFirst && cState.hp > 0) {
       addLog(`▶ SPEEDアドバンテージ！${p1Disp}が追加行動！`, 'status');
+      addLog(`▶ 追撃 ${p1Disp}: ${actionLabel(pAct, pState)}`, 'log-action');
       applyAction(pState, cState, pAct);
     } else if (!pFirst && pState.hp > 0) {
       addLog(`▶ SPEEDアドバンテージ！${p2Disp}が追加行動！`, 'status');
+      addLog(`▶ 追撃 ${p2Disp}: ${actionLabel(cAct, cState)}`, 'log-action');
       applyAction(cState, pState, cAct);
     }
   }
 
-  // 2回行動（オーバークロック／絶影の極み）
+  // 2回行動（オーバークロック／絶影の極み）— 2回目はゲージコストのみ免除（GDD追記予定の方針）
+  const extraOpts = { skipGaugeCost: true };
   if (pState.extraTurn) {
     pState.extraTurn = false;
     if (cState.hp > 0) {
       const lbl = pState.passive === 'shadow' ? `⭐ 絶影の極み！${p1Disp}が追加行動！` : `▶ オーバークロック発動！${p1Disp}が追加行動！`;
       addLog(lbl, 'status');
-      applyAction(pState, cState, pAct);
+      addLog(`▶ 2回目 ${p1Disp}: ${actionLabel(pAct, pState)}`, 'log-action');
+      applyAction(pState, cState, pAct, extraOpts);
     }
   }
   if (cState.extraTurn) {
@@ -3134,9 +4057,13 @@ function resolveActions(pAct, cAct) {
     if (pState.hp > 0) {
       const lbl = cState.passive === 'shadow' ? `⭐ 絶影の極み！${p2Disp}が追加行動！` : `▶ オーバークロック発動！${p2Disp}が追加行動！`;
       addLog(lbl, 'status');
-      applyAction(cState, pState, cAct);
+      addLog(`▶ 2回目 ${p2Disp}: ${actionLabel(cAct, cState)}`, 'log-action');
+      applyAction(cState, pState, cAct, extraOpts);
     }
   }
+
+  if (pHadDoubleThisResolve) pState.doubleFromOverclock = false;
+  if (cHadDoubleThisResolve) cState.doubleFromOverclock = false;
 
   endOfTurn();
 }
@@ -3153,12 +4080,14 @@ function actionLabel(act, s) {
 }
 
 // ===== 行動適用 =====
-function applyAction(attacker, defender, action) {
+function applyAction(attacker, defender, action, opt) {
+  opt = opt || {};
+  const skipGaugeCost = !!opt.skipGaugeCost;
   if (attacker.hp <= 0 || defender.hp <= 0) return;
   attacker.lastAction = action;
   const aName = attacker.displayName || (attacker.isPlayer ? 'あなた' : 'CPU');
   const dName = defender.displayName || (defender.isPlayer ? 'あなた' : 'CPU');
-  const atk25 = (attacker.passive === 'nova' && attacker.gauge >= 60) ? 10 : 25; // v6.5: 15→10
+  const atk25 = (attacker.passive === 'nova' && attacker.gauge >= 80) ? 15 : 25; // v6.5: 15→10（→ v6.14調整: 80%以上で15%）
 
   switch(action) {
     // ===== 通常行動 =====
@@ -3179,30 +4108,35 @@ function applyAction(attacker, defender, action) {
         AudioManager.playSE('miss');
         addGauge(attacker, 5);
         if (attacker.primed) attacker.primed = false;
-        if (defender.counterStance) { defender.counterStance = false; addLog(`– カウンター空振り（攻撃届かず）`, 'log-miss'); showBattleFlash('MISS', 'miss'); }
+        if (defender.counterStance) { clearCounterStance(defender); addLog(`– カウンター空振り（攻撃届かず）`, 'log-miss'); showBattleFlash('MISS', 'miss'); }
         if (defender.passive === 'shadow') {
           addGauge(defender, 20);
           addLog(`${dName}の絶影！速度差回避でゲージ+20%！`, 'status');
           AudioManager.playSE('shadow_zettsuei');
+          defender.shadowSureHitNext = true;
+          addLog(`⭐ 絶影の反撃！次の中/強/カウンターが必中`, 'status');
         }
         break;
       }
 
       // 命中判定（弱は必中なのでスキップ。チュートリアル強制命中フラグ考慮）
-      if (action !== 'weak' && !_tutForceHit && Math.random() * 100 > hitRate) {
+      // SHADOW：速度差回避後の「反撃必中」は中/強に適用（カウンターは別処理）
+      const shadowSureHit = attacker.passive === 'shadow' && attacker.shadowSureHitNext && (action === 'mid' || action === 'strong');
+      const blazePrimedBefore = attacker.passive === 'blaze' && attacker.primed;
+      if (action !== 'weak' && !_tutForceHit && !shadowSureHit && Math.random() * 100 > hitRate) {
         const gaugeOnMiss = action === 'strong' ? 5 : 8;
         addLog(`– ${aName}の攻撃がはずれた`, 'log-miss');
         showBattleFlash('MISS', 'miss');
         AudioManager.playSE('miss');
         addGauge(attacker, gaugeOnMiss);
         if (attacker.primed) attacker.primed = false;
-        if (defender.counterStance) { defender.counterStance = false; addLog(`– カウンター空振り（攻撃届かず）`, 'log-miss'); showBattleFlash('MISS', 'miss'); }
+        if (defender.counterStance) { clearCounterStance(defender); addLog(`– カウンター空振り（攻撃届かず）`, 'log-miss'); showBattleFlash('MISS', 'miss'); }
         break;
       }
 
       // ダメージ計算
       let dmg = base * attacker.dmgMod;
-      if (attacker.passive === 'shadow') dmg = Math.round(dmg * 0.9); // SHADOW通常攻撃追加減衰
+      // SHADOW通常攻撃の追加減衰は廃止（dmgModのみ適用）
       dmg = applySlowMod(attacker, dmg);
       if (attacker.taunt) { dmg *= 1.3; attacker.taunt = false; }
       if (attacker.primed && attacker.passive === 'blaze') dmg *= 1.3;
@@ -3219,17 +4153,19 @@ function applyAction(attacker, defender, action) {
 
       // カウンター処理
       if (defender.counterStance) {
-        applyCounter(defender, attacker, dmg);
-        defender.counterStance = false;
+        const incoming = blazePrimedBefore ? Math.round(dmg * 0.7) : dmg; // BLAZE：起爆準備後のカウンター反撃ダメージを軽減
+        const { hit } = applyCounter(defender, attacker, incoming);
+        if (hit) resolveCounterStanceAfterHit(defender);
+        else clearCounterStance(defender);
       } else {
         // 身代わり（SHADOW影分身）
         if (defender.shimaiNext) {
           defender.shimaiNext = false;
           addLog(`${dName}の身代わり！ダメージ無効！`, 'status');
         } else {
-          dealDamage(attacker, defender, dmg, aName, dName, titanOverheat);
-          // 強攻撃ヒット時：相手SPEED-10（v5追加）
-          if (action === 'strong') {
+          const finalDmg = dealDamage(attacker, defender, dmg, aName, dName, titanOverheat);
+          // 強攻撃：実ダメが相手に入った場合のみ SPEED-10（強×ガードは常にジャスト扱いで finalDmg=0 → 不発）
+          if (action === 'strong' && finalDmg > 0) {
             defender.speed = Math.max(0, defender.speed - 10);
             defender.slow = defender.speed <= 35;
             defender.fast = defender.speed >= 70;
@@ -3237,6 +4173,16 @@ function applyAction(attacker, defender, action) {
           }
         }
       }
+
+      // SHADOW：通常攻撃の命中（ガード含む）でSPEED上昇（弱+10／中+8／強+6、上限100。SPEED80超でも半減しない）
+      if (attacker.passive === 'shadow') {
+        const gain = action === 'weak' ? 10 : action === 'mid' ? 8 : 6;
+        attacker.speed = Math.min(100, attacker.speed + gain);
+        attacker.fast = attacker.speed >= 70;
+        attacker.slow = attacker.speed <= 35;
+        addLog(`${aName}の機動上昇！SPEED +${gain} → ${Math.round(attacker.speed)}`, 'status');
+      }
+      if (shadowSureHit) attacker.shadowSureHitNext = false;
       break;
     }
 
@@ -3249,27 +4195,34 @@ function applyAction(attacker, defender, action) {
     case 'speedatk': {
       AudioManager.playSE('speedAtk');
       const cost = attacker.quantum ? 0 : atk25;
-      if (attacker.gauge < cost && !attacker.quantum) break;
-      attacker.gauge -= cost;
-      addGauge(attacker, 8);
       const hadQuantum = attacker.quantum;
-      if (attacker.quantum) attacker.quantum = false;
+      if (!skipGaugeCost) {
+        if (attacker.gauge < cost && !attacker.quantum) break;
+        attacker.gauge -= cost;
+        addGauge(attacker, 8);
+        if (attacker.quantum) attacker.quantum = false;
+      }
       const bonusDmg = getSpeedBonus(defender.speed);
       let dmg = 13; // v6.7: 16→13（+5に戻す）
       dmg = applySlowMod(attacker, dmg);
       if (attacker.taunt) { dmg *= 1.3; attacker.taunt = false; }
       let totalDmg = Math.round(dmg * attacker.dmgMod + bonusDmg);
       if (hadQuantum) totalDmg = Math.round(totalDmg * 1.2); // 量子強化：威力+20%（v6.5）
-      if (attacker.passive === 'learning') totalDmg = Math.round(totalDmg * 1.1); // NEXUS-7 属性バフ
+      if (attacker.passive === 'learning') totalDmg = Math.round(totalDmg * 1.2); // NEXUS-7 属性バフ
       if (attacker.passive === 'learning' && attacker.crowdBonusActive) { totalDmg = Math.round(totalDmg * 1.2); attacker.crowdBonusActive = false; addLog(`🤖 CROWD BONUS！量子増幅+20%！`, 'status'); } // NEXUS-7 CROWD ON FIRE（v6.5）
       if (attacker.passive === 'blaze') totalDmg = Math.round(totalDmg * 1.4);    // BLAZE 属性倍率
       if (attacker.learned === 'speedatk') { const lm = 2.0; totalDmg = Math.round(totalDmg * lm); attacker.learned = null; attacker.crowdBonusActive = false; } // v6.5: 1.8→2.0
       const speedatkWasPrimed = attacker.primed;
       if (attacker.primed) attacker.primed = false;
       addLog(`${aName}の速度特攻！(+${bonusDmg}ボーナス)`, '');
-      if (bonusDmg > 0) addAudience(2);
+      // CROWDは「読み合い勝ち」の演出寄り：FAST級（SPEED70+）を咎めた時だけ上げる
+      // 速度特攻は「読み勝ち」の確度が低い（相手FASTを咎めただけ）ので、他の読み勝ち系より上昇量を抑える
+      if (bonusDmg > 0 && defender.speed >= 70) addAudience(1);
       if (defender.counterStance) {
-        const selfDmg = applyCounter(defender, attacker, totalDmg); defender.counterStance = false;
+        const incoming = (attacker.passive === 'blaze' && speedatkWasPrimed) ? Math.round(totalDmg * 0.7) : totalDmg;
+        const { selfDmg, hit } = applyCounter(defender, attacker, incoming);
+        if (hit) resolveCounterStanceAfterHit(defender);
+        else clearCounterStance(defender);
         // かすりダメージあり（完全防御でない）場合のみSLOW適用
         if (selfDmg > 0 && defender.hp > 0) {
           const reduction = 10 + Math.round(Math.random() * 5);
@@ -3300,18 +4253,20 @@ function applyAction(attacker, defender, action) {
     case 'guardbk': {
       AudioManager.playSE('guardBreak');
       const cost = attacker.quantum ? 0 : atk25;
-      if (attacker.gauge < cost && !attacker.quantum) break;
-      attacker.gauge -= cost;
-      addGauge(attacker, 8);
       const hadQuantum = attacker.quantum;
-      if (attacker.quantum) attacker.quantum = false;
+      if (!skipGaugeCost) {
+        if (attacker.gauge < cost && !attacker.quantum) break;
+        attacker.gauge -= cost;
+        addGauge(attacker, 8);
+        if (attacker.quantum) attacker.quantum = false;
+      }
       let dmg = 20; // v6.7: 23→20（+5に戻す）
       dmg = applySlowMod(attacker, dmg);
       if (attacker.taunt) { dmg *= 1.3; attacker.taunt = false; }
       if (attacker.learned === 'guardbk') { const lm = 2.0; dmg *= lm; attacker.learned = null; attacker.crowdBonusActive = false; } // v6.5: 1.8→2.0
       dmg = Math.round(dmg * attacker.dmgMod);
       if (hadQuantum) dmg = Math.round(dmg * 1.2); // 量子強化：威力+20%（v6.5）
-      if (attacker.passive === 'learning') dmg = Math.round(dmg * 1.1); // NEXUS-7 属性バフ
+      if (attacker.passive === 'learning') dmg = Math.round(dmg * 1.2); // NEXUS-7 属性バフ
       if (attacker.passive === 'learning' && attacker.crowdBonusActive) { dmg = Math.round(dmg * 1.2); attacker.crowdBonusActive = false; addLog(`🤖 CROWD BONUS！量子増幅+20%！`, 'status'); } // NEXUS-7 CROWD ON FIRE（v6.5）
       if (attacker.passive === 'blaze') dmg = Math.round(dmg * 1.4);    // BLAZE 属性倍率
       const guardbkWasPrimed = attacker.primed;
@@ -3324,7 +4279,10 @@ function applyAction(attacker, defender, action) {
         addAudience(2);
       }
       if (defender.counterStance) {
-        applyCounter(defender, attacker, dmg); defender.counterStance = false;
+        const incoming = (attacker.passive === 'blaze' && guardbkWasPrimed) ? Math.round(dmg * 0.7) : dmg;
+        const { hit } = applyCounter(defender, attacker, incoming);
+        if (hit) resolveCounterStanceAfterHit(defender);
+        else clearCounterStance(defender);
       } else if (defender.shimaiNext) {
         defender.shimaiNext = false;
         addLog(`${dName}の身代わり！ダメージ無効！`, 'status');
@@ -3339,25 +4297,30 @@ function applyAction(attacker, defender, action) {
     case 'sealatk': {
       AudioManager.playSE('seal');
       const cost = attacker.quantum ? 0 : atk25;
-      if (attacker.gauge < cost && !attacker.quantum) break;
-      attacker.gauge -= cost;
-      addGauge(attacker, 8);
       const hadQuantum = attacker.quantum;
-      if (attacker.quantum) attacker.quantum = false;
+      if (!skipGaugeCost) {
+        if (attacker.gauge < cost && !attacker.quantum) break;
+        attacker.gauge -= cost;
+        addGauge(attacker, 8);
+        if (attacker.quantum) attacker.quantum = false;
+      }
       let dmg = 27; // v6.7: 30→27（+5に戻す）
       dmg = applySlowMod(attacker, dmg);
       if (attacker.taunt) { dmg *= 1.3; attacker.taunt = false; }
       if (attacker.learned === 'sealatk') { const lm = 2.0; dmg *= lm; attacker.learned = null; attacker.crowdBonusActive = false; } // v6.5: 1.8→2.0
       dmg = Math.round(dmg * attacker.dmgMod);
       if (hadQuantum) dmg = Math.round(dmg * 1.2); // 量子強化：威力+20%（v6.5）
-      if (attacker.passive === 'learning') dmg = Math.round(dmg * 1.1); // NEXUS-7 属性バフ
+      if (attacker.passive === 'learning') dmg = Math.round(dmg * 1.2); // NEXUS-7 属性バフ
       if (attacker.passive === 'learning' && attacker.crowdBonusActive) { dmg = Math.round(dmg * 1.2); attacker.crowdBonusActive = false; addLog(`🤖 CROWD BONUS！量子増幅+20%！`, 'status'); } // NEXUS-7 CROWD ON FIRE（v6.5）
       if (attacker.passive === 'blaze') dmg = Math.round(dmg * 1.4);    // BLAZE 属性倍率
       const sealatkWasPrimed = attacker.primed;
       if (attacker.primed) attacker.primed = false;
       addLog(`${aName}の回復封じ！`, '');
       if (defender.counterStance) {
-        const selfDmg = applyCounter(defender, attacker, dmg); defender.counterStance = false;
+        const incoming = (attacker.passive === 'blaze' && sealatkWasPrimed) ? Math.round(dmg * 0.7) : dmg;
+        const { selfDmg, hit } = applyCounter(defender, attacker, incoming);
+        if (hit) resolveCounterStanceAfterHit(defender);
+        else clearCounterStance(defender);
         if (selfDmg > 0 && defender.hp > 0) {
           defender.sealTurns = 1;
           addLog(`${dName}に回復封じ1T！（かすり貫通）`, 'status');
@@ -3382,9 +4345,9 @@ function applyAction(attacker, defender, action) {
 
     // ===== 特殊行動 =====
     case 'accel': {
-      if (attacker.gauge < 15) break;
+      if (!skipGaugeCost && attacker.gauge < 15) break;
       AudioManager.playSE('accel');
-      attacker.gauge -= 15;
+      if (!skipGaugeCost) attacker.gauge -= 15;
       const gain = 20 + Math.round(Math.random() * 10);
       attacker.speed = Math.min(100, attacker.speed + gain);
       attacker.fast = attacker.speed >= 70;
@@ -3395,9 +4358,9 @@ function applyAction(attacker, defender, action) {
     }
 
     case 'slow': {
-      if (attacker.gauge < 30) break;
+      if (!skipGaugeCost && attacker.gauge < 30) break;
       AudioManager.playSE('slow');
-      attacker.gauge -= 30;
+      if (!skipGaugeCost) attacker.gauge -= 30;
       const reduction = 15 + Math.round(Math.random() * 10);
       defender.speed = Math.max(0, defender.speed - reduction);
       defender.slow = defender.speed <= 35;
@@ -3409,9 +4372,10 @@ function applyAction(attacker, defender, action) {
     }
 
     case 'heal': {
-      if (attacker.gauge < 30 || attacker.sealTurns > 0) break;
+      if (attacker.sealTurns > 0) break;
+      if (!skipGaugeCost && attacker.gauge < 30) break;
       AudioManager.playSE('heal');
-      attacker.gauge -= 30;
+      if (!skipGaugeCost) attacker.gauge -= 30;
       const healAmt = 15 + Math.round(Math.random() * 10);
       attacker.hp = Math.min(attacker.maxHp, attacker.hp + healAmt);
       showDmgPopup(attacker.isPlayer, healAmt, 'heal');
@@ -3420,18 +4384,21 @@ function applyAction(attacker, defender, action) {
     }
 
     case 'taunt': {
-      if (attacker.gauge < 30 || attacker.sealTurns > 0) break;
-      attacker.gauge -= 30;
+      if (attacker.sealTurns > 0) break;
+      if (!skipGaugeCost && attacker.gauge < 30) break;
+      if (!skipGaugeCost) attacker.gauge -= 30;
       attacker.taunt = true;
       addLog(`${aName}が挑発！次の攻撃+30%`, 'status');
       break;
     }
 
     case 'overclock': {
+      if (skipGaugeCost) break; // 2回目の同一解決では効果・ログを重ねない
       if (attacker.gauge < 100) break;
       AudioManager.playSE('overclock');
       attacker.gauge = 0;
       attacker.pendingDouble = true;
+      attacker.doubleFromOverclock = true;
       attacker.overclockCooldown = 3;
       addLog(`${aName}がオーバークロック！次ターン2回行動確定！`, 'status');
       break;
@@ -3439,9 +4406,15 @@ function applyAction(attacker, defender, action) {
 
     // ===== 固有技 =====
     case 'unique': {
-      if (attacker.gauge < 50) break;
-      attacker.gauge -= 50;
-      addGauge(attacker, 8);
+      const uniqueCost = uniqueGaugeCost(attacker);
+      if (!skipGaugeCost && attacker.gauge < uniqueCost) {
+        addLog(`– ${aName}の${attacker.uniqueName || '固有技'}がゲージ不足で不発`, 'log-miss');
+        break;
+      }
+      if (!skipGaugeCost) {
+        attacker.gauge -= uniqueCost;
+        addGauge(attacker, 8);
+      }
       // primedはapplyUnique内（BLAZEの爆裂拳）で参照するのでここでは消さない
       applyUnique(attacker, defender, aName, dName);
       if (attacker.primed) attacker.primed = false; // applyUnique後にリセット
@@ -3460,7 +4433,7 @@ function applyBlazeJibaku(attacker, defender, dealtDmg, aName, dName) {
     addGauge(attacker, 8);
     return;
   }
-  const selfDmg = Math.round(dealtDmg * 0.2);
+  const selfDmg = Math.round(dealtDmg * 0.1);
   const chainDmg = Math.round(selfDmg * 0.5);
   addLog(`🔥 ${aName}が自爆！自分-${selfDmg}HP、誘爆で${dName}にも-${chainDmg}HP！`, 'hit');
   attacker.hp -= selfDmg;
@@ -3499,7 +4472,10 @@ function applyCounter(counterUser, attacker, incomingDmg) {
   else if (speedDiff >= 20) selfPct = 0.1;
   const selfDmg = Math.round(incomingDmg * selfPct);
   const selfMsg = selfDmg > 0 ? `（${cName}かすり -${selfDmg}）` : '（完全シャットアウト）';
-  if (_tutForceCounter || Math.random() < 0.8) {
+  let hit = false;
+  const force = !!counterUser.counterForce;
+  if (force || _tutForceCounter || Math.random() < 0.8) {
+    hit = true;
     AudioManager.playSE('counter');
     addLog(`⚡ カウンター成功！${incomingDmg}ダメージ返し！${selfMsg}`, 'log-counter');
     showBattleFlash('COUNTER', 'counter', 300);
@@ -3507,12 +4483,15 @@ function applyCounter(counterUser, attacker, incomingDmg) {
     showActionPop(attacker.isPlayer, 'MISREAD', 'misread');
     attacker.hp -= incomingDmg;
     counterUser.totalDmgDealt += incomingDmg;
+    if (counterUser.isPlayer) matchStats.pCounterSuccess++;
+    else matchStats.cCounterSuccess++;
     addAudience(3);
   } else {
     addLog(`– カウンター空振り${selfMsg}`, 'log-miss');
   }
   counterUser.hp -= selfDmg;
-  return selfDmg; // デバフ適用判定に使用（0=完全防御でデバフ無効）
+  if (force) counterUser.counterForce = false;
+  return { selfDmg, hit }; // selfDmg: デバフ適用判定（0=完全防御でデバフ無効）
 }
 
 // ===== 固有技 =====
@@ -3525,8 +4504,11 @@ function applyUnique(attacker, defender, aName, dName) {
       if (attacker.taunt) { dmg = Math.round(dmg * 1.3); attacker.taunt = false; }
       dmg = Math.round(dmg * attacker.dmgMod);
       addLog(`${aName}の量子ビーム！`, '');
-      if (defender.counterStance) { applyCounter(defender, attacker, Math.round(dmg * 0.5)); defender.counterStance = false; }
-      else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
+      if (defender.counterStance) {
+        const { hit } = applyCounter(defender, attacker, Math.round(dmg * 0.5));
+        if (hit) resolveCounterStanceAfterHit(defender);
+        else clearCounterStance(defender);
+      } else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
       else {
         dealDamage(attacker, defender, dmg, aName, dName);
         addGauge(attacker, 25);
@@ -3535,29 +4517,63 @@ function applyUnique(attacker, defender, aName, dName) {
       }
       break;
     }
-    case 'shadow': { // SHADOW 影分身（v5：身代わり）
+    case 'shadow': { // SHADOW 分身斬り（身代わり＋斬撃）
       AudioManager.playSE('shadow_unique');
+      let dmg = 22 * 2.0; // 影斬り（強）相当 ×2.0
+      dmg = applySlowMod(attacker, dmg);
+      if (attacker.taunt) { dmg = Math.round(dmg * 1.3); attacker.taunt = false; }
+      dmg = Math.round(dmg * attacker.dmgMod);
       attacker.shimaiNext = true;
-      addLog(`${aName}の影分身！次の攻撃を身代わりで無効化！`, 'status');
+      addLog(`${aName}の分身斬り！`, '');
+      if (defender.counterStance) {
+        // カウンターに合わせられた場合：
+        // - 斬撃ダメージは減衰して通る
+        // - カウンター返しダメージは分身が受けて本体は無傷（読み勝ちの回答として成立させる）
+        const reducedDmg = Math.round(dmg * 0.6);
+        if (reducedDmg > 0) dealDamage(attacker, defender, reducedDmg, aName, dName);
+
+        const counterReturn = Math.round(reducedDmg * 0.5); // 固有技への返しは50%
+        const prevHp = attacker.hp;
+        const prevTotal = defender.totalDmgDealt;
+        const { hit } = applyCounter(defender, attacker, counterReturn);
+        if (hit) {
+          // 返しダメージだけ分身が受ける（HP・与ダメ集計は一致させる）
+          attacker.hp = prevHp;
+          defender.totalDmgDealt = prevTotal;
+          addLog(`⭐ 分身が反撃を受けた！本体ノーダメ`, 'status');
+          resolveCounterStanceAfterHit(defender);
+        } else {
+          attacker.hp = prevHp; // 念のため（空振り時もHPは戻しておく）
+          defender.totalDmgDealt = prevTotal;
+          clearCounterStance(defender);
+        }
+      } else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
+      else {
+        dealDamage(attacker, defender, dmg, aName, dName);
+      }
+      addLog(`身代わり発動待機！次の攻撃を無効化`, 'status');
       break;
     }
     case 'nova': { // NOVA QUEEN 星屑砲
       AudioManager.playSE('nova_unique');
       const losthp = attacker.maxHp - attacker.hp;
-      let dmg = 40 + Math.round(losthp * 0.5); // 基礎40 + 損失HP×0.5（v6.4）
+      let dmg = 35 + Math.round(losthp * 0.4); // 基礎35 + 損失HP×0.4
       dmg = applySlowMod(attacker, dmg);
       if (attacker.taunt) { dmg = Math.round(dmg * 1.3); attacker.taunt = false; }
-      const gaugeSteal = attacker.crowdBonusActive ? 60 : 40;
+      const gaugeSteal = attacker.crowdBonusActive ? 30 : 20;
       attacker.crowdBonusActive = false;
       addLog(`${aName}の星屑砲！（ダメ${dmg}）`, '');
-      if (defender.counterStance) { applyCounter(defender, attacker, Math.round(dmg * 0.5)); defender.counterStance = false; }
-      else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
+      if (defender.counterStance) {
+        const { hit } = applyCounter(defender, attacker, Math.round(dmg * 0.5));
+        if (hit) resolveCounterStanceAfterHit(defender);
+        else clearCounterStance(defender);
+      } else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
       else {
         dealDamage(attacker, defender, dmg, aName, dName);
         defender.gauge = Math.max(0, defender.gauge - gaugeSteal);
-        addLog(`${dName}のゲージ-${gaugeSteal}%！${gaugeSteal === 60 ? ' (CROWD BONUS！)' : ''}`, 'status');
-        addGauge(attacker, 20); // 星屑砲：使用後自ゲージ+20%（v6.5）
-        addLog(`${aName}のゲージ+20%（星屑砲リカバリー）`, 'status');
+        addLog(`${dName}のゲージ-${gaugeSteal}%！${gaugeSteal === 30 ? ' (CROWD BONUS！)' : ''}`, 'status');
+        addGauge(attacker, 5); // 星屑砲：使用後自ゲージ+5%
+        addLog(`${aName}のゲージ+5%（星屑砲リカバリー）`, 'status');
       }
       break;
     }
@@ -3572,8 +4588,11 @@ function applyUnique(attacker, defender, aName, dName) {
       else dmg = 55;
       if (attacker.taunt) { dmg = Math.round(dmg * 1.3); attacker.taunt = false; }
       addLog(`${aName}の超電磁砲！（残HP:${attacker.hp}）`, '');
-      if (defender.counterStance) { applyCounter(defender, attacker, Math.round(dmg * 0.5)); defender.counterStance = false; }
-      else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
+      if (defender.counterStance) {
+        const { hit } = applyCounter(defender, attacker, Math.round(dmg * 0.5));
+        if (hit) resolveCounterStanceAfterHit(defender);
+        else clearCounterStance(defender);
+      } else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
       else { dealDamage(attacker, defender, dmg, aName, dName); }
       break;
     }
@@ -3583,8 +4602,11 @@ function applyUnique(attacker, defender, aName, dName) {
       dmg = applySlowMod(attacker, dmg);
       if (attacker.taunt) { dmg = Math.round(dmg * 1.3); attacker.taunt = false; }
       addLog(`${aName}の細胞再生！`, '');
-      if (defender.counterStance) { applyCounter(defender, attacker, Math.round(dmg * 0.5)); defender.counterStance = false; }
-      else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
+      if (defender.counterStance) {
+        const { hit } = applyCounter(defender, attacker, Math.round(dmg * 0.5));
+        if (hit) resolveCounterStanceAfterHit(defender);
+        else clearCounterStance(defender);
+      } else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
       else {
         const finalDmg = dealDamage(attacker, defender, dmg, aName, dName);
         const absorbRate = attacker.crowdBonusActive ? 0.5 : 0.3;
@@ -3605,8 +4627,11 @@ function applyUnique(attacker, defender, aName, dName) {
       if (wasPrimed) { dmg *= 1.3; } // 起爆準備クリティカル（既にprimed=falseになってる）
       dmg = Math.round(dmg);
       addLog(`${aName}の爆裂拳！`, '');
-      if (defender.counterStance) { applyCounter(defender, attacker, Math.round(dmg * 0.5)); defender.counterStance = false; }
-      else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
+      if (defender.counterStance) {
+        const { hit } = applyCounter(defender, attacker, Math.round(dmg * 0.5));
+        if (hit) resolveCounterStanceAfterHit(defender);
+        else clearCounterStance(defender);
+      } else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
       else {
         const finalDmg = dealDamage(attacker, defender, dmg, aName, dName);
         // 起爆準備なしは確定自爆（v5変更）
@@ -3624,6 +4649,10 @@ function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
     if (attacker.lastAction === 'strong') {
       finalDmg = 0;
       defender.gauge = Math.min(100, defender.gauge + 20);
+      let rem = typeof defender.guardJustCharges === 'number' ? defender.guardJustCharges : 1;
+      rem--;
+      defender.guardJustCharges = rem;
+      if (rem <= 0) defender.guardThisTurn = false;
       AudioManager.playSE('justGuard');
       addLog(`✨ ジャストガード！ダメージ0・ゲージ+20%！`, 'log-success');
       showBattleFlash('JUST GUARD', 'success');
@@ -3635,15 +4664,20 @@ function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
       addLog(`${dName}がガード！ダメージ半減`, '');
     }
   }
+  // BLAZE：起爆準備はガードより軽い軽減（B1）
+  if (defender.passive === 'blaze' && defender.primed && !guardBreak) {
+    finalDmg = Math.round(finalDmg * 0.8);
+    addLog(`${dName}の起爆準備！被ダメ軽減`, 'status');
+  }
   // TITAN被ダメ軽減
   if (defender.passive === 'titan' && defender.slow) finalDmg = Math.round(finalDmg * 0.85);
   // NOVA QUEEN HP閾値
   // NEXUS-7 アドバンスド・ラーニング：相手の固有技被ダメ-20%（v6.4）
   if (defender.passive === 'learning' && attacker.lastAction === 'unique') finalDmg = Math.round(finalDmg * 0.8);
-  // NOVA QUEEN 瀕死の逆転王: HP40%以下（38以下）で被ダメ-20%（v6.4）
-  if (defender.passive === 'nova' && defender.hp <= 38) finalDmg = Math.round(finalDmg * 0.75);
-  // NOVA QUEEN 序盤パッシブ: HP48以上で被ダメ-10%（v6.4）
-  if (defender.passive === 'nova' && defender.hp >= 48) finalDmg = Math.round(finalDmg * 0.9);
+  // NOVA QUEEN 瀕死の逆転王: HP40%以下で被ダメ-20%（maxHp可変に追従）
+  if (defender.passive === 'nova' && defender.hp <= Math.floor(defender.maxHp * 0.4)) finalDmg = Math.round(finalDmg * 0.8);
+  // NOVA QUEEN 序盤パッシブ: HP48以上で被ダメ-5%
+  if (defender.passive === 'nova' && defender.hp >= 48) finalDmg = Math.round(finalDmg * 0.95);
   finalDmg = Math.max(0, finalDmg);
   defender.hp -= finalDmg;
   attacker.totalDmgDealt += finalDmg;
@@ -3662,8 +4696,8 @@ function addGauge(s, amount) {
   if (s.overclockCooldown > 0) inc *= 0.5;
   // 一般ルール: HP40%以下でゲージ+50%（NOVA QUEENは固有ルール適用）
   if (s.hp <= s.maxHp * 0.4 && s.passive !== 'nova') inc *= 1.5;
-  // NOVA QUEEN固有: 瀕死（HP30%以下 = 27以下）でゲージ+50%
-  if (s.passive === 'nova' && s.hp <= 38) inc *= 1.5; // 瀕死閾値 HP38以下（v6.4）
+  // NOVA QUEEN固有: 瀕死（HP40%以下）でゲージ増加+20%（一般ルールとは別）
+  if (s.passive === 'nova' && s.hp <= Math.floor(s.maxHp * 0.4)) inc *= 1.2;
   s.gauge = Math.min(100, s.gauge + inc);
 }
 
@@ -3672,8 +4706,10 @@ function endOfTurn() {
   // ガード・カウンターフラグリセット
   pState.guardThisTurn = false;
   cState.guardThisTurn = false;
-  pState.counterStance = false;
-  cState.counterStance = false;
+  pState.guardJustCharges = 0;
+  cState.guardJustCharges = 0;
+  clearCounterStance(pState);
+  clearCounterStance(cState);
   // CROWD BONUS: 前ターンactive→消滅、pending→active変換（1ターン遅延起動）
   [pState, cState].forEach(s => {
     s.crowdBonusActive = false; // 前ターンから持ち越した未使用ボーナスを消滅
@@ -3689,10 +4725,13 @@ function endOfTurn() {
     const lyraxFighter = s.isPlayer ? cState : pState;
     if (lyraxFighter.passive === 'lyrax' && s.slow) {
       AudioManager.playSE('corrosion');
-      s.hp -= 3;
+      const corrodeDmg = (s.passive === 'titan') ? 2 : 3;
+      s.hp -= corrodeDmg;
+      if (s.isPlayer) matchStats.pCorrosionDmg += corrodeDmg;
+      else matchStats.cCorrosionDmg += corrodeDmg;
       screenShake(s.isPlayer);
-      showDmgPopup(s.isPlayer, 3);
-      addLog(`${name}が腐食ダメージ -3HP`, 'hit');
+      showDmgPopup(s.isPlayer, corrodeDmg);
+      addLog(`${name}が腐食ダメージ -${corrodeDmg}HP`, 'hit');
     }
   });
 
@@ -3701,9 +4740,9 @@ function endOfTurn() {
     const name = s.displayName || (s.isPlayer ? 'あなた' : (gameMode === '2p' ? s.name : 'CPU'));
     if (s.passive === 'lyrax' && s.hp > 0) {
       AudioManager.playSE('lyrax_autoHeal', 0.4);
-      s.hp = Math.min(s.maxHp, s.hp + 2);
-      showDmgPopup(s.isPlayer, 2, 'heal');
-      addLog(`${name}が自動回復 +2HP`, 'heal');
+      s.hp = Math.min(s.maxHp, s.hp + 4);
+      showDmgPopup(s.isPlayer, 4, 'heal');
+      addLog(`${name}が自動回復 +4HP`, 'heal');
     }
   });
 
@@ -3752,8 +4791,10 @@ function endOfTurn() {
   }
 
   // 行動履歴を記録（直近5ターン）
-  if (pState.lastAction) { pState.actionHistory.push(pState.lastAction); if (pState.actionHistory.length > 5) pState.actionHistory.shift(); }
-  if (cState.lastAction) { cState.actionHistory.push(cState.lastAction); if (cState.actionHistory.length > 5) cState.actionHistory.shift(); }
+  const histMax = (difficulty === 'easy' && gameMode === 'cpu') ? 9 : 5;
+  if (pState.lastAction) { pState.actionHistory.push(pState.lastAction); while (pState.actionHistory.length > histMax) pState.actionHistory.shift(); }
+  if (cState.lastAction) { cState.actionHistory.push(cState.lastAction); while (cState.actionHistory.length > histMax) cState.actionHistory.shift(); }
+  renderBattleHint(null);
 
   if (!autoMode) {
     // オンライン・チュートリアル中はターン進行を各モジュールに委譲
@@ -3787,6 +4828,70 @@ function openResultLog() {
 }
 function closeResultLog() {
   document.getElementById('result-log-modal').classList.remove('open');
+}
+
+function toggleResultRulesSibling(btn) {
+  if (!btn) return;
+  const body = btn.nextElementSibling;
+  if (!body || !body.classList.contains('result-rules-body')) return;
+  const open = body.style.display !== 'block';
+  body.style.display = open ? 'block' : 'none';
+  const chev = btn.querySelector('.result-rules-chev');
+  if (chev) chev.textContent = open ? '▲' : '▼';
+}
+
+function _resultCrowdSummaryHTML() {
+  const n = crowdOnFireCount | 0;
+  return `<div class="result-crowd-summary"><div class="rc-title">CROWD ON FIRE（試合中）</div>
+発生: <b>${n}</b> 回<br>
+・発動時: 両者ゲージ <b>+30%</b><br>
+・次の行動解決: <b>同時解決</b>（SPEED差による先手キル無効）<br>
+・各キャラ: <b>固有ボーナス</b> 1ターン（キャラにより内容不同）</div>`;
+}
+
+function _resultCharRulePairHTML(charKey, label) {
+  const c = CHARS[charKey];
+  if (!c) return '';
+  const kw = (c.passiveKeys || '').replace(/\s*／\s*/g, ' · ');
+  const hard = (difficulty === 'hard' && gameMode === '2p')
+    ? `<div class="result-hard-stats"><b>この試合の計測（参考）</b><br>
+カウンター成功: ${label} ${charKey === pState.charKey ? matchStats.pCounterSuccess : matchStats.cCounterSuccess} 回<br>
+腐食被ダメ合計: ${label} ${charKey === pState.charKey ? matchStats.pCorrosionDmg : matchStats.cCorrosionDmg} HP</div>`
+    : '';
+  return `<div class="result-rules-toggle" onclick="toggleResultRulesSibling(this)">
+  <span><b>${label}</b> キャラルール</span><span class="result-rules-kw">${kw}</span><span class="result-rules-chev">▼</span>
+</div>
+<div class="result-rules-body" style="display:none">
+  <div class="rr-h">${c.name} — パッシブ</div>${c.passiveDesc}
+  <div class="rr-h">固有「${c.uniqueName}」</div>${c.uniqueDesc}
+  ${hard}
+</div>`;
+}
+
+function buildResultExtraHTML() {
+  const crowd = _resultCrowdSummaryHTML();
+  if (gameMode === '2p') {
+    return `<div class="result-extra">${crowd}${_resultCharRulePairHTML(pState.charKey, 'P1')}${_resultCharRulePairHTML(cState.charKey, 'P2')}</div>`;
+  }
+  const oppLabel = gameMode === 'online' ? '対戦相手' : 'CPU';
+  const hardBoth = (difficulty === 'hard' && (gameMode === 'cpu' || gameMode === 'online'))
+    ? `<div class="result-hard-stats"><b>この試合の計測（参考）</b><br>
+カウンター成功: あなた ${matchStats.pCounterSuccess} ／ ${oppLabel} ${matchStats.cCounterSuccess}<br>
+腐食被ダメ合計: あなた ${matchStats.pCorrosionDmg} ／ ${oppLabel} ${matchStats.cCorrosionDmg} HP</div>`
+    : '';
+  const ck = cState.charKey;
+  const c = CHARS[ck];
+  const kw = c ? (c.passiveKeys || '').replace(/\s*／\s*/g, ' · ') : '';
+  return `<div class="result-extra">${crowd}
+<div class="result-rules-toggle" onclick="toggleResultRulesSibling(this)">
+  <span><b>${oppLabel}</b> キャラ固有</span><span class="result-rules-kw">${kw}</span><span class="result-rules-chev">▼</span>
+</div>
+<div class="result-rules-body" style="display:none">
+  <div class="rr-h">${c.name} — パッシブ</div>${c.passiveDesc}
+  <div class="rr-h">固有「${c.uniqueName}」</div>${c.uniqueDesc}
+  ${hardBoth}
+</div>
+</div>`;
 }
 
 function showResult(outcome) {
@@ -3829,7 +4934,7 @@ function showResult(outcome) {
       <div class="result-row"><span class="result-label">P2 HP</span><span class="result-val">${Math.max(0,cState.hp)} / ${cState.maxHp}</span></div>
       <div class="result-row"><span class="result-label">P1 DMG</span><span class="result-val">${pState.totalDmgDealt}</span></div>
       <div class="result-row"><span class="result-label">P2 DMG</span><span class="result-val">${cState.totalDmgDealt}</span></div>
-    `;
+    ` + buildResultExtraHTML();
   } else {
     if (outcome === 'win') {
       title.textContent = '🏆 WINNER!'; title.className = 'result-title win';
@@ -3845,7 +4950,7 @@ function showResult(outcome) {
       <div class="result-row"><span class="result-label">${opponentLabel}</span><span class="result-val">${Math.max(0,cState.hp)} / ${cState.maxHp}</span></div>
       <div class="result-row"><span class="result-label">DMG DEALT</span><span class="result-val">${pState.totalDmgDealt}</span></div>
       ${gameMode !== 'online' ? `<div class="result-row"><span class="result-label">DIFFICULTY</span><span class="result-val">${difficulty.toUpperCase()}</span></div>` : ''}
-    `;
+    ` + buildResultExtraHTML();
   }
 
   // ===== 5連戦モード処理 =====
@@ -3892,63 +4997,166 @@ function abModelChange() {
 
 // Smart AI for auto mode (explicit state params, no global deps)
 function abSmartAct(s, opp) {
-  const atk25 = (s.passive === 'nova' && s.gauge >= 60) ? 10 : 25;
+  const atk25 = (s.passive === 'nova' && s.gauge >= 80) ? 15 : 25;
   const ccost = s.counterConsecutive > 0 ? 50 : atk25;
   const pool = [];
   const add = (a, w) => { for (let i = 0; i < w; i++) pool.push(a); };
-  add('weak',2); add('mid',3); add('strong',3); add('guard',2);
-  if (s.gauge >= atk25) { add('speedatk',2); add('guardbk',2); add('sealatk',2); }
+  const novaVsLyra = s.passive === 'nova' && opp.passive === 'lyrax';
+  // 方針：strong/midは事故が起きやすいので控えめ。weakでゲージを溜め、属性/固有へ寄せる。
+  add('weak',6); add('mid',2); add('strong',1); add('guard', novaVsLyra ? 1 : 2);
+  if (s.gauge >= atk25) {
+    if (!novaVsLyra) add('speedatk', 2); // LYRAは自前加速しないことが多く速度特攻の旨味が薄い
+    add('guardbk', 2); add('sealatk', 2);
+  }
   if (s.gauge >= ccost)  add('counter',2);
   if (s.gauge >= 15)     add('accel',2);
-  if (s.gauge >= 30)   { add('slow',2); if (!s.sealTurns) { add('heal',1); add('taunt',2); } }
+  if (s.gauge >= 30 && opp.passive !== 'titan' && !novaVsLyra) { add('slow',2); if (turn >= 3 && !s.sealTurns) { add('heal',1); add('taunt',2); } }
   if (s.gauge >= 100)    add('overclock',1);
-  if (s.gauge >= 50)     add('unique',2);
+  if (canUseUnique(s)) add('unique',2);
   switch (s.passive) {
     case 'titan':
-      if (s.gauge >= 50) add('unique', 2);                          // HP関係なく超電磁砲使う
-      if (s.hp <= 40 && s.gauge >= 50) add('unique', 3);           // 低HP時はさらに優先
-      if (s.gauge >= ccost) add('counter', 1); add('mid', 2); // strongは速度差で外れるので除外
+      if (canUseUnique(s)) add('unique', 2);                        // HP関係なく超電磁砲使う
+      if (s.hp <= 40 && canUseUnique(s)) add('unique', 3);         // 低HP時はさらに優先
+      // weak多めで貯めて固有/属性へ
+      add('weak', 10);
+      add('mid', 1);
+      add('strong', 0);
+      if (s.gauge >= ccost) add('counter', 2); // strongは速度差で外れるので除外
       if (s.gauge >= atk25) { add('speedatk', 2); add('guardbk', 2); add('sealatk', 2); } // 属性攻撃（控えめ）
       if (!s.sealTurns && s.gauge >= 30) add('taunt', 3);          // 挑発も選択肢
       if (s.slow && opp.passive === 'lyrax' && s.gauge >= 15) add('accel', 8); // LYRA-X戦でSLOW→腐食回避
-      const titanFilter = a => (a !== 'strong' || opp.speed < 50) && (a !== 'accel' || (s.slow && opp.passive === 'lyrax'));
-      return pool.filter(titanFilter)[Math.floor(Math.random() * pool.filter(titanFilter).length)] || 'mid';
-    case 'blaze': {
-      if (s.primed && s.gauge >= 50) add('unique', 14);      // 起爆準備済み→爆裂拳をほぼ確定
-      if (s.primed && s.gauge >= atk25) { add('speedatk',6); add('guardbk',6); add('sealatk',6); } // 起爆準備中は属性攻撃も積極的に
-      if (!s.primed && s.gauge >= 30) add('guard', 9);       // 起爆準備を強く優先
-      if (!s.primed && s.gauge >= 30 && !s.sealTurns) add('taunt', 4); // 挑発も選択肢
-      // 起爆準備済み→guardを除外（二重起爆防止）
-      if (s.primed) {
-        const blazePrimed = pool.filter(a => a !== 'guard');
-        return blazePrimed[Math.floor(Math.random() * blazePrimed.length)] || 'unique';
+      // 対NOVA/NEXUS：受け（counter）に寄りすぎると吸われるので、属性と中を少し増やす
+      if (opp.passive === 'nova' || opp.passive === 'learning') {
+        add('mid', 3);
+        if (s.gauge >= atk25) { add('speedatk', 3); add('guardbk', 3); add('sealatk', 2); }
       }
-      // 未起爆でゲージ30%以上→mid/strongを除外して起爆準備に集中
-      if (!s.primed && s.gauge >= 30) {
-        const blazeFiltered = pool.filter(a => a !== 'mid' && a !== 'strong');
+      // 対NOVA：星屑砲圏内（ゲージ50%以上）は、受け（guard/counter）に寄せてテンポを切る
+      if (opp.passive === 'nova' && opp.gauge >= 50) {
+        add('guard', 4);
+        if (s.gauge >= ccost) add('counter', 4);
+      }
+      // 対NEXUS/SHADOW：速度特攻はTITANの主武器。速い相手ほど刺さるので優先
+      if ((opp.passive === 'learning' || opp.passive === 'shadow') && s.gauge >= atk25) {
+        if (opp.speed >= 70) add('speedatk', 10);
+        else if (opp.speed >= 60) add('speedatk', 7);
+        else add('speedatk', 3);
+      }
+      const titanFilter = a => (a !== 'strong' || opp.speed < 50) && (a !== 'accel' || (s.slow && opp.passive === 'lyrax'));
+      const tPick = pool.filter(titanFilter).filter(a => cpuPoolAffordable(s, opp, a));
+      return tPick[Math.floor(Math.random() * tPick.length)] || 'mid';
+    case 'blaze': {
+      add('weak', 8);
+      // 方針（AUTO/HARD）：
+      // - 起爆準備（guard）はゲージ50%以上を目安に（30で即起爆しない）
+      // - 起爆後（primed）は属性/固有を優先し、たまにguardでフェイント
+      const vsNexus = opp.passive === 'learning';
+      const vsLyra = opp.passive === 'lyrax';
+      // 開幕コンボ案：1T挑発→2T起爆準備で、早い回から読み合いを強制（毎回固定にはしない）
+      // 初期ゲージは30%なので、turn1で挑発が成立する。
+      if (turn === 1 && !s.primed && !s.taunt && s.sealTurns === 0 && s.gauge >= 30) {
+        if (Math.random() < 0.65) return 'taunt'; // 6割以上
+      }
+      if (s.primed) {
+        // 起爆後（primed）は「痛い攻撃3択＋フェイント」の4択に固定（対人HARDの歯応え優先）
+        const opts = [];
+        opts.push('unique','unique','unique','unique','unique','unique');
+        if (s.gauge >= atk25) { opts.push('guardbk','guardbk','guardbk'); opts.push('sealatk','sealatk','sealatk'); }
+        opts.push('guard','guard'); // フェイント
+        const primedPick = opts.filter(a => cpuPoolAffordable(s, opp, a));
+        return primedPick[Math.floor(Math.random() * primedPick.length)] || 'guard';
+      }
+
+      if (!s.primed && s.gauge >= 50) add('guard', 42); // 起爆準備を大きく強める（50%以上は起爆に寄せる）
+      if (!s.primed && s.gauge >= 30 && !s.sealTurns) add('taunt', 4); // 挑発も選択肢
+      if (vsNexus && s.gauge >= atk25) { add('sealatk', 3); add('guardbk', 3); } // 属性回転を止める
+      if (vsLyra && s.slow && s.gauge >= 15) add('accel', 8); // 腐食レース回避
+      // 未起爆でゲージ50%以上→mid/strongを除外して起爆準備に集中
+      if (!s.primed && s.gauge >= 50) {
+        const blazeFiltered = pool.filter(a => a !== 'mid' && a !== 'strong').filter(a => cpuPoolAffordable(s, opp, a));
+        // まず起爆へ寄せ、たまに行動を散らして読み合いは残す
+        if (Math.random() < 0.75) return 'guard';
         return blazeFiltered[Math.floor(Math.random() * blazeFiltered.length)] || 'guard';
       }
       break;
     }
-    case 'lyrax': // LYRA-X: slowで腐食を稼ぎ、回復封じで長期戦制圧
+    case 'lyrax': // LYRA-X: slowで腐食を稼ぎ、回復封じで長期戦制圧（weak多め）
+      add('weak', 6);
+      // CPU（HARD/AUTO）用：SHADOW以外には早期（1〜2T）にSLOWを入れて主導権を作る
+      if (turn <= 2 && opp.passive !== 'shadow' && s.gauge >= 30 && !opp.slow) return 'slow';
       if (s.gauge >= 30) {
         if (!opp.slow) add('slow', 12);          // スロー多用（最優先）
         else add('slow', 4);                     // SLOW中も延長
       }
       if (s.gauge >= atk25) add('sealatk', 10); // 回復封じを特に多用
       if (s.gauge >= atk25 && opp.slow) { add('speedatk',4); add('guardbk',4); } // SLOW中は追撃も
-      if (s.gauge >= 50) add('unique', 8);       // 細胞再生で吸収+削り
+      if (canUseUnique(s)) add('unique', 8);    // 細胞再生で吸収+削り
       if (s.slow && s.gauge >= 15) add('accel', 6); // 自分がSLOWなら加速
+      // 対TITAN：腐食が入ってる間は属性で押す or 固有で回復しつつ削る（対人の歯応え用）
+      if (opp.passive === 'titan' && opp.corrode) {
+        if (s.gauge >= atk25) { add('speedatk', 6); add('guardbk', 6); }
+        if (canUseUnique(s)) add('unique', 4);
+        else add('weak', 2); // 少し貯めて細胞再生へ
+      }
       break;
-    case 'shadow': // SHADOW: 加速+強攻撃80%+属性攻撃で削る
-      if (s.speed < 70 && s.gauge >= 15) add('accel', 8);   // FAST到達優先
-      if (!s.fast && s.gauge >= 15) add('accel', 5);        // FAST切れたら加速
-      add('strong', 6);                                      // 強攻撃80%hit率を活かす
-      if (s.fast && s.gauge >= ccost) add('counter', 3);    // カウンターは控えめ
-      if (s.gauge >= atk25) { add('guardbk', 5); add('sealatk', 5); } // 属性攻撃で削る
-      if (opp.passive === 'nova' && s.gauge >= atk25) { add('guardbk', 5); add('sealatk', 5); } // NOVA対策
+    case 'shadow': { // SHADOW: weakで貯めつつ、属性・固有への枝を厚め（AUTO/HARD）
+      if (s.speed < 70 && s.gauge >= 15) add('accel', 2);   // 最終手段（事故回避用）
+      if (!s.fast && s.gauge >= 15) add('accel', 1);        // 同上
+      if (opp.passive === 'learning') {
+        add('weak', 8);
+        add('strong', 3);
+        add('mid', 4);
+        if (s.gauge >= 40) add('speedatk', 4);
+        if (s.fast && s.gauge >= ccost) add('counter', 5);
+        if (s.gauge >= atk25) { add('guardbk', 5); add('sealatk', 6); }
+        if (canUseUnique(s)) add('unique', 30);
+        if (s.lastAction === 'counter' && canUseUnique(s)) add('unique', 18);
+        if (s.lastAction === 'counter' && !canUseUnique(s)) { add('mid', 4); add('strong', 3); }
+        if (opp.lastAction === 'unique') { // ビーム直後：受け（guard/counter）or 分身斬りで1ターンを作る
+          add('guard', 12);
+          if (s.gauge >= ccost) add('counter', 12);
+          if (canUseUnique(s)) add('unique', 16);
+        }
+        if (opp.learned && opp.gauge >= 50) { // 学習済み＋ゲージあり：強い属性が飛ぶ前提で受け厚め
+          add('guard', 10);
+          if (s.gauge >= ccost) add('counter', 10);
+          if (canUseUnique(s)) add('unique', 12);
+        }
+        if (opp.learned === 'speedatk' && s.gauge >= atk25) { add('guardbk', 6); add('sealatk', 4); add('mid', 4); }
+        if (opp.learned === 'guardbk' && s.gauge >= atk25) { add('speedatk', 6); add('sealatk', 4); add('mid', 4); }
+        if (opp.learned === 'sealatk' && s.gauge >= atk25) { add('speedatk', 6); add('guardbk', 5); add('mid', 4); }
+        if (opp.quantum && s.gauge >= atk25) {
+          add('counter', 4);
+          if (canUseUnique(s)) add('unique', 12);
+          add('guard', 3);
+          add('sealatk', 3);
+        }
+        if (opp.gauge >= 50) {
+          add('guard', 2);
+          if (canUseUnique(s)) add('unique', 12);
+        }
+      } else {
+        add('weak', 12);
+        add('strong', 2);
+        add('mid', 2);
+        if (s.gauge >= 40) add('speedatk', 3);
+        if (s.fast && s.gauge >= ccost) add('counter', 7);
+        if (s.gauge >= atk25) { add('guardbk', 5); add('sealatk', 5); }
+        if (canUseUnique(s)) add('unique', 18);
+      }
+      if (opp.passive === 'blaze' && opp.primed) add('guard', 4);
+      // 対NOVA共通ブロックはSHADOWでは未適用。分身斬り優先で差を取る
+      if (opp.passive === 'nova' && s.gauge >= atk25) {
+        add('guardbk', 3);
+        add('sealatk', 3);
+        if (s.fast && s.gauge >= ccost) add('counter', 3);
+        if (canUseUnique(s)) add('unique', 12);
+      }
       break;
-    case 'learning': // NEXUS-7: 属性攻撃を積極的に使う
+    }
+    case 'learning': // NEXUS-7: weakで溜めて属性を回す（strong/mid控えめ）
+      add('weak', 12);
+      add('strong', 1);
+      add('mid', 1);
       if (s.gauge >= atk25) {
         add('speedatk',8); add('guardbk',8); add('sealatk',8); // +8（合計10）
         if (s.learned) { // 学習済みなら対応攻撃を最優先
@@ -3958,16 +5166,32 @@ function abSmartAct(s, opp) {
         }
         if (s.quantum) { add('speedatk',6); add('guardbk',6); add('sealatk',6); } // 量子強化中も優先
       }
-      if (s.gauge >= 50) add('unique',6); // 量子ビームでゲージ稼ぎ→属性攻撃へ
+      if (canUseUnique(s)) add('unique', 6); // 量子ビームでゲージ稼ぎ→属性攻撃へ
+      if (opp.passive === 'nova') {
+        if (canUseUnique(s)) add('unique', 4); // 量子強化で一気に主導権を取りたい
+        if (s.gauge >= atk25) add('sealatk', 6); // 回復/挑発封じで逆転筋を潰す
+      }
       break;
-    case 'nova': { // NOVA QUEEN: ゲージ60%到達後に属性連発が真骨頂
-      if (s.gauge >= 70) { add('speedatk',8); add('guardbk',8); add('sealatk',8); add('unique',8); } // コスト10%で属性連発＋星屑砲
-      else if (s.gauge >= 50) add('unique',6); // ゲージ50〜69%でも星屑砲は打つ
-      // ゲージ70%未満フェーズ：相手が前ターン攻撃してきたらカウンターで返す
-      if (s.gauge < 70 && s.gauge >= ccost) {
-        const oppAtk = ['weak','mid','strong','speedatk','guardbk','sealatk','unique'];
-        if (oppAtk.includes(opp.lastAction)) add('counter', 6); // 攻撃してきたら返り討ち
-        if (opp.lastAction === 'sealatk') add('counter', 4);    // 回復封じには特に強く反応
+    case 'nova': { // NOVA QUEEN: ゲージ80%到達後に属性連発が真骨頂（属性コスト軽減の閾値）
+      const vsLyra = opp.passive === 'lyrax';
+      if (s.gauge >= 80) {
+        if (!vsLyra) add('speedatk', 8); // LYRAは自前加速が少なく速度特攻の旨味が薄い
+        add('guardbk', 8); add('sealatk', 8);
+        if (canUseUnique(s)) add('unique', 8);
+      }
+      else if (canUseUnique(s)) add('unique', 7); // 50〜69%の星屑砲は強すぎない程度に（連打は見せるが勝ち切りすぎない）
+
+      // 80%未満フェーズ：カウンターで勝ち切りすぎると「連打」に到達しにくい
+      // → 弱攻撃（ゲージ+15%）と星屑砲（使用後+20%）を厚めにし、カウンターは「相手が攻撃した直後」だけ控えめに入れる
+      if (s.gauge < 80) {
+        add('weak', 7);
+        if (canUseUnique(s)) add('unique', 4);
+        if (!vsLyra) add('guard', 2); // LYRA戦はガード厚盛りが無駄打ちになりやすいので積まない
+        if (s.gauge >= ccost) {
+          const oppAtk = ['weak','mid','strong','speedatk','guardbk','sealatk','unique'];
+          if (oppAtk.includes(opp.lastAction)) add('counter', 2);
+          if (opp.lastAction === 'sealatk') add('counter', 1);
+        }
       }
       // HP見て回復（封じ中は不可・3ターン目以降）
       if (!s.sealTurns && s.gauge >= 30 && turn >= 3) {
@@ -3976,27 +5200,56 @@ function abSmartAct(s, opp) {
         else if (hpRate < 0.6) add('heal', 6);   // HP60%未満→回復を選択肢に
         else if (hpRate < 0.75) add('heal', 3);  // HP75%未満→少し意識
       }
-      // ゲージ70%未満は弱攻撃に集中、70%以上はmid/strongを除外して属性攻撃に集中
-      if (s.gauge < 70) {
-        const novaFiltered = pool.filter(a => !['mid','strong','speedatk','guardbk','sealatk','accel','guard','slow','taunt'].includes(a));
+      // 対LYRA：序盤は弱連打でゲージを作り、80%到達後はコスト15%の属性連打で削る。回復・星屑砲も状況で混ぜる。
+      if (vsLyra) {
+        if (turn <= 2) add('weak', 12); // 初回から弱連打
+        if (s.gauge >= 80) { add('guardbk', 8); add('sealatk', 8); add('mid', 4); } // LYRA戦は速度特攻より封じ・貫通・中火力
+        if (canUseUnique(s)) add('unique', 3);
+        // 腐食タグ付き＝LYRAのSLOW軸で削られている局面。相手にSLOWを振っても腐食は解けずゲージの無駄になりやすい→属性・固有で踏み込む
+        if (s.corrode) {
+          if (s.gauge >= atk25) { add('sealatk', 14); add('guardbk', 12); }
+          if (canUseUnique(s)) add('unique', 10);
+          add('weak', 3);
+        }
+        // 腐食を切るための加速案は逆効果になりやすかったので、ここでは積まない（通常の汎用ロジックに任せる）
+      }
+      // ゲージ80%未満は弱攻撃に集中、80%以上はmid/strongを除外して属性攻撃に集中
+      // LYRA-X戦のみ例外：80%未満でも上のフィルタ即returnをせず、switch外の共通pool抽選へ（属性・固有をコスト許す範囲で取りに行けるように検証）
+      if (s.gauge < 80 && !vsLyra) {
+        const novaFiltered = pool.filter(a => !['mid','strong','speedatk','guardbk','sealatk','accel','guard','slow','taunt'].includes(a))
+          .filter(a => cpuPoolAffordable(s, opp, a));
         return novaFiltered[Math.floor(Math.random() * novaFiltered.length)] || 'weak';
-      } else {
-        const novaAtk = pool.filter(a => !['mid','strong','accel','guard','slow','taunt'].includes(a));
-        return novaAtk[Math.floor(Math.random() * novaAtk.length)] || 'speedatk';
+      }
+      if (s.gauge >= 80) {
+        const novaAtk = pool.filter(a => !['mid','strong','accel','guard','slow','taunt'].includes(a))
+          .filter(a => cpuPoolAffordable(s, opp, a));
+        // 対LYRAは属性連打が勝ち筋（速度特攻は相手が自前加速しないことが多くコスパが悪い）
+        if (vsLyra && Math.random() < 0.75) {
+          const lyraAtk = novaAtk.filter(a => a !== 'unique' && a !== 'speedatk');
+          return lyraAtk[Math.floor(Math.random() * lyraAtk.length)] || 'sealatk';
+        }
+        const nvAtkNoSp = vsLyra ? novaAtk.filter(a => a !== 'speedatk') : novaAtk;
+        return nvAtkNoSp[Math.floor(Math.random() * nvAtkNoSp.length)] || 'sealatk';
       }
       break;
     }
   }
-  if (opp.gauge >= 50) { add('guard',2); if (s.gauge >= ccost) add('counter',2); }
+  if (opp.gauge >= 50 && !novaVsLyra) { add('guard',2); if (s.gauge >= ccost) add('counter',2); }
   if (opp.hp <= 8)       add('weak',8);
   if (s.slow && s.gauge >= 15) add('accel',6);
   if (opp.passive === 'titan' && s.gauge >= ccost) add('counter', 5); // TITAN相手はカウンター多用
-  if (opp.passive === 'nova' && s.gauge >= atk25) add('sealatk', 6); // NOVA相手は回復封じを最優先
+  // ===== 対NOVA（全キャラ共通：HARD/AUTOでも発動）=====
+  // SHADOWは案B：同メタを掛けない
+  if (opp.passive === 'nova' && s.gauge >= atk25 && s.passive !== 'shadow') {
+    if (turn <= 3) add('sealatk', 6);
+    if (opp.lastAction === 'heal') add('sealatk', 6);
+    if (opp.gauge >= 50) { add('sealatk', 4); add('guardbk', 3); }
+  }
   if (opp.passive === 'shadow' && opp.fast && s.gauge >= atk25) add('speedatk', 8); // SHADOW FAST時は速度特攻
   if (opp.passive === 'shadow' && opp.slow && s.gauge >= atk25) { add('guardbk', 8); add('sealatk', 8); } // SHADOW SLOW中はガード貫通＋回復封じで畳み込む
   if (opp.primed) {
     if (s.gauge >= 50 && s.gauge >= ccost) add('counter',3);
-    else { add('guard',3); if (s.gauge >= 30) add('slow',2); }
+    else { add('guard', novaVsLyra ? 1 : 3); if (s.gauge >= 30 && !novaVsLyra) add('slow',2); }
   }
   // 前ターンにカウンターを使った相手は今ターン無防備→攻撃チャンス
   if (opp.lastAction === 'counter') {
@@ -4016,7 +5269,7 @@ function abSmartAct(s, opp) {
     if (count('guard') >= 2 && s.gauge >= atk25) add('guardbk', 5);
 
     // 加速が多い→速度特攻で迎え撃つ
-    if (count('accel') >= 2 && s.gauge >= atk25) add('speedatk', 5);
+    if (count('accel') >= 2 && s.gauge >= atk25 && !novaVsLyra) add('speedatk', 5);
 
     // 回復が多い→回復封じを優先
     if (count('heal') >= 2 && s.gauge >= atk25) add('sealatk', 5);
@@ -4028,32 +5281,49 @@ function abSmartAct(s, opp) {
 
   // ゲージが高い相手は固有技・属性攻撃の脅威→守りを増やす
   if (opp.gauge >= 75 && s.gauge >= ccost) add('counter', 2);
-  if (opp.gauge >= 75) add('guard', 2);
+  if (opp.gauge >= 75 && !novaVsLyra) add('guard', 2);
 
-  return pool[Math.floor(Math.random() * pool.length)] || 'weak';
+  // NOVA×LYRA：プールにslowが混ざっても選ばない（腐食中に相手SLOWは状況が変わりにくい）
+  let pickPool = pool;
+  if (novaVsLyra) pickPool = pool.filter(a => a !== 'slow' && a !== 'speedatk');
+  pickPool = pickPool.filter(a => cpuPoolAffordable(s, opp, a));
+  if (!pickPool.length) pickPool = ['weak'];
+  return pickPool[Math.floor(Math.random() * pickPool.length)] || 'weak';
 }
 
 // Random AI
-function abRandomAct(s) {
-  const atk25 = (s.passive === 'nova' && s.gauge >= 60) ? 10 : 25;
+function abRandomAct(s, opp) {
+  const atk25 = (s.passive === 'nova' && s.gauge >= 80) ? 15 : 25;
+  const novaVsLyra = !!(opp && s.passive === 'nova' && opp.passive === 'lyrax');
   const avail = ['weak','mid','strong','guard'];
-  if (s.gauge >= atk25) avail.push('speedatk','guardbk','sealatk','counter');
+  if (s.gauge >= atk25) {
+    if (!novaVsLyra) avail.push('speedatk');
+    avail.push('guardbk', 'sealatk', 'counter');
+  }
   if (s.gauge >= 15)    avail.push('accel');
-  if (s.gauge >= 30)  { avail.push('slow'); if (!s.sealTurns) avail.push('heal','taunt'); }
+  if (s.gauge >= 30) {
+    if ((!opp || opp.passive !== 'titan') && !novaVsLyra) avail.push('slow');
+    if (turn >= 3 && !s.sealTurns) avail.push('heal','taunt');
+  }
   if (s.gauge >= 100)   avail.push('overclock');
-  if (s.gauge >= 50)    avail.push('unique');
-  return avail[Math.floor(Math.random() * avail.length)];
+  if (canUseUnique(s)) avail.push('unique');
+  const ok = avail.filter(a => cpuPoolAffordable(s, opp, a));
+  return ok[Math.floor(Math.random() * ok.length)] || 'weak';
 }
 
 // Build concise prompt
 function abPrompt(s, opp) {
-  const atk25 = (s.passive === 'nova' && s.gauge >= 60) ? 10 : 25;
+  const atk25 = (s.passive === 'nova' && s.gauge >= 80) ? 15 : 25;
+  const novaVsLyra = !!(opp && s.passive === 'nova' && opp.passive === 'lyrax');
   const avail = ['weak','mid','strong','guard'];
-  if (s.gauge >= atk25) avail.push('speedatk','guardbk','sealatk','counter');
+  if (s.gauge >= atk25) {
+    if (!novaVsLyra) avail.push('speedatk');
+    avail.push('guardbk', 'sealatk', 'counter');
+  }
   if (s.gauge >= 15)    avail.push('accel');
-  if (s.gauge >= 30)  { avail.push('slow'); if (!s.sealTurns) avail.push('heal','taunt'); }
+  if (s.gauge >= 30)  { avail.push('slow'); if (turn >= 3 && !s.sealTurns) avail.push('heal','taunt'); }
   if (s.gauge >= 100)   avail.push('overclock');
-  if (s.gauge >= 50)    avail.push('unique');
+  if (canUseUnique(s)) avail.push('unique');
   const strategyHint = {
     learning: s.learned
       ? `STRATEGY: You have [LEARNED:${s.learned}]! Use ${s.learned} NOW for 2x damage bonus. Attribute attacks (speedatk/guardbk/sealatk) are your core moves — use them whenever gauge allows.`
@@ -4119,10 +5389,38 @@ async function abSonnetAct(s, opp, apiKey) {
 // Dispatch to correct AI
 async function abGetAct(s, opp, model, cfg) {
   let act = null;
-  if      (model === 'random') act = abRandomAct(s);
+  if      (model === 'random') act = abRandomAct(s, opp);
   else if (model === 'gemma')  act = await abGemmaAct(s, opp, cfg.url, cfg.ollamaModel);
   else if (model === 'sonnet') act = await abSonnetAct(s, opp, cfg.apiKey);
+  // Validate model output so AUTO never picks impossible moves (e.g. unique with insufficient gauge).
+  const validate = (a) => {
+    if (!a) return null;
+    if (a === 'heal' && turn < 3) return null;
+    return cpuPoolAffordable(s, opp, a) ? a : null;
+  };
+  act = validate(act);
   return act || abSmartAct(s, opp);
+}
+
+function abDetailSnapSide(s) {
+  return {
+    hp: s.hp,
+    g: Math.round(s.gauge),
+    spd: Math.round(s.speed),
+    fast: s.fast ? 1 : 0,
+    slow: s.slow ? 1 : 0,
+    seal: s.sealTurns | 0,
+    ctr: s.counterStance ? 1 : 0,
+    taunt: s.taunt ? 1 : 0,
+    primed: s.primed ? 1 : 0,
+    q: s.quantum ? 1 : 0,
+    learned: s.learned || '',
+    shimai: s.shimaiNext ? 1 : 0,
+    occ: s.overclockCooldown | 0,
+    cba: s.crowdBonusActive ? 1 : 0,
+    cbp: s.crowdBonusPending ? 1 : 0,
+    cor: s.corrode ? 1 : 0,
+  };
 }
 
 // Run one full battle, returns { winner, p1Atk, p1Total, p2Atk, p2Total, turns }
@@ -4140,6 +5438,8 @@ async function abOneBattle(c1, c2, model, cfg, recordTurns) {
   let winner = 'draw';
 
   for (let t = 0; t < 60; t++) {
+    // AUTOでもターン番号に応じたAI分岐を動かす（abSmartActはグローバルturnを参照する）
+    turn = t + 1; window.turn = turn;
     const [a1, a2] = await Promise.all([
       abGetAct(pState, cState, model, cfg),
       abGetAct(cState, pState, model, cfg)
@@ -4148,13 +5448,27 @@ async function abOneBattle(c1, c2, model, cfg, recordTurns) {
     p1Total++; p2Total++;
     if (attrSet.has(a1)) p1Atk++;
     if (attrSet.has(a2)) p2Atk++;
-    if (turns) turns.push({
-      t: t+1, a1, a2,
-      p1hp: pState.hp, p2hp: cState.hp,
-      p1g: Math.round(pState.gauge), p2g: Math.round(cState.gauge),
-      p1s: Math.round(pState.speed), p2s: Math.round(cState.speed)
-    });
+    if (turns) {
+      turns.push({
+        t: t+1, a1, a2,
+        pre: {
+          aud: audienceGauge | 0,
+          cn: crowdOnFireNext ? 1 : 0,
+          p1: abDetailSnapSide(pState),
+          p2: abDetailSnapSide(cState),
+        }
+      });
+    }
     resolveActions(a1, a2);
+    if (turns) {
+      const last = turns[turns.length - 1];
+      last.post = {
+        aud: audienceGauge | 0,
+        cn: crowdOnFireNext ? 1 : 0,
+        p1: abDetailSnapSide(pState),
+        p2: abDetailSnapSide(cState),
+      };
+    }
     if (pState.hp <= 0 || cState.hp <= 0) {
       if      (pState.hp > 0)  winner = 'p1';
       else if (cState.hp > 0)  winner = 'p2';
@@ -4197,6 +5511,7 @@ async function abStart() {
   document.getElementById('ab-run-btn').disabled = true;
   document.getElementById('ab-csv-btn').disabled = true;
   document.getElementById('ab-detail-csv-btn').disabled = true;
+  document.getElementById('ab-detail-nova-lyra-btn').disabled = true;
   document.getElementById('ab-results').style.display = 'none';
 
   let done = 0;
@@ -4208,9 +5523,8 @@ async function abStart() {
       document.getElementById('ab-progress').textContent =
         `▶ ${CHARS[c1].name} vs ${CHARS[c2].name} — ${done}/${total} battles`;
       for (let b = 0; b < n; b++) {
-        const recordTurns = abDetailLogs.length < 5;
-        const res = await abOneBattle(c1, c2, model, cfg, recordTurns);
-        if (recordTurns && res.turns) {
+        const res = await abOneBattle(c1, c2, model, cfg, true);
+        if (res.turns) {
           abDetailLogs.push({ c1, c2, b: b+1, c1name: CHARS[c1].name, c2name: CHARS[c2].name, winner: res.winner, turns: res.turns });
         }
         mat[c1][c2].n++;
@@ -4231,6 +5545,7 @@ async function abStart() {
   document.getElementById('ab-run-btn').disabled = false;
   document.getElementById('ab-csv-btn').disabled = false;
   document.getElementById('ab-detail-csv-btn').disabled = false;
+  document.getElementById('ab-detail-nova-lyra-btn').disabled = false;
   document.getElementById('ab-progress').textContent = `✅ 完了 ${done} battles`;
 
   autoResults = { wins, mat, chars, n, atkChar, atkMat };
@@ -4272,7 +5587,8 @@ function abShowResults({ wins, mat, chars, n, atkChar, atkMat }) {
 
   // ===== 属性攻撃使用率 =====
   if (!atkChar) return;
-  const ATTR_TARGETS = { nexus7:[40,60], novaqueen:[50,70] }; // 期待レンジ[%]
+  // NOVAは「属性コスト軽減閾値」を80%に上げたため、属性攻撃率の期待帯も下がる想定
+  const ATTR_TARGETS = { nexus7:[40,60], novaqueen:[25,45] }; // 期待レンジ[%]（AUTO用の目安）
   let ahtml = '<tr><th>キャラ</th><th>属性攻撃率</th><th>行動数</th><th>判定</th></tr>';
   chars.forEach(c => {
     const {atk, total} = atkChar[c];
@@ -4325,18 +5641,64 @@ function abSaveCsv() {
   a.click();
 }
 
+function abBuildDetailCsv(logs) {
+  const cols = [
+    'バトル','P1','P2','ターン','P1行動','P2行動',
+    'AUD','CROWD次',
+    'P1HP','P2HP','P1ゲージ%','P2ゲージ%','P1速度','P2速度',
+    'P1FAST','P1SLOW','P1封じ残','P1CTR','P1挑発','P1起爆','P1量子','P1学習','P1身代わり','P1OC残','P1CROWDアク','P1CROWD待','P1腐食',
+    'P2FAST','P2SLOW','P2封じ残','P2CTR','P2挑発','P2起爆','P2量子','P2学習','P2身代わり','P2OC残','P2CROWDアク','P2CROWD待','P2腐食',
+    'AUD後','CROWD次後',
+    'P1HP後','P2HP後','P1ゲージ%後','P2ゲージ%後','P1速度後','P2速度後',
+    'P1FAST後','P1SLOW後','P1封じ残後','P1CTR後','P1挑発後','P1起爆後','P1量子後','P1学習後','P1身代わり後','P1OC残後','P1CROWDアク後','P1CROWD待後','P1腐食後',
+    'P2FAST後','P2SLOW後','P2封じ残後','P2CTR後','P2挑発後','P2起爆後','P2量子後','P2学習後','P2身代わり後','P2OC残後','P2CROWDアク後','P2CROWD待後','P2腐食後',
+  ];
+  const esc = (v) => {
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+  };
+  const rowSide = (x) => ([
+    x.hp, x.g, x.spd,
+    x.fast, x.slow, x.seal, x.ctr, x.taunt, x.primed, x.q, esc(x.learned), x.shimai, x.occ, x.cba, x.cbp, x.cor
+  ].join(','));
+  let csv = cols.join(',') + '\n';
+  logs.forEach(({c1name, c2name, b, winner, turns}) => {
+    turns.forEach(r => {
+      const battle = `${c1name}vs${c2name}(${b}戦目)`;
+      const pre = r.pre, post = r.post;
+      csv += [
+        battle, c1name, c2name, r.t, r.a1, r.a2,
+        pre.aud, pre.cn,
+        rowSide(pre.p1), rowSide(pre.p2),
+        post.aud, post.cn,
+        rowSide(post.p1), rowSide(post.p2),
+      ].join(',') + '\n';
+    });
+    const blanks = Array(Math.max(0, cols.length - 6)).fill('').join(',');
+    csv += `${c1name}vs${c2name}(${b}戦目)結果,,,,,${winner},${blanks}\n`;
+  });
+  return '\uFEFF' + csv;
+}
+
 function abSaveDetailCsv() {
   if (!abDetailLogs.length) return;
-  let csv = 'バトル,P1,P2,ターン,P1行動,P2行動,P1HP,P2HP,P1ゲージ%,P2ゲージ%,P1速度,P2速度\n';
-  abDetailLogs.forEach(({c1name, c2name, b, winner, turns}) => {
-    turns.forEach(r => {
-      csv += `${c1name}vs${c2name}(${b}戦目),${c1name},${c2name},${r.t},${r.a1},${r.a2},${r.p1hp},${r.p2hp},${r.p1g},${r.p2g},${r.p1s},${r.p2s}\n`;
-    });
-    csv += `${c1name}vs${c2name}(${b}戦目)結果,,,,,${winner},,,,,,\n`;
-  });
+  const csv = abBuildDetailCsv(abDetailLogs);
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
   a.download = `sw_detail_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function abSaveDetailCsvNovaLyra() {
+  const logs = abDetailLogs.filter(e =>
+    (e.c1 === 'novaqueen' && e.c2 === 'lyrax') ||
+    (e.c1 === 'lyrax' && e.c2 === 'novaqueen')
+  );
+  if (!logs.length) return;
+  const csv = abBuildDetailCsv(logs);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download = `sw_detail_nova_lyra_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
 }
 </script>
@@ -4727,13 +6089,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 音声：fetch → ArrayBuffer を保存（デコードはユーザー操作後に行う）
     // suspended状態での decodeAudioData 失敗を防ぐため、デコードは openingClick 後に実施
-    // encodeURI を使う：スペースは %20 にしつつカンマ等の安全な文字は変換しない
+    // カンマ入りパスは Safari が誤解釈するためセグメント encode（論理キーは storeRaw の url のまま）
     const sndLoads = SOUNDS.map(url => {
-      const encoded = encodeURI(url);
+      const encoded = url.split('/').map(encodeURIComponent).join('/');
       const controller = new AbortController();
       const tid = setTimeout(() => controller.abort(), 12000); // 12秒でタイムアウト
       return fetch(encoded, { signal: controller.signal })
-        .then(r => r.arrayBuffer())
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
         .then(ab => AudioManager.storeRaw(url, ab))
         .catch(() => {})
         .finally(() => { clearTimeout(tid); onProgress(); });

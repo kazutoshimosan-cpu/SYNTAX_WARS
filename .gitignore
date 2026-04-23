@@ -13,6 +13,9 @@ assets/
 # Claude Code ローカル設定
 .claude/
 
+# AIエージェント作業生成物
+.ai/
+
 # エディタ・OS
 Thumbs.db
 *.swp

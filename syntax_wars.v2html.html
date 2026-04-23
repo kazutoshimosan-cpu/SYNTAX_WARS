@@ -550,6 +550,7 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 
 <!-- OPENING -->
 <div id="opening-screen" class="screen active" onclick="openingClick()" ontouchstart="openingClick(); event.preventDefault()">
+  <audio id="opening-inline-bgm" preload="auto" loop playsinline webkit-playsinline style="position:absolute;width:0;height:0;opacity:0;pointer-events:none" src="assets/sound/system%2Cbgm/system/opening.mp3"></audio>
   <div class="op-container">
     <div class="op-header">[ SYNTAX WARS / TERMINAL v1.0 ]&nbsp;&nbsp;████████ SECURE CONNECTION</div>
     <pre id="op-text"></pre><span id="op-cursor"></span>
@@ -1060,11 +1061,11 @@ const AudioManager = (() => {
   // プリロード用：fetch で取得した ArrayBuffer を AudioBuffer にデコードして保存
   // iOS Safari は Promise 版 decodeAudioData に非対応の場合があるためコールバック版で包む
   function decodeAndStore(path, arrayBuffer) {
-    if (!audioCtx) return Promise.resolve();
+    if (!audioCtx) return Promise.resolve(false);
     return new Promise(resolve => {
       let settled = false;
-      const ok  = buf => { if (!settled) { settled = true; buffers[path] = buf; resolve(); } };
-      const err = ()  => { if (!settled) { settled = true; resolve(); } };
+      const ok  = buf => { if (!settled) { settled = true; buffers[path] = buf; resolve(true); } };
+      const err = ()  => { if (!settled) { settled = true; resolve(false); } };
       try {
         const result = audioCtx.decodeAudioData(arrayBuffer.slice(0), ok, err);
         // モダンブラウザは Promise も返すので両方サポート
@@ -1081,7 +1082,7 @@ const AudioManager = (() => {
       const fileEl = document.getElementById('loading-file');
       if (type === 'loaded' && fileEl) fileEl.textContent = '> ' + name;
       if (typeof DbgPanel !== 'undefined') {
-        const labels = { loaded:'LOADED', decoded:'DECODED', unlocked:'UNLOCKED', bgm_play:'BGM PLAY', bgm_nobuf:'BGM NO BUF' };
+        const labels = { loaded:'LOADED', decoded:'DECODED', decode_fail:'DECODE FAIL', unlocked:'UNLOCKED', bgm_play:'BGM PLAY', bgm_nobuf:'BGM NO BUF' };
         DbgPanel.log(type, '[' + (labels[type] || type.toUpperCase()) + '] ' + name);
         DbgPanel.updateState(buffers, rawBuffers);
       }
@@ -1093,6 +1094,11 @@ const AudioManager = (() => {
     return [...Object.values(SE), ...BGM_BATTLE, ...Object.values(BGM_MAP)];
   }
 
+  function urlForRequest(path) {
+    if (!path) return path;
+    try { return path.split('/').map(encodeURIComponent).join('/'); } catch(e) { return path; }
+  }
+
   // プリロード時：ArrayBuffer を保存するだけ（デコードはユーザー操作後に行う）
   function storeRaw(path, ab) {
     rawBuffers[path] = ab;
@@ -1101,13 +1107,15 @@ const AudioManager = (() => {
 
   // 指定パスのデコードを開始（未デコードなら即開始、進行中なら同一Promiseを返す）
   function decodeOne(path) {
-    if (buffers[path])    return Promise.resolve();
+    if (buffers[path])    return Promise.resolve(true);
     if (decodeQ[path])    return decodeQ[path];
-    if (!rawBuffers[path]) return Promise.resolve();
+    if (!rawBuffers[path]) return Promise.resolve(false);
     const ab = rawBuffers[path];
     delete rawBuffers[path]; // 解放
-    decodeQ[path] = decodeAndStore(path, ab).then(() => {
-      _audioLog('decoded', path);
+    decodeQ[path] = decodeAndStore(path, ab).then((ok) => {
+      if (ok) _audioLog('decoded', path);
+      else _audioLog('decode_fail', path);
+      return ok;
     }).finally(() => { delete decodeQ[path]; });
     return decodeQ[path];
   }
@@ -1145,7 +1153,7 @@ const AudioManager = (() => {
       _playBuffer(path, vol, false);
     } else {
       // フォールバック：バッファなしなら <audio> 要素で単発再生
-      try { const a = new Audio(path); a.volume = vol; a.play().catch(() => {}); } catch(e) {}
+      try { const a = new Audio(urlForRequest(path)); a.volume = vol; a.play().catch(() => {}); } catch(e) {}
     }
   }
 
@@ -1191,7 +1199,7 @@ const AudioManager = (() => {
       _audioLog('bgm_nobuf', path);
       _dbg('NO BUFFER → <audio> fallback');
       try {
-        const audio = new Audio(path);
+        const audio = new Audio(urlForRequest(path));
         audio.loop = loop;
         audio.volume = 0.5;
         audio.stop = function() { try { this.pause(); this.currentTime = 0; } catch(e) {} };
@@ -1208,16 +1216,25 @@ const AudioManager = (() => {
     if (key === 'opening') setTimeout(() => { if (myGen === bgmGen) stopBGM(); }, 16000);
   }
 
+  function stopOpeningInline() {
+    try {
+      const el = document.getElementById('opening-inline-bgm');
+      if (el) { el.pause(); el.currentTime = 0; }
+    } catch(e) {}
+  }
+
   function stopBGM() {
+    stopOpeningInline();
     if (bgmSource) {
       try { bgmSource.stop(0); } catch(e) {}
+      try { if (typeof bgmSource.pause === 'function') bgmSource.pause(); } catch(e) {}
       bgmSource = null;
     }
   }
 
   // audioCtx.resume() を呼び、running 状態になったら resolve する
   // iOS Safari では resume() の Promise がハングすることがあるため
-  // statechange イベント + 500ms タイムアウトで確実に解決する
+  // statechange + ポーリングで running を待つ（最大4s）
   function unlock() {
     if (!audioCtx) return Promise.resolve();
     if (audioCtx.state === 'running') {
@@ -1227,23 +1244,33 @@ const AudioManager = (() => {
     audioCtx.resume().catch(() => {});
     return new Promise(resolve => {
       let done = false;
+      let pollIv = null;
+      let tmax = null;
+      const cleanup = () => {
+        audioCtx.removeEventListener('statechange', onState);
+        if (pollIv) clearInterval(pollIv);
+        if (tmax) clearTimeout(tmax);
+      };
       const finish = () => {
         if (done) return;
         done = true;
-        audioCtx.removeEventListener('statechange', onState);
+        cleanup();
         _audioLog('unlocked', 'AudioContext(' + audioCtx.state + ')');
         resolve();
       };
       const onState = () => { if (audioCtx.state === 'running') finish(); };
       audioCtx.addEventListener('statechange', onState);
-      // iOS Safari ハング対策：500ms で強制 resolve
-      setTimeout(finish, 500);
+      pollIv = setInterval(() => {
+        if (audioCtx.state === 'running') finish();
+        else try { audioCtx.resume().catch(() => {}); } catch(e) {}
+      }, 50);
+      tmax = setTimeout(finish, 4000);
     });
   }
 
   const warmupAll = unlock; // openingClick から呼ばれる互換エイリアス
 
-  return { storeRaw, decodeOne, decodeAll, decodeAndStore, getAllAudioPaths, playSE, playAttackSE, playBGM, stopBGM, unlock, warmupAll };
+  return { storeRaw, decodeOne, decodeAll, decodeAndStore, getAllAudioPaths, playSE, playAttackSE, playBGM, stopBGM, stopOpeningInline, unlock, warmupAll };
 })();
 
 // ===== DEBUG PANEL =====
@@ -1603,6 +1630,19 @@ function openingClick() {
   if (!_opStarted) {
     // 初回クリック：resume() 完了を待ってから BGM＋タイピング開始
     _opStarted = true;
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isIOS) {
+      const inline = document.getElementById('opening-inline-bgm');
+      if (inline) {
+        try {
+          inline.volume = 0.5;
+          inline.loop = true; // PC の Web Audio と同様（opening は ~16s で stopOpeningInline）
+          inline.currentTime = 0;
+          inline.play().catch(e => { try { DbgPanel.log('error', '[OP] inline play: ' + (e && e.message)); } catch(_) {} });
+        } catch(e) { try { DbgPanel.log('error', '[OP] inline: ' + e.message); } catch(_) {} }
+      }
+      setTimeout(() => { try { AudioManager.stopOpeningInline(); } catch(_) {} }, 16000);
+    }
     document.getElementById('op-start').style.display = 'none';
     // タイピングアニメーションは即座に開始（音声待ちにしない）
     // iOS Safari では audioCtx.resume() の Promise がハングする場合があるため
@@ -1619,7 +1659,8 @@ function openingClick() {
       ].map(p => AudioManager.decodeOne(p)));
       DbgPanel.log('info', '[OP] decode done → playBGM');
       AudioManager.decodeAll();
-      AudioManager.playBGM('opening');
+      if (!isIOS) AudioManager.playBGM('opening');
+      else DbgPanel.log('info', '[OP] iOS: opening = inline <audio>（Web Audio の opening はスキップ）');
     }).catch(e => { DbgPanel.log('error', '[OP] ERROR: ' + e.message); });
     return;
   }
@@ -4465,13 +4506,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 音声：fetch → ArrayBuffer を保存（デコードはユーザー操作後に行う）
     // suspended状態での decodeAudioData 失敗を防ぐため、デコードは openingClick 後に実施
-    // encodeURI を使う：スペースは %20 にしつつカンマ等の安全な文字は変換しない
+    // カンマ入りパスは Safari が誤解釈するためセグメント encode（論理キーは storeRaw の url のまま）
     const sndLoads = SOUNDS.map(url => {
-      const encoded = encodeURI(url);
+      const encoded = url.split('/').map(encodeURIComponent).join('/');
       const controller = new AbortController();
       const tid = setTimeout(() => controller.abort(), 12000); // 12秒でタイムアウト
       return fetch(encoded, { signal: controller.signal })
-        .then(r => r.arrayBuffer())
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
         .then(ab => AudioManager.storeRaw(url, ab))
         .catch(() => {})
         .finally(() => { clearTimeout(tid); onProgress(); });

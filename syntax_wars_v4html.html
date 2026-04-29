@@ -28,6 +28,14 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 .title-main { font-size:15px; color:#e0f0ff; letter-spacing:2px; text-align:center; }
 .title-sub-ja { font-size:11px; color:#7090b0; letter-spacing:1px; text-align:center; line-height:1.8; }
 .title-sub-en { font-size:10px; color:#405070; letter-spacing:1px; text-align:center; line-height:1.8; font-style:italic; }
+.title-home-hint {
+  font-size:10px;
+  color:#6f90b0;
+  letter-spacing:1px;
+  text-align:center;
+  line-height:1.6;
+  margin-top:-6px;
+}
 #cpu-menu-screen { flex-direction:column; align-items:center; justify-content:center; min-height:100vh; gap:16px; }
 #tutorial-menu-screen { flex-direction:column; align-items:center; justify-content:center; min-height:100vh; gap:16px; }
 .btn {
@@ -899,7 +907,8 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   <button class="btn" onclick="start2PMode()">▶ 2P LOCAL</button>
   <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#006644;color:#00ffcc;" onclick="startOnlineMode()">🌐 ONLINE MATCH</button>
   <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#f0a000;color:#f0a000;" onclick="openTutorialMenu()">▶ TUTORIAL</button>
-  <button class="btn dev-only" id="title-auto-btn" style="font-size:11px;padding:6px 28px;border-color:#203050;color:#4080a0;display:none;" onclick="showScreen('auto-screen')">⚙ AUTO BATTLE</button>
+  <div class="title-home-hint">スマホはホーム画面に追加がおすすめ</div>
+  <button class="btn dev-only" id="title-auto-btn" style="font-size:11px;padding:6px 28px;border-color:#203050;color:#4080a0;display:none;" onclick="Analytics.event('title_button_auto'); showScreen('auto-screen')">⚙ AUTO BATTLE</button>
 </div>
 
 <!-- CPU MENU -->
@@ -1387,9 +1396,30 @@ const AudioManager = (() => {
     } catch(e) {}
   }
 
+  function uniq(list) {
+    return [...new Set(list.filter(Boolean))];
+  }
+
+  const STARTUP_AUDIO_PATHS = uniq([
+    SE.confirm,
+    BGM_MAP.opening,
+    BGM_MAP.title,
+  ]);
+
+  let _deferredPreloadStarted = false;
+
   // DOMContentLoaded がロードすべき全音声パスを取得するために使用
   function getAllAudioPaths() {
-    return [...Object.values(SE), ...BGM_BATTLE, ...Object.values(BGM_MAP)];
+    return uniq([...Object.values(SE), ...BGM_BATTLE, ...Object.values(BGM_MAP)]);
+  }
+
+  function getStartupAudioPaths() {
+    return STARTUP_AUDIO_PATHS.slice();
+  }
+
+  function getDeferredAudioPaths() {
+    const startup = new Set(STARTUP_AUDIO_PATHS);
+    return getAllAudioPaths().filter(path => !startup.has(path));
   }
 
   // fetch / <audio> / new Audio() 用。フォルダ名 `system,bgm` のカンマが Safari で
@@ -1403,6 +1433,31 @@ const AudioManager = (() => {
   function storeRaw(path, ab) {
     rawBuffers[path] = ab;
     _audioLog('loaded', path);
+  }
+
+  function fetchRaw(path, timeoutMs = 12000) {
+    if (!path || buffers[path] || rawBuffers[path] || decodeQ[path]) return Promise.resolve(true);
+    const encoded = urlForRequest(path);
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), timeoutMs);
+    return fetch(encoded, { signal: controller.signal })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+      .then(ab => { storeRaw(path, ab); return true; })
+      .catch(() => false)
+      .finally(() => clearTimeout(tid));
+  }
+
+  function preloadPaths(paths, onProgress) {
+    const list = uniq(paths);
+    return Promise.all(list.map(path =>
+      fetchRaw(path).finally(() => { if (onProgress) onProgress(path); })
+    ));
+  }
+
+  function preloadDeferredAudio() {
+    if (_deferredPreloadStarted) return Promise.resolve(false);
+    _deferredPreloadStarted = true;
+    return preloadPaths(getDeferredAudioPaths()).then(() => true);
   }
 
   // 指定パスのデコードを開始（未デコードなら即開始、進行中なら同一Promiseを返す）
@@ -1494,6 +1549,7 @@ const AudioManager = (() => {
     if (myGen !== bgmGen) { _dbg('cancelled after resume'); return; }
     if (!buffers[path]) {
       _dbg('await decodeOne ' + fname);
+      if (!rawBuffers[path]) await fetchRaw(path);
       await decodeOne(path);
       _dbg('decodeOne done | buf:' + !!buffers[path]);
     }
@@ -1574,8 +1630,55 @@ const AudioManager = (() => {
 
   const warmupAll = unlock; // openingClick から呼ばれる互換エイリアス
 
-  return { storeRaw, decodeOne, decodeAll, decodeAndStore, getAllAudioPaths, playSE, playAttackSE, playBGM, stopBGM, stopOpeningInline, unlock, warmupAll };
+  return {
+    storeRaw, decodeOne, decodeAll, decodeAndStore,
+    fetchRaw, preloadPaths, preloadDeferredAudio,
+    getAllAudioPaths, getStartupAudioPaths, getDeferredAudioPaths,
+    playSE, playAttackSE, playBGM, stopBGM, stopOpeningInline, unlock, warmupAll
+  };
 })();
+
+// ===== LIGHTWEIGHT EVENT ANALYTICS =====
+const Analytics = (() => {
+  const queue = [];
+  let seq = 0;
+  const sessionId = (() => {
+    try {
+      const bytes = new Uint8Array(8);
+      crypto.getRandomValues(bytes);
+      return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    } catch(e) {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    }
+  })();
+
+  function event(name, data = {}) {
+    const payload = {
+      name,
+      data,
+      session_id: sessionId,
+      seq: ++seq,
+      path: location.pathname,
+      search: location.search,
+      user_agent: navigator.userAgent,
+      screen_w: window.innerWidth,
+      screen_h: window.innerHeight,
+    };
+    if (window.Logger && typeof window.Logger.logEvent === 'function') {
+      window.Logger.logEvent(payload);
+    } else {
+      queue.push(payload);
+    }
+  }
+
+  function flush() {
+    if (!window.Logger || typeof window.Logger.logEvent !== 'function') return;
+    while (queue.length) window.Logger.logEvent(queue.shift());
+  }
+
+  return { event, flush };
+})();
+window.Analytics = Analytics;
 
 // ===== DEBUG PANEL =====
 const DbgPanel = (() => {
@@ -1863,6 +1966,7 @@ const InteractiveTutorial = (() => {
 })();
 
 function startInteractiveTutorial() {
+  Analytics.event('tutorial_interactive_start_click');
   AudioManager.playSE('confirm');
   InteractiveTutorial.start();
 }
@@ -1907,6 +2011,7 @@ let _opDone = false;
 
 function openingClick() {
   if (!_opStarted) {
+    Analytics.event('opening_tap');
     // 初回クリック：resume() 完了を待ってから BGM＋タイピング開始
     _opStarted = true;
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -1929,17 +2034,16 @@ function openingClick() {
     // iOS Safari では audioCtx.resume() の Promise がハングする場合があるため
     // アニメーションを音声と切り離して独立して動作させる
     _opStartTyping();
-    // 優先デコード方式：最初に使うBGM3本を先にデコードしてから再生
-    // 残りはバックグラウンドでデコード（battle BGM など）
+    // 優先デコード方式：最初に使うBGMを先にデコードしてから再生
+    // 残りはバックグラウンドで取得し、必要になった音だけデコードする
     AudioManager.unlock().then(async () => {
       DbgPanel.log('info', '[OP] unlock OK → priority decode...');
       await Promise.all([
         'assets/sound/system,bgm/system/opening.mp3',
         'assets/sound/system,bgm/BGM/title.mp3',
-        'assets/sound/system,bgm/BGM/characterchoosing.mp3',
       ].map(p => AudioManager.decodeOne(p)));
       DbgPanel.log('info', '[OP] decode done → playBGM');
-      AudioManager.decodeAll();
+      AudioManager.preloadDeferredAudio();
       if (!isIOS) AudioManager.playBGM('opening');
       else DbgPanel.log('info', '[OP] iOS: opening = inline <audio>（Web Audio の opening はスキップ）');
     }).catch(e => { DbgPanel.log('error', '[OP] ERROR: ' + e.message); });
@@ -1957,6 +2061,7 @@ function openingClick() {
   }
   if (_opDone) {
     // 全文表示後クリック：タイトルへ
+    Analytics.event('opening_complete_to_title');
     showScreen('title-screen');
     AudioManager.playBGM('title');
   }
@@ -2494,6 +2599,7 @@ const TUT_PAGES = [
 let tutPage = 0;
 
 function openTutorial() {
+  Analytics.event('tutorial_howto_open');
   tutPage = 0;
   renderTutPage();
   showScreen('tutorial-screen');
@@ -2517,6 +2623,7 @@ function tutNav(dir) {
 
 function setDifficulty(d) {
   difficulty = d;
+  Analytics.event('cpu_difficulty_select', { difficulty: d });
   ['easy','normal','hard'].forEach(x => {
     document.getElementById('diff-' + x).classList.toggle('selected', x === d);
   });
@@ -2672,18 +2779,25 @@ function makeState(charKey, isPlayer) {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  Analytics.event('screen_view', { screen: id });
 }
 function goToTitle() { clearTimer(); showScreen('title-screen'); updateDevUI(); AudioManager.playBGM('title'); }
-function openCpuMenu() { showScreen('cpu-menu-screen'); AudioManager.playSE('confirm'); }
-function openTutorialMenu() { showScreen('tutorial-menu-screen'); AudioManager.playSE('confirm'); }
+function openCpuMenu(source = 'title') {
+  if (source === 'title') Analytics.event('title_button_cpu');
+  AudioManager.preloadDeferredAudio();
+  showScreen('cpu-menu-screen');
+  AudioManager.playSE('confirm');
+}
+function openTutorialMenu() { Analytics.event('title_button_tutorial'); showScreen('tutorial-menu-screen'); AudioManager.playSE('confirm'); }
 function goBackFromSelect() {
-  if (gameMode === 'cpu') { openCpuMenu(); }
+  if (gameMode === 'cpu') { openCpuMenu('back_from_select'); }
   else { goToTitle(); }
 }
 
-function startCpuMode() { gameMode = 'cpu'; goToSelect(); }
-function start2PMode() { gameMode = '2p'; charSelectPhase = 1; p1CharKey = null; goToSelect(); }
+function startCpuMode() { Analytics.event('cpu_single_start_click', { difficulty }); gameMode = 'cpu'; goToSelect(); }
+function start2PMode() { Analytics.event('title_button_2p'); AudioManager.preloadDeferredAudio(); gameMode = '2p'; charSelectPhase = 1; p1CharKey = null; goToSelect(); }
 function startOnlineMode() {
+  Analytics.event('title_button_online');
   gameMode = 'online'; onlineRole = null;
   // online-screen を初期状態（メニュー表示）にリセット
   ['online-menu','online-host-wait','online-guest-input','online-matched'].forEach(id => {
@@ -2697,6 +2811,8 @@ function startOnlineMode() {
 }
 
 function startSeriesMode(n) {
+  Analytics.event('cpu_series_start_click', { difficulty, battles: n });
+  AudioManager.preloadDeferredAudio();
   seriesActive = true;
   seriesCurrent = 0;
   seriesPlayerWins = 0;
@@ -2770,6 +2886,7 @@ function endingClick() {
 
 function goToSelect() {
   clearTimer();
+  AudioManager.preloadDeferredAudio();
   showScreen('select-screen');
   AudioManager.playBGM('select');
   selectedChar = null;
@@ -2806,6 +2923,7 @@ function goToSelect() {
       </div>
     `;
     div.onclick = () => {
+      Analytics.event('character_select', { mode: gameMode, character: key, difficulty });
       document.querySelectorAll('.char-card').forEach(d => d.classList.remove('selected'));
       div.classList.add('selected');
       selectedChar = key;
@@ -2836,6 +2954,7 @@ function goToSelect() {
 let selectedChar = null;
 function confirmSelect() {
   if (!selectedChar) return;
+  Analytics.event('character_confirm', { mode: gameMode, character: selectedChar, difficulty });
   if (gameMode === 'online') {
     window.OnlineManager?.confirmCharOnline(selectedChar);
     return;
@@ -2861,6 +2980,8 @@ function confirmSelect() {
 
 // ===== ゲーム開始 =====
 function startGame(pKey, cKey) {
+  Analytics.event('battle_start', { mode: gameMode, difficulty, player: pKey, opponent: cKey, series: !!seriesActive });
+  AudioManager.preloadDeferredAudio();
   AudioManager.playSE('battleStart');
   setTimeout(() => AudioManager.playBGM('battle'), 80);
   savedPKey = pKey;
@@ -4895,6 +5016,14 @@ function buildResultExtraHTML() {
 }
 
 function showResult(outcome) {
+  Analytics.event('match_result', {
+    outcome,
+    mode: gameMode,
+    difficulty,
+    turns: turn,
+    player: pState?.charKey,
+    opponent: cState?.charKey,
+  });
   // バトルログをactionLogBufferから生成して保存
   if (actionLogBuffer && actionLogBuffer.length > 0) {
     savedBattleLogHTML = actionLogBuffer
@@ -5726,6 +5855,25 @@ const db  = getFirestore(app);
 // ===== Logger API (window経由でメインスクリプトから呼び出し可) =====
 window.Logger = {
 
+  async logEvent(evt) {
+    try {
+      await addDoc(collection(db, 'user_events'), {
+        event_name: evt.name,
+        session_id: evt.session_id,
+        seq: evt.seq,
+        path: evt.path,
+        search: evt.search,
+        data: evt.data || {},
+        user_agent: evt.user_agent,
+        screen_w: evt.screen_w,
+        screen_h: evt.screen_h,
+        timestamp: serverTimestamp(),
+      });
+    } catch (e) {
+      console.warn('[Logger] logEvent failed:', e);
+    }
+  },
+
   // ① 試合結果 + ② 行動ログ を同時保存
   async saveMatchResult(data) {
     try {
@@ -5765,6 +5913,10 @@ window.Logger = {
     } catch (_) {}
   },
 };
+
+if (window.Analytics && typeof window.Analytics.flush === 'function') {
+  window.Analytics.flush();
+}
 
 // ===== OnlineManager =====
 (() => {
@@ -6054,6 +6206,7 @@ window.Logger = {
 
 // ===== PRELOAD ON STARTUP =====
 document.addEventListener('DOMContentLoaded', async () => {
+  Analytics.event('page_open');
   const overlay = document.getElementById('loading-overlay');
   // エラーが何であっても必ずオーバーレイを消す（ゲームが止まらないよう保証）
   try {
@@ -6065,8 +6218,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       'assets/image/lyra.PNG',
       'assets/image/blaze.PNG',
     ];
-    // AudioManager が管理する全音声パスを取得（パスの二重管理を避ける）
-    const SOUNDS = AudioManager.getAllAudioPaths();
+    // 初回表示に必要な音だけ先読みする。残りはタイトル操作後にバックグラウンドで読む。
+    const SOUNDS = AudioManager.getStartupAudioPaths();
 
     const fill    = document.getElementById('loading-bar-fill');
     const pctText = document.getElementById('loading-pct');
@@ -6087,19 +6240,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       img.src = url;
     }).finally(onProgress));
 
-    // 音声：fetch → ArrayBuffer を保存（デコードはユーザー操作後に行う）
-    // suspended状態での decodeAudioData 失敗を防ぐため、デコードは openingClick 後に実施
-    // カンマ入りパスは Safari が誤解釈するためセグメント encode（論理キーは storeRaw の url のまま）
-    const sndLoads = SOUNDS.map(url => {
-      const encoded = url.split('/').map(encodeURIComponent).join('/');
-      const controller = new AbortController();
-      const tid = setTimeout(() => controller.abort(), 12000); // 12秒でタイムアウト
-      return fetch(encoded, { signal: controller.signal })
-        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
-        .then(ab => AudioManager.storeRaw(url, ab))
-        .catch(() => {})
-        .finally(() => { clearTimeout(tid); onProgress(); });
-    });
+    // 音声：fetch → ArrayBuffer を保存するだけ（デコードはユーザー操作後）
+    const sndLoads = SOUNDS.map(url =>
+      AudioManager.fetchRaw(url).finally(onProgress)
+    );
 
     await Promise.all([...imgLoads, ...sndLoads]);
   } catch(e) {
@@ -6117,10 +6261,10 @@ setTimeout(() => {
 
 // ③ グローバルエラー自動キャッチ
 window.addEventListener('error', (e) => {
-  window.Logger.logError(e.message, e.error?.stack || `${e.filename}:${e.lineno}:${e.colno}`);
+  if (window.Logger) window.Logger.logError(e.message, e.error?.stack || `${e.filename}:${e.lineno}:${e.colno}`);
 });
 window.addEventListener('unhandledrejection', (e) => {
-  window.Logger.logError('UnhandledRejection: ' + e.reason, e.reason?.stack || '');
+  if (window.Logger) window.Logger.logError('UnhandledRejection: ' + e.reason, e.reason?.stack || '');
 });
 </script>
 </body>

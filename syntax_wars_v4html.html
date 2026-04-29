@@ -716,8 +716,8 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 /* 既存トーストは削除 */
 #audio-log { display:none; }
 
-#opening-screen.active, #ending-screen.active { display:flex !important; }
-#opening-screen, #ending-screen {
+#intro-screen.active, #ending-screen.active { display:flex !important; }
+#intro-screen, #ending-screen {
   background:#000; cursor:pointer;
   flex-direction:column; align-items:center; justify-content:center;
   min-height:100vh; padding:16px;
@@ -750,6 +750,56 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   display:none; margin-top:12px; color:#00ff41;
   font-size:14px; font-weight:bold; letter-spacing:2px;
   animation:op-blink 1s step-end infinite;
+}
+.intro-title {
+  color:#a0f0ff;
+  font-size:24px;
+  letter-spacing:5px;
+  text-align:center;
+  text-shadow:0 0 16px #00eaff88;
+  margin-bottom:8px;
+}
+.intro-lang-row {
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin:10px 0 18px;
+}
+.intro-lang-btn {
+  background:transparent;
+  border:1px solid #205070;
+  color:#70a0c0;
+  font-family:'Courier New',monospace;
+  font-size:12px;
+  padding:7px 18px;
+  cursor:pointer;
+  letter-spacing:2px;
+}
+.intro-lang-btn.active {
+  border-color:#a0f0ff;
+  color:#a0f0ff;
+  background:#071724;
+  box-shadow:0 0 12px #00eaff44;
+}
+.intro-text {
+  white-space:pre-wrap;
+  color:#d8f4ff;
+  font-size:14px;
+  line-height:1.9;
+  letter-spacing:0.3px;
+  text-align:left;
+  background:#030b10;
+  border:1px solid #123044;
+  padding:16px;
+  max-height:58vh;
+  overflow-y:auto;
+}
+.intro-actions {
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-top:16px;
 }
 
 /* ===== INTERACTIVE TUTORIAL PANEL ===== */
@@ -834,15 +884,20 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   <div id="dbg-log"></div>
 </div>
 
-<!-- OPENING -->
-<div id="opening-screen" class="screen active" onclick="openingClick()" ontouchstart="openingClick(); event.preventDefault()">
-  <!-- iOS：ユーザージェスチャの同一スタックで play() するため Web Audio より先に使う（openingClick 内で制御） -->
-  <audio id="opening-inline-bgm" preload="auto" loop playsinline webkit-playsinline style="position:absolute;width:0;height:0;opacity:0;pointer-events:none" src="assets/sound/system%2Cbgm/system/opening.mp3"></audio>
+<!-- INTRO / WORLD -->
+<div id="intro-screen" class="screen">
   <div class="op-container">
-    <div class="op-header">[ SYNTAX WARS / TERMINAL v1.0 ]&nbsp;&nbsp;████████ SECURE CONNECTION</div>
-    <pre id="op-text"></pre><span id="op-cursor"></span>
-    <div id="op-start">▶ CLICK TO INITIALIZE...</div>
-    <div id="op-prompt">▶ CLICK TO ENTER THE ARENA...</div>
+    <div class="intro-title">INTRO / WORLD</div>
+    <div class="op-header">[ SYNTAX WARS / WORLD FILE ]&nbsp;&nbsp;████████ PUBLIC FEED</div>
+    <div class="intro-lang-row">
+      <button class="intro-lang-btn active" id="intro-lang-en" onclick="setIntroLang('en')">EN</button>
+      <button class="intro-lang-btn" id="intro-lang-jp" onclick="setIntroLang('jp')">JP</button>
+    </div>
+    <div class="intro-text" id="intro-text"></div>
+    <div class="intro-actions">
+      <button class="btn" style="font-size:12px;padding:8px 24px;border-color:#a0f0ff;color:#a0f0ff;" onclick="openCpuMenu()">▶ VS CPU</button>
+      <button class="btn" style="font-size:12px;padding:8px 24px;border-color:#304060;color:#506080;" onclick="goToTitle()">← BACK</button>
+    </div>
   </div>
 </div>
 
@@ -898,7 +953,7 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 </div>
 
 <!-- TITLE -->
-<div id="title-screen" class="screen">
+<div id="title-screen" class="screen active">
   <div class="title-logo">SYNTAX WARS<span class="dev-badge" id="dev-badge" style="display:none">DEV</span></div>
   <div class="title-main">読み勝て。同時選択の心理戦格闘。</div>
   <div class="title-sub-ja">先を読むか、先を行くか。<br>スピードが運命を分け、ゲージが逆転を呼ぶ。</div>
@@ -907,6 +962,7 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   <button class="btn" onclick="start2PMode()">▶ 2P LOCAL</button>
   <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#006644;color:#00ffcc;" onclick="startOnlineMode()">🌐 ONLINE MATCH</button>
   <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#f0a000;color:#f0a000;" onclick="openTutorialMenu()">▶ TUTORIAL</button>
+  <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#7050c0;color:#c8b8ff;" onclick="openIntro()">▶ INTRO / WORLD</button>
   <div class="title-home-hint">First time? Start with VS CPU → EASY.<br>Add to Home Screen on mobile.</div>
   <button class="btn dev-only" id="title-auto-btn" style="font-size:11px;padding:6px 28px;border-color:#203050;color:#4080a0;display:none;" onclick="Analytics.event('title_button_auto'); showScreen('auto-screen')">⚙ AUTO BATTLE</button>
 </div>
@@ -1402,7 +1458,6 @@ const AudioManager = (() => {
 
   const STARTUP_AUDIO_PATHS = uniq([
     SE.confirm,
-    BGM_MAP.opening,
     BGM_MAP.title,
   ]);
 
@@ -1971,120 +2026,70 @@ function startInteractiveTutorial() {
   InteractiveTutorial.start();
 }
 
-// ===== OPENING SEQUENCE =====
-const OPENING_TEXT =
-`> SYSTEM BOOT... [OK]
-> CONNECTING TO UNDERGROUND NETWORK... [OK]
-> WELCOME TO ARENA [ SYNTAX ]
+// ===== INTRO / WORLD =====
+const INTRO_TEXT = {
+  en:
+`Welcome to SYNTAX.
 
-ここは、巨額のバウンティ（賞金）を求め、狂人やAI兵器、
-ミュータントたちが戦う未来の地下闘技場『SYNTAX』。
+Victory is not the only thing that matters here.
+The crowd does not roar for strength alone.
+They roar when you read your opponent.
 
-リングに立つ全ての戦士には、特殊なデバイスが埋め込まれている。
-運営の目的は「極限状態における戦闘データの収集」と、
-リミッター解除による「潜在能力の強制解放」だ。
+A perfect counter.
+A turn stolen at the edge of defeat.
+One decision that changes the fight.
 
-この闘いは全世界に生配信されている。
-コンソール越しにコマンドを送る君（ハンドラー）の使命は一つ。
-ただ勝つだけでなく、観客（オーディエンス）を熱狂させることだ。
+Every move is recorded.
+Every read has value.
+Every roar raises your name.
 
-=================================================
- [ SYSTEM TUTORIAL: CROWD ON FIRE ]
-=================================================
-華麗な読み合い（ジャストガード、カウンター成功等）を
-魅せることで、観客のボルテージ（ゲージ）が上昇する。
+Fight.
+Read.
+Ignite the crowd.`,
 
-ゲージがMAXに達した瞬間、闘技場のリミッターが強制解除。
-【 観客の大歓声 ＋ 両者のゲージが激しく発光 】
-熱狂のエネルギーがデバイスに流れ込み、戦士を限界突破させる！
+  jp:
+`ようこそ、地下闘技場《SYNTAX》へ。
 
-次ターンはSPEED差無効。
-一瞬の判断ミスが命取りになる、極限の読み合いを制圧せよ。
-=================================================
+ここでは勝利だけが価値ではない。
+観客は、力だけでは熱狂しない。
+相手の一手を読み切った瞬間にこそ、歓声は爆発する。
 
-> PRESS [START] TO ENGAGE...`;
+完璧なカウンター。
+敗北寸前で奪い返す流れ。
+戦況を変える、たった一つの判断。
 
-let _opInterval = null;
-let _opIdx = 0;
-let _opStarted = false;
-let _opDone = false;
+すべての動きは記録される。
+すべての読みには価値がある。
+すべての歓声が、君の名を押し上げる。
 
-function openingClick() {
-  if (!_opStarted) {
-    Analytics.event('opening_tap');
-    // 初回クリック：resume() 完了を待ってから BGM＋タイピング開始
-    _opStarted = true;
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    // iOS / WebKit：unlock().then(...) 内の play() はユーザージェスチャが切れ NotSupportedError になりやすい。
-    // 同一ターンの最初に <audio playsinline> を同期 play し、Web Audio 側の opening は掛けない（他BGMは従来どおり）。
-    if (isIOS) {
-      const inline = document.getElementById('opening-inline-bgm');
-      if (inline) {
-        try {
-          inline.volume = 0.5;
-          inline.loop = true; // PC の Web Audio と同様（opening は ~16s で stopOpeningInline）
-          inline.currentTime = 0;
-          inline.play().catch(e => { try { DbgPanel.log('error', '[OP] inline play: ' + (e && e.message)); } catch(_) {} });
-        } catch(e) { try { DbgPanel.log('error', '[OP] inline: ' + e.message); } catch(_) {} }
-      }
-      setTimeout(() => { try { AudioManager.stopOpeningInline(); } catch(_) {} }, 16000);
-    }
-    document.getElementById('op-start').style.display = 'none';
-    // タイピングアニメーションは即座に開始（音声待ちにしない）
-    // iOS Safari では audioCtx.resume() の Promise がハングする場合があるため
-    // アニメーションを音声と切り離して独立して動作させる
-    _opStartTyping();
-    // 優先デコード方式：最初に使うBGMを先にデコードしてから再生
-    // 残りはバックグラウンドで取得し、必要になった音だけデコードする
-    AudioManager.unlock().then(async () => {
-      DbgPanel.log('info', '[OP] unlock OK → priority decode...');
-      await Promise.all([
-        'assets/sound/system,bgm/system/opening.mp3',
-        'assets/sound/system,bgm/BGM/title.mp3',
-      ].map(p => AudioManager.decodeOne(p)));
-      DbgPanel.log('info', '[OP] decode done → playBGM');
-      AudioManager.preloadDeferredAudio();
-      if (!isIOS) AudioManager.playBGM('opening');
-      else DbgPanel.log('info', '[OP] iOS: opening = inline <audio>（Web Audio の opening はスキップ）');
-    }).catch(e => { DbgPanel.log('error', '[OP] ERROR: ' + e.message); });
-    return;
-  }
-  if (_opInterval) {
-    // タイピング中クリック：即全文表示
-    clearInterval(_opInterval);
-    _opInterval = null;
-    document.getElementById('op-text').textContent = OPENING_TEXT;
-    document.getElementById('op-cursor').style.display = 'none';
-    _opDone = true;
-    document.getElementById('op-prompt').style.display = 'block';
-    return;
-  }
-  if (_opDone) {
-    // 全文表示後クリック：タイトルへ
-    Analytics.event('opening_complete_to_title');
-    showScreen('title-screen');
-    AudioManager.playBGM('title');
-  }
+戦え。
+読め。
+群衆を燃やせ。`
+};
+
+let introLang = 'en';
+
+function renderIntro() {
+  const textEl = document.getElementById('intro-text');
+  if (textEl) textEl.textContent = INTRO_TEXT[introLang] || INTRO_TEXT.en;
+  document.getElementById('intro-lang-en')?.classList.toggle('active', introLang === 'en');
+  document.getElementById('intro-lang-jp')?.classList.toggle('active', introLang === 'jp');
 }
 
-function _opStartTyping() {
-  const el = document.getElementById('op-text');
-  _opInterval = setInterval(() => {
-    if (_opIdx >= OPENING_TEXT.length) {
-      clearInterval(_opInterval);
-      _opInterval = null;
-      _opDone = true;
-      document.getElementById('op-cursor').style.display = 'none';
-      document.getElementById('op-prompt').style.display = 'block';
-      return;
-    }
-    el.textContent += OPENING_TEXT[_opIdx];
-    window.scrollTo(0, document.body.scrollHeight);
-    _opIdx++;
-  }, 22);
+function setIntroLang(lang) {
+  introLang = lang === 'jp' ? 'jp' : 'en';
+  Analytics.event(introLang === 'jp' ? 'intro_lang_jp' : 'intro_lang_en');
+  renderIntro();
 }
 
-// BGMは opening 経由でのみアンロック（グローバルリスナー不要）
+function openIntro() {
+  Analytics.event('title_button_intro');
+  renderIntro();
+  showScreen('intro-screen');
+  AudioManager.playSE('confirm');
+}
+
+// BGM is unlocked by the first user action.
 
 // ===== キャラクターデータ =====
 const CHARS = {
@@ -6207,6 +6212,7 @@ if (window.Analytics && typeof window.Analytics.flush === 'function') {
 // ===== PRELOAD ON STARTUP =====
 document.addEventListener('DOMContentLoaded', async () => {
   Analytics.event('page_open');
+  Analytics.event('screen_view', { screen: 'title-screen' });
   const overlay = document.getElementById('loading-overlay');
   // エラーが何であっても必ずオーバーレイを消す（ゲームが止まらないよう保証）
   try {

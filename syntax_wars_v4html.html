@@ -642,11 +642,25 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 .result-title.win { color:#ff0; }
 .result-title.lose { color:#f44; }
 .result-title.draw { color:#0ff; }
+.result-poster {
+  display:none; width:min(320px, 72vw); aspect-ratio:9/16;
+  border:1px solid #304060; background:#050510; overflow:hidden;
+  box-shadow:0 0 24px #000a, 0 0 22px #80d8ff22;
+}
+.result-poster.active { display:block; }
+.result-poster img {
+  width:100%; height:100%; object-fit:cover; display:block;
+}
 .result-stats { border:1px solid #304060; padding:20px 32px; min-width:240px; }
 .result-row { display:flex; justify-content:space-between; font-size:13px; gap:24px; margin-bottom:8px; }
 .result-label { color:#506080; }
 .result-val { color:#a0f0ff; }
 .result-btns { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+@media (max-width: 720px) {
+  #result-screen { justify-content:flex-start; padding:18px 12px 28px; gap:12px; }
+  .result-title { font-size:30px; letter-spacing:4px; text-align:center; }
+  .result-poster { width:min(260px, 72vw); max-height:46vh; }
+}
 #result-log-modal {
   display:none; position:fixed; inset:0; background:rgba(0,0,10,0.92);
   z-index:1000; flex-direction:column; align-items:center; justify-content:flex-start;
@@ -1316,6 +1330,9 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 <div id="result-screen" class="screen">
   <div class="result-title" id="result-title">???</div>
   <div id="series-score" style="display:none;font-size:18px;letter-spacing:3px;color:#f0a000;margin:8px 0;"></div>
+  <div class="result-poster" id="result-poster">
+    <img id="result-poster-img" alt="">
+  </div>
   <div class="result-stats" id="result-stats"></div>
   <div class="result-btns">
     <button class="btn" id="next-battle-btn" style="display:none;border-color:#a06000;color:#f0a000;" onclick="nextSeriesBattle()">NEXT BATTLE</button>
@@ -5082,6 +5099,26 @@ function buildResultExtraHTML() {
 </div>`;
 }
 
+function getResultPosterChar(outcome) {
+  if (outcome === 'draw') return pState?.charKey;
+  if (gameMode === '2p') return outcome === 'win' ? pState?.charKey : cState?.charKey;
+  return outcome === 'win' ? pState?.charKey : cState?.charKey;
+}
+
+function updateResultPoster(outcome) {
+  const wrap = document.getElementById('result-poster');
+  const img = document.getElementById('result-poster-img');
+  const c = CHARS[getResultPosterChar(outcome)];
+  if (!wrap || !img || !c || !c.posterSrc) {
+    if (wrap) wrap.classList.remove('active');
+    if (img) { img.removeAttribute('src'); img.alt = ''; }
+    return;
+  }
+  img.src = c.posterSrc;
+  img.alt = c.name;
+  wrap.classList.add('active');
+}
+
 function showResult(outcome) {
   Analytics.event('match_result', {
     outcome,
@@ -5116,6 +5153,7 @@ function showResult(outcome) {
   showScreen('result-screen');
   AudioManager.playBGM('result');
   const title = document.getElementById('result-title');
+  updateResultPoster(outcome);
   if (gameMode === '2p') {
     if (outcome === 'win') {
       title.textContent = '🏆 P1 WIN!'; title.className = 'result-title win';

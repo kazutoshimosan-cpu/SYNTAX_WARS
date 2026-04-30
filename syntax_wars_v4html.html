@@ -2134,7 +2134,8 @@ const CHARS = {
   nexus: {
     name:'NEXUS-7 🤖', type:'バランス型', hp:100, speed:50, gauge:30,
     dmgMod:1.0, hitMod:0, gaugeIncMod:1.0,
-    themeColor:'#00ffff', emoji:'🤖', imgSrc:'assets/image/thumbs/nexus7_thumb.jpg', posterSrc:'assets/posters/nexus7_9x16.png',
+    themeColor:'#00ffff', emoji:'🤖', imgSrc:'assets/image/thumbs/nexus7_thumb.jpg',
+    posterSrc:'assets/posters/nexus7_9x16.png', posterMobileSrc:'assets/posters/mobile/nexus7_poster_mobile.jpg',
     catchphrase:'被弾で解析　同属性で破砕',
     passiveKeys:'属性学習で威力2倍 ／ 固有技被ダメ-20%',
     moves:{ weak:'ナノブレード', mid:'EMP波動', strong:'プラズマカノン', guard:'ガード', unique:'量子ビーム' },
@@ -2145,7 +2146,8 @@ const CHARS = {
   shadow: {
     name:'SHADOW 🥷', type:'速度型', hp:100, speed:65, gauge:30,
     dmgMod:0.9, hitMod:10, gaugeIncMod:1.0,
-    themeColor:'#ff003c', emoji:'🥷', imgSrc:'assets/image/thumbs/shadow_thumb.jpg', posterSrc:'assets/posters/shadow_9x16.png', imgPosition:'top',
+    themeColor:'#ff003c', emoji:'🥷', imgSrc:'assets/image/thumbs/shadow_thumb.jpg',
+    posterSrc:'assets/posters/shadow_9x16.png', posterMobileSrc:'assets/posters/mobile/shadow_poster_mobile.jpg', imgPosition:'top',
     catchphrase:'超速で回避　反撃で処理',
     passiveKeys:'SPEED差30以上で強攻撃回避 ／ 回避でゲージ+25%',
     moves:{ weak:'クナイ投げ', mid:'鎖鎌', strong:'影斬り', guard:'ガード', unique:'分身斬り' },
@@ -2156,7 +2158,8 @@ const CHARS = {
   novaqueen: {
     name:'NOVA QUEEN 🔮', type:'属性型', hp:95, speed:50, gauge:30,
     dmgMod:1.0, hitMod:0, gaugeIncMod:1.0,
-    themeColor:'#b026ff', emoji:'🔮', imgSrc:'assets/image/thumbs/nova_thumb.jpg', posterSrc:'assets/posters/nova_9x16.png', imgPosition:'top',
+    themeColor:'#b026ff', emoji:'🔮', imgSrc:'assets/image/thumbs/nova_thumb.jpg',
+    posterSrc:'assets/posters/nova_9x16.png', posterMobileSrc:'assets/posters/mobile/nova_poster_mobile.jpg', imgPosition:'top',
     catchphrase:'溜めて連打　臨界で撃ち抜く',
     passiveKeys:'HP減るほど星屑砲が強化 ／ CROWD ON FIRE時ゲージ吸収強化',
     moves:{ weak:'エナジー弾', mid:'次元裂き', strong:'重力場', guard:'ガード', unique:'星屑砲' },
@@ -2167,7 +2170,8 @@ const CHARS = {
   titan: {
     name:'TITAN 🦾', type:'パワー型', hp:100, speed:30, gauge:30,
     dmgMod:1.3, hitMod:-10, gaugeIncMod:1.0,
-    themeColor:'#ffb000', emoji:'🦾', imgSrc:'assets/image/thumbs/titan_thumb.jpg', posterSrc:'assets/posters/titan_9x16.png', imgPosition:'20% top',
+    themeColor:'#ffb000', emoji:'🦾', imgSrc:'assets/image/thumbs/titan_thumb.jpg',
+    posterSrc:'assets/posters/titan_9x16.png', posterMobileSrc:'assets/posters/mobile/titan_poster_mobile.jpg', imgPosition:'20% top',
     catchphrase:'遅いほど強い　押して潰す',
     passiveKeys:'SLOW状態で被ダメ-15%＆与ダメ+10% ／ FAST状態でガード不可',
     moves:{ weak:'鉄拳', mid:'地震砕き', strong:'ギガントプレス', guard:'ガード', unique:'超電磁砲' },
@@ -2178,7 +2182,8 @@ const CHARS = {
   lyrax: {
     name:'LYRA-X 🧬', type:'デバフ型', hp:100, speed:50, gauge:30,
     dmgMod:0.9, hitMod:0, gaugeIncMod:0.8,
-    themeColor:'#39ff14', emoji:'🧬', imgSrc:'assets/image/thumbs/lyra_thumb.jpg', posterSrc:'assets/posters/lyra_9x16.png',
+    themeColor:'#39ff14', emoji:'🧬', imgSrc:'assets/image/thumbs/lyra_thumb.jpg',
+    posterSrc:'assets/posters/lyra_9x16.png', posterMobileSrc:'assets/posters/mobile/lyra_poster_mobile.jpg',
     catchphrase:'slowで腐食　持久で削れ',
     passiveKeys:'毎ターン+4HP自動回復 ／ SLOW相手に毎ターン腐食-3HP（TITANは-2）',
     moves:{ weak:'酸液噴射', mid:'変異爪', strong:'捕縛触手', guard:'ガード', unique:'細胞再生' },
@@ -2189,7 +2194,8 @@ const CHARS = {
   blaze: {
     name:'BLAZE 🔥', type:'爆発型', hp:100, speed:50, gauge:30,
     dmgMod:1.3, hitMod:0, gaugeIncMod:1.0,
-    themeColor:'#ff5500', emoji:'🔥', imgSrc:'assets/image/thumbs/blaze_thumb.jpg', posterSrc:'assets/posters/blaze_9x16.png',
+    themeColor:'#ff5500', emoji:'🔥', imgSrc:'assets/image/thumbs/blaze_thumb.jpg',
+    posterSrc:'assets/posters/blaze_9x16.png', posterMobileSrc:'assets/posters/mobile/blaze_poster_mobile.jpg',
     catchphrase:'起爆して煽れ　ドカンと決めろ',
     passiveKeys:'全攻撃+30% ／ 起爆準備で自爆回避＆火力UP',
     moves:{ weak:'ファイアボール', mid:'火炎放射', strong:'マグマストライク', guard:'起爆準備', unique:'爆裂拳' },
@@ -2217,7 +2223,8 @@ function updateSelectPoster(c) {
     img.alt = '';
     return;
   }
-  img.src = c.posterSrc;
+  const useMobilePoster = window.matchMedia && window.matchMedia('(max-width: 720px)').matches;
+  img.src = useMobilePoster && c.posterMobileSrc ? c.posterMobileSrc : c.posterSrc;
   img.alt = c.name;
   wrap.classList.add('has-image');
 }

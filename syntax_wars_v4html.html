@@ -2863,6 +2863,15 @@ function showScreen(id) {
   document.getElementById(id).classList.add('active');
   Analytics.event('screen_view', { screen: id });
 }
+let titleBgmPrimedByGesture = false;
+function primeTitleBgmFromGesture() {
+  if (titleBgmPrimedByGesture) return false;
+  const titleScreen = document.getElementById('title-screen');
+  if (!titleScreen || !titleScreen.classList.contains('active')) return false;
+  titleBgmPrimedByGesture = true;
+  AudioManager.playBGM('title');
+  return true;
+}
 function goToTitle() { clearTimer(); showScreen('title-screen'); updateDevUI(); AudioManager.playBGM('title'); }
 function openCpuMenu(source = 'title') {
   if (source === 'title') Analytics.event('title_button_cpu');
@@ -6313,6 +6322,19 @@ if (window.Analytics && typeof window.Analytics.flush === 'function') {
 document.addEventListener('DOMContentLoaded', async () => {
   Analytics.event('page_open');
   Analytics.event('screen_view', { screen: 'title-screen' });
+  const titleScreen = document.getElementById('title-screen');
+  if (titleScreen) {
+    const startTitleBgm = () => {
+      if (primeTitleBgmFromGesture()) {
+        titleScreen.removeEventListener('pointerdown', startTitleBgm);
+        titleScreen.removeEventListener('click', startTitleBgm);
+        titleScreen.removeEventListener('keydown', startTitleBgm);
+      }
+    };
+    titleScreen.addEventListener('pointerdown', startTitleBgm);
+    titleScreen.addEventListener('click', startTitleBgm);
+    titleScreen.addEventListener('keydown', startTitleBgm);
+  }
   const overlay = document.getElementById('loading-overlay');
   // エラーが何であっても必ずオーバーレイを消す（ゲームが止まらないよう保証）
   try {

@@ -4,9 +4,269 @@
 
 ---
 
+## 2026-05-02（タイトル魅せ方改善／BGM軽量化／タイトルBGM起動修正）
+
+### 今日やったこと（ここに貼る）
+
+担当エージェント
+* Codex
+
+タイトル離脱の仮説整理
+* 今日も何回かアクセスはあったが、計測上はタイトル付近で止まっている可能性がある。
+* ゲーム内容が悪いというより、初見ユーザーが「これは何をするゲームか」「最初にどこを押せばいいか」を掴む前に離脱している仮説。
+* 世界観を読ませる前に、タイトルで「同時選択して読み合うゲーム」だと一瞬で伝える方向へ寄せる。
+
+BGM軽量化
+* 音がなかなか出ない原因として、BGMファイルの重さを確認。
+* SEは多くが数十KB〜100KB前後で軽く、主因はBGMと判断。
+* 重いBGM 5本を圧縮。
+  * `title.mp3`: 約5.4MB → 約1.9MB
+  * `characterchoosing.mp3`: 約6.2MB → 約1.8MB
+  * `battle1.mp3`: 約2.5MB → 約845KB
+  * `battle2.mp3`: 約3.1MB → 約1.0MB
+  * `battle3.mp3`: 約3.1MB → 約1.1MB
+* 対象5本合計は約20MBから約6.7MBへ軽量化。
+* `result.mp3`、`opening.mp3`、各SEは十分軽いため今回は触らず。
+
+タイトルBGM起動修正
+* タイトル画面は最初から表示されているが、初回表示時には `playBGM('title')` が呼ばれていなかった。
+* iPhone/Safariではユーザー操作前の自動再生ができないため、タイトル画面の最初のタップ/クリックをきっかけにタイトルBGMを開始する処理を追加。
+* 追加の `SOUND ON` ボタンは出さず、既存のタイトル操作で自然に音が鳴る形にした。
+
+タイトルの読み合いデモ
+* タイトル説明文の下、ボタン群の上に `LIVE SIMULATION / 読み合いデモ` を追加。
+* 実戦スクショではなく、軽いHTML/CSSのミニUIで「YOU / ENEMY が同時に選ぶ → 結果が出る」を見せる形。
+* 回復封じなど次ターン概念が絡むものは初見には難しいため、タイトルデモからは除外。
+* デモは以下の3パターンを約2.6秒ごとに切替。
+  * `GUARD vs HEAVY` → `JUST GUARD!`
+  * `COUNTER vs STRIKE` → `COUNTER HIT!`
+  * `FAST vs ATTACK` → `SPEED SHIFT!`
+* 海外流入も想定しつつ、日本語ユーザーにも伝わるよう、結果説明は短く日英併記にした。
+
+### 触ったファイル（わかれば）
+
+- `syntax_wars_v4html.html`
+- `assets/sound/system,bgm/BGM/title.mp3`
+- `assets/sound/system,bgm/BGM/characterchoosing.mp3`
+- `assets/sound/system,bgm/BGM/battle1.mp3`
+- `assets/sound/system,bgm/BGM/battle2.mp3`
+- `assets/sound/system,bgm/BGM/battle3.mp3`
+- `handoff.md`
+- `Syntax_Wars_作業ログ_貼り付け用.md`
+
+### 次にやること（メモ程度でOK）
+
+- GitHub Pages反映後に、`user_events` で `page_open → title_button_cpu → cpu_single_start_click → character_select` の落ち方を見る。
+- タイトルデモで本当に伝わるかはまだ未確定。情報量が多い、ボタンが下がりすぎる、英語/日本語が読みにくい場合は調整。
+- さらに改善するなら、タイトルに `START: VS CPU EASY` の直通ボタンを作り、難易度画面を飛ばしてキャラ選択へ送る案を検討。
+
+### 気づいたこと・不具合
+
+- タイトルで止まるアクセスは、ゲーム本編以前に「入口の理解」で落ちている可能性がある。
+- 初見タイトルでは世界観よりも「ルールの一口試食」が重要。
+- 回復封じ、腐食、CROWD、ゲージなどは面白いが、タイトルで見せるには重い。まずは JUST GUARD / COUNTER / SPEED 程度に絞るのがよさそう。
+
+---
+
+## 2026-04-30（GitHub Pages導線改善／計測／SNS運用準備）
+
+### 今日やったこと（ここに貼る）
+
+担当エージェント
+* Codex
+
+GitHub Pages導線の見直し
+* GitHub Pages公開後にユーザーアクセス/プレイ完走が落ちているように見えたため、まず公開URL・入口・プリロード・計測の順に確認。
+* 旧Netlifyリンクをすぐ直せない前提で、SNS/Instagramから新URLへ再誘導する方針に整理。
+* タイトル画面下に英語案内 `First time? Start with VS CPU → EASY. / Add to Home Screen on mobile.` を追加。
+* 初期表示をオープニングからタイトル直行へ変更。初見ユーザーがすぐ `VS CPU` を選べる導線にした。
+* 旧オープニングは廃止し、世界観はタイトルの `INTRO / WORLD` ボタンから任意で読める形へ変更。
+* `INTRO / WORLD` は EN/JP 切替つき。世界観は「SYNTAX=地下闘技場＋企業の戦闘データ市場」「観客は読み合いに熱狂する」「歓声が戦士の価値を押し上げる」に整理。
+
+初回ロード・音声
+* 起動時に全音声を読む構成をやめ、初回に必要な最小限だけ読む形に変更。
+* バトルBGM、技SE、各種SEはタイトル操作後または再生時に取得する方針。
+* オープニングを初期表示から外したため、旧オープニング音声も初回読み込み対象から除外。
+* 初回音声ロードは約45MBから約5.4MBへ軽量化。
+
+計測
+* Firestoreに `user_events` コレクションを追加して、途中行動を保存。
+* 記録イベント: `page_open`, `screen_view`, `title_button_cpu`, `title_button_2p`, `title_button_online`, `title_button_tutorial`, `title_button_intro`, `intro_lang_en`, `intro_lang_jp`, `character_select`, `character_confirm`, `battle_start`, `match_result` など。
+* Firebase Rulesで `user_events` は `create` のみ許可、read/update/deleteは禁止。
+* 初回CSVでは自分の確認アクセス混在あり。`page_open` 15、`match_result` 1。完走セッションは `VS CPU → EASY → NOVA QUEEN vs LYRA-X → 12ターン敗北`。
+
+分析CSV
+* ローカル分析用に `scripts/export_firestore_events.js` を作成。
+* サービスアカウントJSONはリポジトリ外のデスクトップに置き、スクリプト実行時にパス指定。
+* 出力: `user_events_raw.csv`, `event_counts.csv`, `funnel_summary.csv`, `session_paths.csv`。
+* 秘密鍵JSONはGitHubに入れない。
+
+Instagram/SNS運用
+* 旧小説アカウントを、SYNTAX専用ではなく「個人制作ゲーム全般」のアカウントへ移行する方針。
+* Instagramは海外フォロワー向けに英語投稿・英語プロフィール・プロフィールリンク運用。
+* 投稿本文内URLはクリック不可のため、プロフィールリンクに GitHub Pages URL を設定。
+* `assets/posters` の6キャラポスターから、固定投稿用4:5画像 `docs/instagram/generated/syntax_wars_fixed_post_cover.png` を作成。
+* キャプションは英語で `Play link in bio.` 前提に整理。
+
+GitHub
+* 以下のコミットを `main` にpush済み。
+  * `ea5dc50` Lighten startup preload and add title analytics
+  * `11d089f` Use English title start hint
+  * `9f76c66` Move intro behind title screen
+* 分析スクリプト、CSV、Instagram生成画像はローカル運用物として未コミットの可能性あり。
+
+### 触ったファイル（わかれば）
+
+- `syntax_wars_v4html.html`
+- `scripts/export_firestore_events.js`
+- `docs/analytics/export/*.csv`
+- `docs/instagram/generated/syntax_wars_fixed_post_cover.png`
+- Firebase Firestore Rules（手動）
+- `handoff.md`
+- `Syntax_Wars_作業ログ_貼り付け用.md`
+
+### 次にやること（メモ程度でOK）
+
+- 数時間〜1日後に `user_events` を再エクスポートし、タイトル直行後の `page_open → title_button_cpu → battle_start → match_result` を見る。
+- 自分のアクセスが混ざるため、投稿後の時間帯や端末サイズを見ながら判断する。
+- 必要なら `Tap any button to enable sound` など音の案内を後で検討。
+- Instagramは固定ポスト、ストーリー、キャラ紹介投稿で継続誘導。
+
+### 気づいたこと・不具合
+
+- Instagramの投稿本文内リンクはクリック不可。プロフィールリンク誘導が必要。
+- iPhone/iPadアプリではプロフィールリンク追加やピン留めUIが不安定な場合がある。
+- 初期導線では世界観より「すぐ遊べる」ことが重要。世界観は任意閲覧に回す方が分析しやすい。
+
+---
+
+## 2026-04-30（キャラ選択・結果画面ポスター／画像軽量化）
+
+### 今日やったこと（ここに貼る）
+
+担当エージェント
+* Codex
+
+キャラ選択画面のビジュアル強化
+* `assets/posters/` に追加した名前なし9:16ポスターを、実装しやすい英字名へ統一。
+  * `nexus7_9x16.png`
+  * `shadow_9x16.png`
+  * `nova_9x16.png`
+  * `titan_9x16.png`
+  * `lyra_9x16.png`
+  * `blaze_9x16.png`
+* PC版のキャラ選択では、キャラカード一覧の右側に選択中キャラの9:16ポスターを表示。
+* スマホ版は最初にポスターが出ると重く感じたため、初期表示ではカード一覧を先に出し、キャラ選択後だけカード下に小さめポスターを表示する形へ調整。
+
+画像軽量化
+* 丸アイコン用に `assets/image/thumbs/` を作成。
+  * `*_thumb.jpg` 6枚を追加。
+  * キャラ選択カード、バトルHUDの丸アイコン、起動時プリロードをサムネイル参照へ変更。
+  * 丸アイコン分の初期画像読み込みは約12MBから約180KB程度まで軽量化。
+* スマホ用ポスターとして `assets/posters/mobile/` を作成。
+  * `*_poster_mobile.jpg` 6枚を追加。
+  * スマホでは約93〜130KBの軽量ポスター、PCでは元の高解像度9:16ポスターを使う分岐にした。
+
+結果画面
+* `WINNER! / ELIMINATED / DRAW` の下、戦績表の上に全身ポスター枠を追加。
+* 勝利時は勝ったキャラの高解像度ポスター、敗北時は相手キャラ、2PではP1/P2勝者、DRAWでは自分側キャラを表示。
+
+GitHub
+* 以下のコミットを `main` に push 済み。
+  * `29adfc7` Add character select poster previews
+  * `4e85e3f` Tune mobile character select posters
+  * `cf6503c` Use lightweight character thumbnails
+  * `873f5f4` Add lightweight mobile character posters
+  * `dbc75fb` Show winner poster on result screen
+
+### 触ったファイル（わかれば）
+
+- `syntax_wars_v4html.html`
+- `assets/posters/*_9x16.png`
+- `assets/posters/mobile/*_poster_mobile.jpg`
+- `assets/image/thumbs/*_thumb.jpg`
+- `handoff.md`
+- `Syntax_Wars_作業ログ_貼り付け用.md`
+
+### 次にやること（メモ程度でOK）
+
+- iPhone実機で、キャラ選択の初期表示・選択後ポスター・結果画面ポスターの重さを確認。
+- 結果画面の高解像度ポスターが重ければ、結果画面もスマホだけ軽量版に切り替える。
+- 勝利画面のポスター位置・サイズが気になれば、タイトル下/戦績上の高さを微調整。
+
+### 気づいたこと・不具合
+
+- スマホWebでは2〜3MB級の画像を選択画面で読むと、見た目は良くても初動が重く感じやすい。
+- PCは高解像度ポスターがかなり映える。スマホは軽量版でも雰囲気は十分出る。
+
+---
+
+## 2026-04-26（通常攻撃の技シーン画像集／インスタ投稿テンプレ）
+
+### 今日やったこと（ここに貼る）
+
+画像素材の整理（コード変更なし）
+* `syntax wars 画像集/` に、各キャラ「**弱攻撃1枚＋追加1枚（中 or 強）**」の技シーン画像を作成して格納（キャラ別フォルダ）。
+* インスタ優先で、実際の画像を確認して「投稿で映える構図か／文字を置ける余白があるか／全体の統一感」をチェック。
+  * 縦長で迫力があり、色味もキャラ別に整理されていて **インスタ運用に向く**（BLAZE=橙、LYRA=黄緑、TITAN=青、NOVA=紫、等）。
+
+インスタ投稿テンプレ（運用案）
+* 1キャラ=1カルーセル（2枚）で量産する方針。
+  * **表紙（1枚目）＝POWER（中/強）**：派手でスクロール停止率が上がる想定
+  * **2枚目＝BASIC（弱）**
+* 文字は全キャラ共通で **上部固定**が事故りにくい（下はエフェクトが強い画像が多い）。
+  * 入れる文字は最小限（キャラ名＋BASIC/POWER）。説明はキャプションへ。
+* 推奨比率：フィードは **4:5（1080×1350）** へ寄せると面積を最大化できる（素材は縦長なので相性良い）。
+
+キャラ別：BASIC/POWER の割り当て（暫定）
+* BLAZE：BASIC=`fireball.PNG` / POWER=`火炎放射器.PNG`
+* LYRA：**BASIC=`酸液噴射.png` / POWER=`変異爪.png`（※このキャラだけ逆）**
+* TITAN：BASIC=`鉄拳.png` / POWER=`ギガントプレス.png`
+* NEXUS-7：BASIC=`ナノブレード.PNG` / POWER=`ビーム.PNG`
+* NOVA：BASIC=`エナジーボール.PNG` / POWER=`次元裂き.PNG`
+* SHADOW：BASIC=`くない投げ.PNG` / POWER=`影斬り.PNG`
+
+現状の運用状況
+* まだ一昨日作った **ポスター投稿を進めている最中**。通常攻撃画像の投稿は次の弾として準備。
+
+### 触ったファイル（わかれば）
+
+- `Syntax_Wars_作業ログ_貼り付け用.md`
+- `handoff.md`
+
+### 次にやること（メモ程度でOK）
+
+- インスタ用に、キャラごとに `basic.png` / `power.png` の **命名統一**を検討（投稿・実装で迷子防止）。
+- キャプションの定型（コピペ用）とハッシュタグ固定セットを作る。
+
+### 気づいたこと・不具合
+
+- （追記なし）
+
+---
+
 ## 2026-04-23（ビジュアル方針メモ／デプロイ後に絵を少しずつ／GDD v6.18）
 
 ### 今日やったこと（ここに貼る）
+
+オンライン（ネット対戦）体験差の修正（`syntax_wars_v4html.html`）
+* オンラインは「**ホストのみ `resolveActions`**」で、ゲストは `turn_result` の適用のみ（SSOT）という構造のため、ローカルと比べて **VFX/UI/音**が欠けていた。
+* **VFXの欠け**：ダメージを与えてもパネルが震えない／ダメ数字が出ない／カウンターやガード貫通の表示が揃わない。
+  * `turn_result.fx` を追加し、ホスト計算中に **シェイク・ダメポップ・アクションPOP・中央フラッシュ**をイベントとしてキャプチャ→両端末で同順再生。
+  * ゲスト側は左右が入れ替わるため、`fx` の `isPlayer` を **ゲスト時だけ反転**して再生（COUNTER/MISREADが逆になる問題を解消）。
+* **オーディエンスゲージUIの欠け**：ゲスト側で貯まらない（実値は同期しているが見た目が更新されない）。
+  * `syncAudienceChrome()` で **バー幅・数値も `audienceGauge` から描画**するように修正。
+  * `addAudience()` はオンラインホスト計算中に DOM 更新を抑制（結果適用側で揃える）。
+* **効果音（SE）の欠け**：ホストだけ鳴ってゲストが無音になりやすい。
+  * `turn_result.se` を追加し、ホスト計算中はSEを鳴らさずキャプチャ→両端末で再生（ホスト二重再生も抑止）。
+
+GitHub移行／公開先の切替
+* GitHubリポジトリ：`SYNTAX_WARS`（`origin`）にコミット・push。
+* Netlifyは **月間限度額超過**でプロジェクトが Paused になり利用不可に。
+* 公開を **GitHub Pages** に切替。公開URL：`https://kazutoshimosan-cpu.github.io/SYNTAX_WARS/`
+  * ルート `/` で V4 を開くため `index.html` を追加（`syntax_wars_v4html.html` へ誘導）。
+  * Netlify用に `_redirects` も追加（将来再開時の保険）。
+* Pages移行後、Consoleに赤が出た件は **キャッシュ**起因（`?v=1` や強制リロードで解消）。現状の赤は `favicon.ico` 404 程度で動作影響なし（放置）。
 
 ビジュアル／運用方針（コード変更なし）
 * **縦（9:16）メイン**の前提でUI設計メモ：背景の「空き」より **上下のUI帯（暗幕グラデ＋必要なら半透明プレート）**で読みやすさを担保する方針。
@@ -26,7 +286,10 @@ GDD／ゲージ表記（ドキュメント中心・V4の実装は従来どおり
 - `Syntax_Wars_作業ログ_貼り付け用.md`
 - `SYNTAX_WARS_GDD_v6.md`
 - `CLAUDE.md`
-- `syntax_wars_v4html.html`（+8 削除→復帰の試行のみ）
+- `syntax_wars_v4html.html`（オンライン体験差：VFX/SE/Audience同期）
+- `index.html`（GitHub Pagesの入口：V4へ）
+- `_redirects`（Netlify用の保険）
+- `.gitignore`（`.ai/` を除外）
 
 ### 次にやること（メモ程度でOK）
 

@@ -1,12 +1,85 @@
 # SYNTAX WARS v6.18 — 引き継ぎドキュメント
 
-最終更新: 2026-04-23（ビジュアル方針メモ／**GDD v6.18**：属性・固有の使用後ゲージ+8 を明文化）
+最終更新: 2026-05-02（タイトル魅せ方改善／BGM軽量化／タイトルBGM起動修正）／2026-04-30（GitHub Pages導線改善／計測／SNS運用準備／キャラ選択・結果画面ポスター導入／画像軽量化）／2026-04-24（画像生成・画風基準のメモ追記）／2026-04-23（オンライン体験差修正／GitHub Pages／GDD v6.18）
 
 > **Netlify をやめて GitHub 側に寄せる話**（やさしいメモ）: 同フォルダの `Netlify_GitHub移行メモ.md`
 
 ---
 
 ## 0. 更新ログ
+
+### 2026-05-02（タイトル魅せ方改善／BGM軽量化／タイトルBGM起動修正）
+
+対象: `syntax_wars_v4html.html` / `assets/sound/system,bgm/BGM/*.mp3`
+
+担当エージェント: Codex
+
+| 項目 | 内容 |
+|------|------|
+| 観測 | 今日も数回アクセスはあったが、計測上はタイトル付近で止まっている可能性あり。初見ユーザーが「何をするゲームか」「どこを押せばいいか」を掴む前に離脱している仮説。 |
+| BGM軽量化 | 重かったBGM 5本（`title` / `characterchoosing` / `battle1` / `battle2` / `battle3`）を圧縮。対象5本合計は約20MB→約6.7MB。`result` や `opening`、SEは元から数十KB〜100KB前後なので今回は触らず。 |
+| タイトルBGM | タイトル画面は初期表示されるだけで `playBGM('title')` が呼ばれていなかったため、最初のタップ/クリックをきっかけにタイトルBGMを開始する処理を追加。iPhone/Safariの自動再生制限に合わせた対応。 |
+| 読み合いデモ | タイトル説明文の下・ボタン群の上に `LIVE SIMULATION / 読み合いデモ` を追加。実戦スクショではなく、軽いHTML/CSSのミニUIで「同時選択→結果」を見せる。 |
+| デモ内容 | `GUARD vs HEAVY → JUST GUARD!`、`COUNTER vs STRIKE → COUNTER HIT!`、`FAST vs ATTACK → SPEED SHIFT!` の3種を約2.6秒ごとに切替。回復封じなど次ターン概念が絡むものは初見には難しいため除外。 |
+| 表現方針 | 海外流入も想定しつつ、日本語ユーザーにも伝わるよう結果説明は短く日英併記。世界観説明より先に「何をするゲームか」をタイトルで一口試食させる方針。 |
+| 要観察 | このデモで本当に分かるかは未確定。次回の `user_events` で `page_open → title_button_cpu → cpu_single_start_click → character_select` の落ち方を見る。デモが邪魔なら文言/位置/サイズを再調整。 |
+
+### 2026-04-30（GitHub Pages導線改善／計測／SNS運用準備）
+
+対象: `syntax_wars_v4html.html` / `scripts/export_firestore_events.js`（ローカル分析用）/ `docs/instagram/generated/syntax_wars_fixed_post_cover.png`（投稿素材）/ Firebase Firestore Rules（手動設定）
+
+担当エージェント: Codex
+
+| 項目 | 内容 |
+|------|------|
+| 初回ロード軽量化 | 起動時の音声プリロードを全音声から、最初に必要な最小限へ縮小。バトル音・技SE・各BGMはタイトル操作後または再生時に取得する方針へ。初回音声ロードは約45MB→約5.4MB。 |
+| ユーザー行動計測 | Firestore `user_events` を追加。`page_open` / `screen_view` / `title_button_cpu` / `title_button_2p` / `title_button_online` / `title_button_tutorial` / `title_button_intro` / `character_select` / `battle_start` / `match_result` などを記録。 |
+| Firestore Rules | Firebase Consoleで `user_events` に `allow create: if true; allow read, update, delete: if false;` を追加。既存の `match_results` / `action_logs` / `error_logs` と同じログ系コレクションとして扱う。 |
+| タイトル導線 | タイトル下に英語案内 `First time? Start with VS CPU → EASY. / Add to Home Screen on mobile.` を追加。Instagram等の海外流入向けに、最初に押す導線を明示。 |
+| オープニング整理 | 旧オープニングを初期表示から外し、ページを開いたらタイトル画面へ直行。世界観テキストはタイトルの `INTRO / WORLD` ボタンから任意で閲覧する形に変更。 |
+| INTRO / WORLD | 英語・日本語切替つきの世界観画面を追加。内容は「SYNTAX＝地下闘技場＋企業の戦闘データ市場」「観客は読み合いに熱狂する」「歓声が戦士の価値を押し上げる」に整理。 |
+| Instagram固定投稿素材 | `assets/posters` の6キャラポスターから、Instagram 4:5用の集合カバー `docs/instagram/generated/syntax_wars_fixed_post_cover.png` を生成。英語見出し `SYNTAX WARS / TURN-BASED SCI-FI FIGHTER / PLAY IN BROWSER`。 |
+| Instagram運用 | 旧小説アカウントを「個人制作ゲーム全般」アカウントへ移行する方針。投稿文・プロフィールは英語中心。投稿本文リンクはクリック不可のため、プロフィールリンクに GitHub Pages URL を設定。 |
+| 分析CSV | `scripts/export_firestore_events.js` をローカル分析用に作成。サービスアカウントJSONをリポジトリ外から指定し、`user_events_raw.csv` / `event_counts.csv` / `funnel_summary.csv` / `session_paths.csv` を出力。秘密鍵はGitHubへ入れない。 |
+| 初回データ所感 | `user_events` の初回CSVでは、自分の確認アクセス混在あり。`page_open` 15、`match_result` 1。完走セッションは `VS CPU → EASY → NOVA QUEEN vs LYRA-X → 12ターン敗北` まで到達。 |
+| GitHub | `main` に push 済み。主なコミット: `ea5dc50`（プリロード軽量化＋計測）, `11d089f`（タイトル案内英語化）, `9f76c66`（INTROをタイトル配下へ移動）。分析スクリプト・CSV・投稿素材はローカル作業物として未コミットの可能性あり。 |
+
+### 2026-04-30（キャラ選択・結果画面ポスター導入／画像軽量化）
+
+対象: `syntax_wars_v4html.html` / `assets/posters/*_9x16.png` / `assets/posters/mobile/*_poster_mobile.jpg` / `assets/image/thumbs/*_thumb.jpg`
+
+担当エージェント: Codex
+
+| 項目 | 内容 |
+|------|------|
+| 9:16ポスター導入 | `assets/posters/*_9x16.png` を6キャラ分追加。キャラ選択画面のPC版では、キャラ一覧の右側に選択中キャラの高解像度ポスターを表示。 |
+| スマホ選択画面 | 初期表示ではポスター非表示。キャラ選択後、カード一覧の下・PASSIVE/SPECIAL説明の上に小さめポスターを表示。 |
+| スマホ用軽量ポスター | `assets/posters/mobile/*_poster_mobile.jpg` を追加。スマホ幅では約93〜130KBの軽量版を読み、PC幅では元の高解像度9:16を読む。 |
+| 丸アイコン軽量化 | `assets/image/thumbs/*_thumb.jpg` を追加。キャラ選択カードとバトルHUDの丸アイコン、起動時プリロードをサムネイル参照に変更。丸アイコン分の初期画像読み込みは約12MB→約180KB程度。 |
+| 結果画面ポスター | `WINNER! / ELIMINATED / DRAW` の下、戦績表の上に結果ポスター枠を追加。勝者キャラの高解像度ポスターを表示（2PはP1/P2勝者、DRAWは自分側）。 |
+| GitHub | `main` に push 済み。主なコミット: `29adfc7`（選択画面ポスター）, `4e85e3f`（スマホ表示調整）, `cf6503c`（丸アイコン軽量化）, `873f5f4`（スマホ用軽量ポスター）, `dbc75fb`（結果画面ポスター）。 |
+
+### 2026-04-26（画像集：通常攻撃2枚セット／インスタ投稿テンプレ）
+
+対象: 運用メモ（コード変更なし）。`syntax wars 画像集/` の整理とインスタ運用方針。
+
+| 項目 | 内容 |
+|------|------|
+| 画像セット | 各キャラ「**弱攻撃1枚＋追加1枚（中 or 強）**」の技シーン画像を用意し、`syntax wars 画像集/<CHAR>/` に格納。 |
+| インスタ方針 | 1キャラ=カルーセル2枚（**表紙=POWER、中/強／2枚目=BASIC、弱**）。文字は **上部固定**で最小限（キャラ名＋BASIC/POWER）、説明はキャプションへ。比率はフィード **4:5（1080×1350）** 推奨。 |
+| POWER割り当て（暫定） | BLAZE=`火炎放射器`、TITAN=`ギガントプレス`、NEXUS-7=`ビーム`、NOVA=`次元裂き`、SHADOW=`影斬り`、**LYRAのみ逆（POWER=`変異爪`、BASIC=`酸液噴射`）**。 |
+| 現状 | まだ一昨日作った **ポスター投稿を進めている最中**。通常攻撃画像投稿は次の弾として準備。 |
+
+### 2026-04-24（画像生成：画風基準・参照画像の扱い）
+
+対象: 運用メモ（コード変更なし）。`assets/image` 差し替え前の **生成AIプロンプト方針**。
+
+| 項目 | 内容 |
+|------|------|
+| 画風の基準 | **NEXUS-7** のビジュアルをシリーズの錨とする。現代サイバーパンク系アニメ調、**夜・雨・湿った路面の反射**、ライティングは **シアンとマゼンタの二主色**、近未来タクティカル装備・発光ディテールは洗練寄り（過剰なギラギラのみに偏らない）。 |
+| Gemini 等での使い方 | 生成時は **参照画像として NEXUS 基準画を添付**し、「添付と同一トーンの画風・色気・ライティングで」と指示するのが確実。添付しない場合は、上記要素をテキストで **【シリーズ基準】** としてプロンプトに含める。 |
+| 既存 PNG を参照に付けるか | **必須ではない**。**画風・同一性を揃えたい**ときは添付が有効。**NOVA** は `2026-04-23` メモのとおり方向転換中のため、**魔法っぽい現行絵が引きずられる**なら参照を弱める／額・銀髪など最小限に留める等の判断が有効。背景単体は参照なしでも可。 |
+| 既存方針との関係 | キャラ差し替えは **全キャラ揃って一括**、NOVA は **量子/重力系SF・銀髪＋額の発光回路**（炎・古典魔法オーラは避ける）、9:16・UI帯前提は **2026-04-23** のビジュアル方針と併せて従う。 |
 
 ### 2026-04-23（ビジュアル方針：縦UI／キャラ絵の運用）
 
@@ -28,6 +101,18 @@
 |------|------|
 | GDD **v6.18** | **属性付き攻撃・固有技**：**UI表記どおりのコストを先に差し引いた後**に、使用後ゲージ加算（基準 **+8%**、`addGauge` 経由で瀕死・OC減衰・キャラ係数の影響ありうる）を明文化。設計意図（使用促進・読み合いのノイズ）／コスト閾値は変わらず無限ループにならないこと／**NEXUS・NOVA** のゲージ回転個性としての位置づけ。 |
 | 運用 | `CLAUDE.md` の最新 GDD 版を **v6.18** に同期。 |
+
+### 2026-04-23（続き・オンライン体験差の修正／GitHub Pages へ公開切替）
+
+対象: `syntax_wars_v4html.html` / `index.html` / `_redirects` / `.gitignore`
+
+| 項目 | 内容 |
+|------|------|
+| オンラインの体験差 | オンラインは「ホストのみ `resolveActions`」で、ゲストは `turn_result` 適用のみ（SSOT）。そのため **VFX/音/UI**がゲスト側で欠ける問題が出た。 |
+| `turn_result.fx` | ホスト計算中に **シェイク・ダメポップ・アクションPOP・中央フラッシュ**をイベントとしてキャプチャし、`applyOnlineTurnResult` で両端末が再生。ゲスト側は `isPlayer` を **反転**して左右を揃える。 |
+| `turn_result.se` | ホスト計算中はSEを鳴らさずキャプチャし、`applyOnlineTurnResult` で両端末が同じSEを鳴らす（ホスト二重再生も抑止）。 |
+| Audience UI | `syncAudienceChrome()` を **バー幅/数値も描画**するように修正。`addAudience()` はオンラインホスト計算中のDOM更新を抑制。 |
+| 公開先 | Netlifyが **月間限度額超過でPaused**。公開を **GitHub Pages** に切替。公開URL: `https://kazutoshimosan-cpu.github.io/SYNTAX_WARS/`（ルートは `index.html` で V4へ誘導）。 |
 
 ### 2026-04-21（AUTO詳細CSV強化／NOVA閾値見直し／SHADOW調整）
 
@@ -196,8 +281,9 @@
 
 | ファイル | 役割 |
 |---------|------|
-| `syntax_wars.v2html.html` | **現行 Netlify デプロイ**。のちに廃止予定 |
-| `syntax_wars_v4html.html` | **開発・修正の主軸（V4）**。仕様は GDD **v6.18**（タイトル行確認。§8-3 UX・属性/固有+8 明文化 含む）。切替後にデプロイ本体へ |
+| `index.html` | **公開入口（GitHub Pages）**。`syntax_wars_v4html.html`（V4）へ誘導 |
+| `syntax_wars_v4html.html` | **公開本体＋開発主軸（V4）**。仕様は GDD **v6.18** |
+| `syntax_wars.v2html.html` | 旧ビルド（必要時のみ参照） |
 
 旧メモの `syntax_wars_v62.html` 単体運用は廃止。いずれも 1 ファイル完結（HTML + CSS + JS）、行数は **約 5400 行**（V4・2026-04 時点）。
 
@@ -256,7 +342,7 @@ assets/sound/
 
 **SSOT パターン**
 - `_onlineTurnLogCapture !== null` の間は `addLog / updateHUD / screenShake / showDmgPopup` が DOM 出力をスキップ
-- ホスト計算結果を Firestore 経由で両者が再生することで画面を同期
+- ホスト計算結果を Firestore 経由で両者が再生することで画面を同期（`turn_result.logs` + `turn_result.fx` + `turn_result.se`）
 
 ---
 
@@ -342,7 +428,9 @@ assets/sound/
 
 ## 6. Netlify デプロイ手順（正しい方法）
 
-Netlify のドラッグ＆ドロップは **`格ゲー` フォルダ全体**をドロップすること。
+※ 2026-04-23 時点: Netlify は **月間限度額超過でPaused**。公開は GitHub Pages を使用中。
+
+（参考）Netlify のドラッグ＆ドロップは **`格ゲー` フォルダ全体**をドロップすること。
 
 ```
 格ゲー/                       ← このフォルダごとドロップ
@@ -374,6 +462,8 @@ rooms/{roomCode}: {
     turn: number,
     p1State: {...}, p2State: {...},
     logs: [{text, cls}],
+    fx:  [{t, ...}],   // VFX（shake/dmg/pop/flash）
+    se:  [{key, vol}], // 効果音（playSE）
     audienceGauge: number,
     crowdOnFireNext: bool,
     gameOver: bool,

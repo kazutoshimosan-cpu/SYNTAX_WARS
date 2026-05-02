@@ -28,6 +28,68 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 .title-main { font-size:15px; color:#e0f0ff; letter-spacing:2px; text-align:center; }
 .title-sub-ja { font-size:11px; color:#7090b0; letter-spacing:1px; text-align:center; line-height:1.8; }
 .title-sub-en { font-size:10px; color:#405070; letter-spacing:1px; text-align:center; line-height:1.8; font-style:italic; }
+.title-demo {
+  width:min(420px, calc(100vw - 32px));
+  border:1px solid #203850;
+  background:#050a12;
+  box-shadow:0 0 18px #00ffff18;
+  padding:10px 12px;
+}
+.title-demo-kicker {
+  font-size:10px;
+  color:#6088a0;
+  letter-spacing:2px;
+  text-align:center;
+  margin-bottom:8px;
+}
+.title-demo-row {
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  gap:8px;
+}
+.title-demo-side {
+  border:1px solid #243850;
+  background:#08101a;
+  padding:7px 8px;
+  min-width:0;
+}
+.title-demo-label {
+  font-size:9px;
+  color:#507090;
+  letter-spacing:1px;
+  margin-bottom:4px;
+}
+.title-demo-move {
+  font-size:13px;
+  color:#d8f6ff;
+  letter-spacing:1px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.title-demo-vs {
+  font-size:10px;
+  color:#c080ff;
+  letter-spacing:1px;
+}
+.title-demo-result {
+  margin-top:8px;
+  text-align:center;
+}
+.title-demo-result-main {
+  font-size:15px;
+  color:#ffe08a;
+  letter-spacing:2px;
+  text-shadow:0 0 12px #ffe08a66;
+}
+.title-demo-result-sub {
+  margin-top:4px;
+  font-size:10px;
+  color:#8fb0c8;
+  line-height:1.5;
+  letter-spacing:0.5px;
+}
 .title-home-hint {
   font-size:10px;
   color:#6f90b0;
@@ -45,6 +107,20 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 }
 .btn:hover { background:#4080c020; box-shadow:0 0 12px #4080c0; }
 .btn:active { transform:scale(0.97); }
+
+@media (max-width: 720px) {
+  #title-screen { gap:12px; padding:18px 12px; justify-content:center; }
+  .title-logo { font-size:28px; letter-spacing:4px; }
+  .title-main { font-size:13px; }
+  .title-sub-ja { font-size:10px; line-height:1.6; }
+  .title-sub-en { font-size:9px; line-height:1.5; }
+  .title-demo { padding:9px 10px; }
+  .title-demo-kicker { font-size:9px; margin-bottom:6px; }
+  .title-demo-side { padding:6px; }
+  .title-demo-move { font-size:11px; }
+  .title-demo-result-main { font-size:13px; }
+  .btn { font-size:12px; padding:10px 24px; }
+}
 
 .difficulty-row { display:flex; gap:8px; }
 .diff-btn {
@@ -1002,6 +1078,24 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   <div class="title-main">読み勝て。同時選択の心理戦格闘。</div>
   <div class="title-sub-ja">先を読むか、先を行くか。<br>スピードが運命を分け、ゲージが逆転を呼ぶ。</div>
   <div class="title-sub-en">Predict or outrun.<br>Speed seals fate — gauge sparks the comeback.</div>
+  <div class="title-demo">
+    <div class="title-demo-kicker">LIVE SIMULATION / 読み合いデモ</div>
+    <div class="title-demo-row">
+      <div class="title-demo-side">
+        <div class="title-demo-label">YOU</div>
+        <div class="title-demo-move" id="demo-you">GUARD</div>
+      </div>
+      <div class="title-demo-vs">VS</div>
+      <div class="title-demo-side">
+        <div class="title-demo-label">ENEMY</div>
+        <div class="title-demo-move" id="demo-enemy">HEAVY</div>
+      </div>
+    </div>
+    <div class="title-demo-result">
+      <div class="title-demo-result-main" id="demo-result">JUST GUARD!</div>
+      <div class="title-demo-result-sub" id="demo-sub">Read the heavy strike. / 強攻撃を読んだ。</div>
+    </div>
+  </div>
   <button class="btn" onclick="openCpuMenu()">▶ VS CPU</button>
   <button class="btn" onclick="start2PMode()">▶ 2P LOCAL</button>
   <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#006644;color:#00ffcc;" onclick="startOnlineMode()">🌐 ONLINE MATCH</button>
@@ -2503,6 +2597,48 @@ function devPanelToggle() {
   const body = document.getElementById('dev-panel-body');
   if (body) body.style.display = body.style.display === 'none' ? '' : 'none';
 }
+
+const TITLE_DEMOS = [
+  {
+    you: 'GUARD',
+    enemy: 'HEAVY',
+    result: 'JUST GUARD!',
+    sub: 'Read the heavy strike. / 強攻撃を読んだ。'
+  },
+  {
+    you: 'COUNTER',
+    enemy: 'STRIKE',
+    result: 'COUNTER HIT!',
+    sub: 'Punish the attack. / 攻撃を読み返した。'
+  },
+  {
+    you: 'FAST',
+    enemy: 'ATTACK',
+    result: 'SPEED SHIFT!',
+    sub: 'Move first next turn. / 次の一手を先に取る。'
+  }
+];
+let titleDemoIndex = 0;
+function renderTitleDemo() {
+  const demo = TITLE_DEMOS[titleDemoIndex % TITLE_DEMOS.length];
+  const you = document.getElementById('demo-you');
+  const enemy = document.getElementById('demo-enemy');
+  const result = document.getElementById('demo-result');
+  const sub = document.getElementById('demo-sub');
+  if (!you || !enemy || !result || !sub) return;
+  you.textContent = demo.you;
+  enemy.textContent = demo.enemy;
+  result.textContent = demo.result;
+  sub.textContent = demo.sub;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderTitleDemo();
+  setInterval(() => {
+    titleDemoIndex++;
+    renderTitleDemo();
+  }, 2600);
+});
 
 // 強制状態付与
 function devForce(who, state) {

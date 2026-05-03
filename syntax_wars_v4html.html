@@ -90,6 +90,21 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   line-height:1.5;
   letter-spacing:0.5px;
 }
+.title-primary-btn {
+  border-color:#ffe08a;
+  color:#ffe08a;
+  background:#1a1404;
+  box-shadow:0 0 18px #ffe08a33;
+  font-size:15px;
+  min-width:min(420px, calc(100vw - 32px));
+}
+.title-primary-btn:hover { background:#2a2008; box-shadow:0 0 20px #ffe08a66; }
+.title-mode-note {
+  font-size:9px;
+  color:#405870;
+  letter-spacing:1px;
+  margin-top:-8px;
+}
 .title-home-hint {
   font-size:10px;
   color:#6f90b0;
@@ -119,6 +134,7 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   .title-demo-side { padding:6px; }
   .title-demo-move { font-size:11px; }
   .title-demo-result-main { font-size:13px; }
+  .title-primary-btn { font-size:13px; min-width:min(360px, calc(100vw - 32px)); }
   .btn { font-size:12px; padding:10px 24px; }
 }
 
@@ -1096,6 +1112,8 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
       <div class="title-demo-result-sub" id="demo-sub">Read the heavy strike. / 強攻撃を読んだ。</div>
     </div>
   </div>
+  <button class="btn title-primary-btn" onclick="startCpuEasyShortcut()">▶ START: VS CPU EASY</button>
+  <div class="title-mode-note">MODE SELECT</div>
   <button class="btn" onclick="openCpuMenu()">▶ VS CPU</button>
   <button class="btn" onclick="start2PMode()">▶ 2P LOCAL</button>
   <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#006644;color:#00ffcc;" onclick="startOnlineMode()">🌐 ONLINE MATCH</button>
@@ -1225,6 +1243,7 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
     <div class="char-detail" id="char-detail"></div>
   </div>
   <div id="select-foot">
+    <button class="btn" id="random-btn" onclick="randomSelectChar()" style="border-color:#ffe08a;color:#ffe08a;">RANDOM</button>
     <button class="btn" id="confirm-btn" onclick="confirmSelect()" style="opacity:0.4;pointer-events:none">FIGHT ▶</button>
     <button class="btn" id="select-back-btn" style="font-size:12px;padding:8px 20px;border-color:#304060;color:#506080;" onclick="goBackFromSelect()">← BACK</button>
   </div>
@@ -2839,11 +2858,12 @@ function tutNav(dir) {
   renderTutPage();
 }
 
-function setDifficulty(d) {
+function setDifficulty(d, track = true) {
   difficulty = d;
-  Analytics.event('cpu_difficulty_select', { difficulty: d });
+  if (track) Analytics.event('cpu_difficulty_select', { difficulty: d });
   ['easy','normal','hard'].forEach(x => {
-    document.getElementById('diff-' + x).classList.toggle('selected', x === d);
+    const btn = document.getElementById('diff-' + x);
+    if (btn) btn.classList.toggle('selected', x === d);
   });
 }
 
@@ -3022,6 +3042,13 @@ function goBackFromSelect() {
 }
 
 function startCpuMode() { Analytics.event('cpu_single_start_click', { difficulty }); gameMode = 'cpu'; goToSelect(); }
+function startCpuEasyShortcut() {
+  Analytics.event('title_button_cpu_easy_shortcut');
+  setDifficulty('easy', false);
+  seriesActive = false;
+  gameMode = 'cpu';
+  startCpuMode();
+}
 function start2PMode() { Analytics.event('title_button_2p'); AudioManager.preloadDeferredAudio(); gameMode = '2p'; charSelectPhase = 1; p1CharKey = null; goToSelect(); }
 function startOnlineMode() {
   Analytics.event('title_button_online');
@@ -3123,6 +3150,11 @@ function goToSelect() {
   const confirmBtn = document.getElementById('confirm-btn');
   confirmBtn.style.opacity = '0.4';
   confirmBtn.style.pointerEvents = 'none';
+  const detail = document.getElementById('char-detail');
+  if (detail) {
+    detail.classList.remove('active');
+    detail.innerHTML = '';
+  }
   // タイトル更新
   const titleEl = document.querySelector('.select-title');
   if (gameMode === '2p') {
@@ -3150,37 +3182,55 @@ function goToSelect() {
         </div>
       </div>
     `;
-    div.onclick = () => {
-      Analytics.event('character_select', { mode: gameMode, character: key, difficulty });
-      document.querySelectorAll('.char-card').forEach(d => d.classList.remove('selected'));
-      div.classList.add('selected');
-      selectedChar = key;
-      updateSelectPoster(c);
-      confirmBtn.style.opacity = '1';
-      confirmBtn.style.pointerEvents = 'auto';
-      const detail = document.getElementById('char-detail');
-      detail.classList.add('active');
-      detail.innerHTML = `
-        <div class="detail-section">
-          <div class="detail-label">PASSIVE</div>
-          ${c.passiveKeys ? `<div class="passive-keywords">${c.passiveKeys}</div>` : ''}
-        </div>
-        <div class="detail-section">
-          <div class="detail-label">SPECIAL MOVE</div>
-          <div class="detail-text">${c.uniqueDesc}</div>
-        </div>
-      `;
-      // キャラ固有ヒント（初回選択時のみ）
-      if (!_seenCharHints.has(key) && CHAR_HINTS[key]) {
-        _seenCharHints.add(key);
-        showCharHintPop(CHAR_HINTS[key]);
-      }
-    };
+    div.onclick = () => chooseCharacter(key, 'tap');
     grid.appendChild(div);
   });
 }
 
 let selectedChar = null;
+function chooseCharacter(key, source = 'tap') {
+  const c = CHARS[key];
+  if (!c) return;
+  Analytics.event('character_select', { mode: gameMode, character: key, difficulty, source });
+  document.querySelectorAll('.char-card').forEach(d => {
+    d.classList.toggle('selected', d.dataset.key === key);
+  });
+  selectedChar = key;
+  updateSelectPoster(c);
+  const confirmBtn = document.getElementById('confirm-btn');
+  if (confirmBtn) {
+    confirmBtn.style.opacity = '1';
+    confirmBtn.style.pointerEvents = 'auto';
+  }
+  const detail = document.getElementById('char-detail');
+  if (detail) {
+    detail.classList.add('active');
+    detail.innerHTML = `
+      <div class="detail-section">
+        <div class="detail-label">PASSIVE</div>
+        ${c.passiveKeys ? `<div class="passive-keywords">${c.passiveKeys}</div>` : ''}
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">SPECIAL MOVE</div>
+        <div class="detail-text">${c.uniqueDesc}</div>
+      </div>
+    `;
+  }
+  // キャラ固有ヒント（初回選択時のみ）
+  if (!_seenCharHints.has(key) && CHAR_HINTS[key]) {
+    _seenCharHints.add(key);
+    showCharHintPop(CHAR_HINTS[key]);
+  }
+}
+
+function randomSelectChar() {
+  const keys = Object.keys(CHARS);
+  const key = keys[Math.floor(Math.random() * keys.length)];
+  Analytics.event('character_random_select', { mode: gameMode, character: key, difficulty });
+  AudioManager.playSE('confirm');
+  chooseCharacter(key, 'random');
+}
+
 function confirmSelect() {
   if (!selectedChar) return;
   Analytics.event('character_confirm', { mode: gameMode, character: selectedChar, difficulty });

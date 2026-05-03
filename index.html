@@ -4,6 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SYNTAX WARS</title>
+    <meta name="theme-color" content="#00e5ff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="SYNTAX" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
     <meta http-equiv="refresh" content="0; url=./syntax_wars_v4html.html" />
     <link rel="canonical" href="./syntax_wars_v4html.html" />
     <style>
@@ -37,6 +43,12 @@
         <a href="./syntax_wars.v2html.html">V2 を開く</a>
       </div>
     </div>
+    <script>
+      if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+        });
+      }
+    </script>
   </body>
 </html>
-

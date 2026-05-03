@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#00e5ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SYNTAX">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <title>SYNTAX WARS v6.2 - Prototype</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -6580,6 +6586,12 @@ window.addEventListener('error', (e) => {
 window.addEventListener('unhandledrejection', (e) => {
   if (window.Logger) window.Logger.logError('UnhandledRejection: ' + e.reason, e.reason?.stack || '');
 });
+
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>

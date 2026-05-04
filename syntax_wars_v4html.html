@@ -25,91 +25,195 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 
 /* ===== TITLE ===== */
 #title-screen {
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  min-height:100vh; gap:20px;
+  min-height:100vh;
+  padding:28px 18px;
+  align-items:center;
+  justify-content:center;
+  background:
+    linear-gradient(90deg, #00e5ff10 1px, transparent 1px),
+    linear-gradient(180deg, #ff3bd50c 1px, transparent 1px),
+    radial-gradient(circle at 50% 14%, #12345f88, transparent 34%),
+    radial-gradient(circle at 50% 86%, #35114288, transparent 36%),
+    #050510;
+  background-size:34px 34px, 34px 34px, auto, auto, auto;
+  font-family:'Courier New', monospace;
 }
-.title-logo { font-size:36px; font-weight:bold; color:#a0f0ff; letter-spacing:6px; text-shadow:0 0 20px #a0f0ff; }
+.title-shell {
+  width:min(520px, 100%);
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:13px;
+  border:1px solid #163a58;
+  background:linear-gradient(180deg, #06101cee, #050510f4);
+  box-shadow:0 0 28px #00e5ff22, inset 0 0 36px #000;
+  padding:18px;
+  position:relative;
+}
+.title-shell::before {
+  content:"[ SYNTAX WARS // ARENA TERMINAL ]";
+  color:#00e5ff;
+  font-size:10px;
+  letter-spacing:2px;
+  border-bottom:1px solid #123048;
+  padding-bottom:8px;
+}
+.title-topline {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  color:#406b88;
+  font-size:10px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+}
+.title-chip {
+  display:inline-flex;
+  align-items:center;
+  width:max-content;
+  border:1px solid #1b5068;
+  background:#071827;
+  color:#8cdfff;
+  padding:5px 8px;
+  border-radius:0;
+  font-size:10px;
+  letter-spacing:1px;
+}
+.title-logo {
+  font-size:40px;
+  line-height:1;
+  font-weight:bold;
+  color:#a0f0ff;
+  letter-spacing:5px;
+  text-align:center;
+  text-shadow:0 0 14px #00e5ff, 0 0 30px #00e5ff55, 3px 3px 0 #ff3bd588;
+}
 .title-sub { font-size:12px; color:#5080a0; letter-spacing:3px; }
+.title-sub-copy {
+  font-size:11px;
+  color:#8fb9d2;
+  letter-spacing:1px;
+  line-height:1.6;
+  text-align:center;
+}
+.title-value-row {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:6px;
+  margin-top:2px;
+}
+.title-value {
+  border:1px solid #183850;
+  background:#060f18;
+  color:#c0eaff;
+  padding:6px 8px;
+  border-radius:0;
+  font-size:10px;
+  letter-spacing:1px;
+}
 .title-version { font-size:10px; color:#304060; letter-spacing:2px; }
 .title-main { font-size:15px; color:#e0f0ff; letter-spacing:2px; text-align:center; }
 .title-sub-ja { font-size:11px; color:#7090b0; letter-spacing:1px; text-align:center; line-height:1.8; }
 .title-sub-en { font-size:10px; color:#405070; letter-spacing:1px; text-align:center; line-height:1.8; font-style:italic; }
 .title-demo {
-  width:min(420px, calc(100vw - 32px));
-  border:1px solid #203850;
-  background:#050a12;
-  box-shadow:0 0 18px #00ffff18;
-  padding:10px 12px;
+  border:1px solid #204860;
+  background:#03070d;
+  border-radius:0;
+  box-shadow:inset 0 0 18px #00e5ff11;
+  padding:11px 12px;
 }
 .title-demo-kicker {
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
   font-size:10px;
-  color:#6088a0;
+  color:#00e5ff;
   letter-spacing:2px;
-  text-align:center;
-  margin-bottom:8px;
+  margin-bottom:9px;
+  text-transform:uppercase;
+}
+.title-demo-kicker::after {
+  content:"simultaneous turn";
+  color:#5b7790;
 }
 .title-demo-row {
   display:grid;
   grid-template-columns:1fr auto 1fr;
   align-items:center;
-  gap:8px;
+  gap:10px;
 }
 .title-demo-side {
-  border:1px solid #243850;
-  background:#08101a;
-  padding:7px 8px;
+  border:1px solid #17324a;
+  background:#081320;
+  border-radius:0;
+  padding:8px;
   min-width:0;
 }
 .title-demo-label {
-  font-size:9px;
-  color:#507090;
+  font-size:10px;
+  color:#547894;
   letter-spacing:1px;
-  margin-bottom:4px;
+  margin-bottom:5px;
 }
 .title-demo-move {
-  font-size:13px;
-  color:#d8f6ff;
+  font-size:15px;
+  color:#e8fbff;
+  font-weight:bold;
   letter-spacing:1px;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
 }
 .title-demo-vs {
-  font-size:10px;
-  color:#c080ff;
+  font-size:11px;
+  color:#ff3bd5;
   letter-spacing:1px;
 }
 .title-demo-result {
-  margin-top:8px;
-  text-align:center;
+  margin-top:12px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  text-align:left;
 }
 .title-demo-result-main {
-  font-size:15px;
   color:#ffe08a;
+  font-size:15px;
+  font-weight:bold;
   letter-spacing:2px;
   text-shadow:0 0 12px #ffe08a66;
+  white-space:nowrap;
 }
 .title-demo-result-sub {
-  margin-top:4px;
+  margin-top:0;
   font-size:10px;
-  color:#8fb0c8;
-  line-height:1.5;
+  color:#7da2bc;
+  line-height:1.45;
   letter-spacing:0.5px;
+  text-align:right;
 }
 .title-primary-btn {
-  border-color:#ffe08a;
+  width:100%;
+  border:2px solid #ffe08a;
+  border-radius:0;
   color:#ffe08a;
-  background:#1a1404;
-  box-shadow:0 0 18px #ffe08a33;
+  background:linear-gradient(180deg, #241900, #0d0900);
+  box-shadow:0 0 18px #ffe08a44, inset 0 0 18px #ffe08a18;
   font-size:15px;
-  min-width:min(420px, calc(100vw - 32px));
+  font-weight:bold;
+  letter-spacing:2px;
+  padding:15px 18px;
 }
-.title-primary-btn:hover { background:#2a2008; box-shadow:0 0 20px #ffe08a66; }
+.title-primary-btn:hover { background:#2e2104; box-shadow:0 0 24px #ffe08a77, inset 0 0 18px #ffe08a22; }
 .title-mode-note {
-  font-size:9px;
-  color:#405870;
-  letter-spacing:1px;
-  margin-top:-8px;
+  font-size:10px;
+  color:#4e718a;
+  letter-spacing:2px;
+  margin-top:2px;
+  text-transform:uppercase;
 }
 .title-home-hint {
   font-size:10px;
@@ -119,6 +223,22 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   line-height:1.6;
   margin-top:-6px;
 }
+.title-sub-btns {
+  display:grid;
+  grid-template-columns:repeat(5, minmax(0, 1fr));
+  gap:6px;
+}
+.title-sub-btn {
+  border:1px solid #203850;
+  border-radius:0;
+  background:#060f18;
+  color:#82a8c0;
+  font-size:10px;
+  padding:8px 5px;
+  letter-spacing:1px;
+  white-space:nowrap;
+}
+.title-sub-btn:hover { color:#dff8ff; border-color:#00e5ff; background:#0a1724; box-shadow:0 0 12px #00e5ff33; }
 #cpu-menu-screen { flex-direction:column; align-items:center; justify-content:center; min-height:100vh; gap:16px; }
 #tutorial-menu-screen { flex-direction:column; align-items:center; justify-content:center; min-height:100vh; gap:16px; }
 .btn {
@@ -130,17 +250,23 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 .btn:active { transform:scale(0.97); }
 
 @media (max-width: 720px) {
-  #title-screen { gap:12px; padding:18px 12px; justify-content:center; }
-  .title-logo { font-size:28px; letter-spacing:4px; }
-  .title-main { font-size:13px; }
-  .title-sub-ja { font-size:10px; line-height:1.6; }
-  .title-sub-en { font-size:9px; line-height:1.5; }
-  .title-demo { padding:9px 10px; }
-  .title-demo-kicker { font-size:9px; margin-bottom:6px; }
-  .title-demo-side { padding:6px; }
-  .title-demo-move { font-size:11px; }
-  .title-demo-result-main { font-size:13px; }
-  .title-primary-btn { font-size:13px; min-width:min(360px, calc(100vw - 32px)); }
+  #title-screen { padding:18px 12px; }
+  .title-shell { gap:11px; }
+  .title-topline { font-size:10px; }
+  .title-logo { font-size:38px; }
+  .title-sub-copy { font-size:13px; line-height:1.45; }
+  .title-value { font-size:11px; padding:6px 8px; }
+  .title-demo { padding:12px; }
+  .title-demo-kicker { font-size:10px; margin-bottom:8px; }
+  .title-demo-row { gap:8px; }
+  .title-demo-side { padding:8px; }
+  .title-demo-move { font-size:13px; }
+  .title-demo-result { display:block; }
+  .title-demo-result-main { font-size:14px; margin-bottom:4px; }
+  .title-demo-result-sub { font-size:11px; text-align:left; }
+  .title-primary-btn { font-size:14px; padding:14px 14px; }
+  .title-sub-btns { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+  .title-sub-btn { font-size:10px; padding:8px 5px; }
   .btn { font-size:12px; padding:10px 24px; }
 }
 
@@ -175,7 +301,48 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 .select-poster.has-image img { display:block; }
 .select-poster-placeholder {
   position:relative; z-index:1; color:#304860; font-size:16px; letter-spacing:4px;
-  text-align:center; line-height:1.8;
+  text-align:center; line-height:1.8; padding:20px 14px; width:100%;
+}
+.fg-title { font-size:9px; color:#3a6080; letter-spacing:3px; margin-bottom:12px; }
+.fg-lead {
+  color:#cdeeff; font-size:15px; letter-spacing:2px; font-weight:800;
+  margin-bottom:8px; text-shadow:0 0 12px #00e5ff33;
+}
+.fg-copy { color:#6f9bb8; font-size:10px; line-height:1.6; letter-spacing:0.5px; margin-bottom:12px; }
+.fg-random {
+  color:#ffe08a; background:#1a1404; border:1px solid #806820;
+  padding:8px 10px; margin-bottom:10px; font-size:11px; letter-spacing:1px;
+  box-shadow:0 0 14px #ffe08a18;
+}
+.fg-picks { display:grid; gap:6px; margin-bottom:10px; }
+.fg-pick {
+  display:flex; justify-content:space-between; align-items:center; gap:8px;
+  border:1px solid #123048; background:#07101a; padding:7px 8px; font-size:10px;
+}
+.fg-pick-name { color:#d8f6ff; letter-spacing:1px; }
+.fg-pick-note { color:#527a96; text-align:right; }
+.fg-steps { list-style:none; padding:0; margin:0; border-top:1px solid #102438; }
+.fg-steps li {
+  color:#486c84; font-size:10px; letter-spacing:0.5px;
+  padding:6px 0; border-bottom:1px solid #0e2030;
+}
+.fg-hint { font-size:9px; color:#2f5872; letter-spacing:2px; margin-top:10px; }
+
+/* モバイル用FIGHTER GUIDE（グリッド下・選択前のみ表示） */
+#mobile-fighter-guide { display:none; }
+@media (max-width:720px) {
+  #mobile-fighter-guide {
+    display:block; background:#050510; border:1px solid #1a3040;
+    padding:10px 12px; margin-bottom:4px;
+  }
+  #mobile-fighter-guide .fg-title { font-size:8px; color:#3a6080; letter-spacing:3px; margin-bottom:8px; }
+  #mobile-fighter-guide .fg-lead { font-size:13px; margin-bottom:6px; }
+  #mobile-fighter-guide .fg-copy { font-size:10px; margin-bottom:8px; }
+  #mobile-fighter-guide .fg-random { padding:7px 8px; margin-bottom:8px; }
+  #mobile-fighter-guide .fg-picks { grid-template-columns:1fr 1fr; }
+  #mobile-fighter-guide .fg-pick { padding:6px; }
+  #mobile-fighter-guide .fg-steps { display:none; }
+  .select-poster.has-image ~ #mobile-fighter-guide { display:none; }
 }
 .select-poster.has-image .select-poster-placeholder { display:none; }
 .char-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
@@ -569,16 +736,36 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 /* ===== ACTION BUTTONS（全幅） ===== */
 .action-area { padding:0 4px; overflow-y:auto; }
 .col-label { font-size:9px; color:#70a8d0; letter-spacing:2px; margin-bottom:4px; margin-top:6px; text-align:center; font-weight:bold; }
+.col-label.label-normal  { color:#4a9eff; }
+.col-label.label-spatk   { color:#ff7a2f; }
+.col-label.label-spact   { color:#b06fff; }
+.col-label.label-spmove  { color:#ff4488; }
+.btn-grid.grid-normal { --action-accent:#4a9eff; --action-dim:#1a3558; --action-bg:#06101c; }
+.btn-grid.grid-spatk  { --action-accent:#ff7a2f; --action-dim:#3a2010; --action-bg:#160b05; }
+.btn-grid.grid-spact  { --action-accent:#b06fff; --action-dim:#2a1a48; --action-bg:#10091d; }
+.btn-grid.grid-spmove { --action-accent:#ff4488; --action-dim:#3a1028; --action-bg:#170611; }
+.btn-grid .action-btn:not(.selected) { border-color:var(--action-dim); }
+.btn-grid .action-btn:hover {
+  border-color:var(--action-accent); background:var(--action-bg);
+  box-shadow:0 0 10px #a0f0ff44, 0 0 20px #a0f0ff18;
+}
 .btn-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:5px; margin-bottom:4px; }
 .action-btn {
   background:#050510; border:1px solid #2a4060; color:#c0d8f0;
   font-family:'Courier New',monospace; font-size:11px; padding:11px 4px;
   cursor:pointer; transition:all 0.12s; text-align:center; line-height:1.4;
+  position:relative; overflow:hidden;
 }
-.action-btn:hover { border-color:#a0f0ff; color:#fff; background:#0a1520; box-shadow:0 0 12px #a0f0ff88, 0 0 24px #a0f0ff33; }
+.action-btn::before {
+  content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:var(--action-accent, #4080c0); opacity:0.72;
+  box-shadow:0 0 10px var(--action-accent, #4080c0);
+}
+.action-btn:hover { color:#fff; }
 .action-btn:active { transform:scale(0.96); }
 .action-btn.disabled { opacity:0.3; pointer-events:none; }
 .action-btn.selected { border-color:#ffff00; color:#ffff00; background:#0a0a00; box-shadow:0 0 8px #ffff0044; }
+.action-btn.selected::before { width:5px; background:#ffff00; opacity:1; box-shadow:0 0 14px #ffff00aa; }
 .action-btn .cost { font-size:8px; color:#506080; display:block; margin-top:2px; }
 .action-btn .cost.active { color:#08f; }
 
@@ -1096,37 +1283,47 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 
 <!-- TITLE -->
 <div id="title-screen" class="screen active">
-  <div class="title-logo">SYNTAX WARS<span class="dev-badge" id="dev-badge" style="display:none">DEV</span></div>
-  <div class="title-main">読み勝て。同時選択の心理戦格闘。</div>
-  <div class="title-sub-ja">先を読むか、先を行くか。<br>スピードが運命を分け、ゲージが逆転を呼ぶ。</div>
-  <div class="title-sub-en">Predict or outrun.<br>Speed seals fate — gauge sparks the comeback.</div>
-  <div class="title-demo">
-    <div class="title-demo-kicker">LIVE SIMULATION / 読み合いデモ</div>
-    <div class="title-demo-row">
-      <div class="title-demo-side">
-        <div class="title-demo-label">YOU</div>
-        <div class="title-demo-move" id="demo-you">GUARD</div>
+  <div class="title-shell">
+    <div class="title-topline">
+      <span class="title-chip">browser / mobile</span>
+      <span>turn-based fighter</span>
+    </div>
+    <div class="title-logo">SYNTAX WARS<span class="dev-badge" id="dev-badge" style="display:none">DEV</span></div>
+    <div class="title-sub-copy">Choose at the same time. Read the enemy. Win the exchange.</div>
+    <div class="title-value-row">
+      <div class="title-value">同時選択</div>
+      <div class="title-value">読み合い</div>
+      <div class="title-value">1 match in minutes</div>
+    </div>
+    <div class="title-demo">
+      <div class="title-demo-kicker">Live read</div>
+      <div class="title-demo-row">
+        <div class="title-demo-side">
+          <div class="title-demo-label">YOU</div>
+          <div class="title-demo-move" id="demo-you">GUARD</div>
+        </div>
+        <div class="title-demo-vs">VS</div>
+        <div class="title-demo-side">
+          <div class="title-demo-label">ENEMY</div>
+          <div class="title-demo-move" id="demo-enemy">HEAVY</div>
+        </div>
       </div>
-      <div class="title-demo-vs">VS</div>
-      <div class="title-demo-side">
-        <div class="title-demo-label">ENEMY</div>
-        <div class="title-demo-move" id="demo-enemy">HEAVY</div>
+      <div class="title-demo-result">
+        <div class="title-demo-result-main" id="demo-result">JUST GUARD!</div>
+        <div class="title-demo-result-sub" id="demo-sub">Read the heavy strike. / 強攻撃を読んだ。</div>
       </div>
     </div>
-    <div class="title-demo-result">
-      <div class="title-demo-result-main" id="demo-result">JUST GUARD!</div>
-      <div class="title-demo-result-sub" id="demo-sub">Read the heavy strike. / 強攻撃を読んだ。</div>
+    <button class="btn title-primary-btn" onclick="startCpuEasyShortcut()">START: VS CPU EASY</button>
+    <div class="title-mode-note">Other modes</div>
+    <div class="title-sub-btns">
+      <button class="btn title-sub-btn" onclick="openCpuMenu()">VS CPU</button>
+      <button class="btn title-sub-btn" onclick="start2PMode()">2P</button>
+      <button class="btn title-sub-btn" onclick="startOnlineMode()">ONLINE</button>
+      <button class="btn title-sub-btn" onclick="openTutorialMenu()">TUTORIAL</button>
+      <button class="btn title-sub-btn" onclick="openIntro()">INTRO</button>
     </div>
+    <button class="btn dev-only" id="title-auto-btn" style="font-size:11px;padding:6px 28px;border-color:#203050;color:#4080a0;display:none;" onclick="Analytics.event('title_button_auto'); showScreen('auto-screen')">⚙ AUTO BATTLE</button>
   </div>
-  <button class="btn title-primary-btn" onclick="startCpuEasyShortcut()">▶ START: VS CPU EASY</button>
-  <div class="title-mode-note">MODE SELECT</div>
-  <button class="btn" onclick="openCpuMenu()">▶ VS CPU</button>
-  <button class="btn" onclick="start2PMode()">▶ 2P LOCAL</button>
-  <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#006644;color:#00ffcc;" onclick="startOnlineMode()">🌐 ONLINE MATCH</button>
-  <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#f0a000;color:#f0a000;" onclick="openTutorialMenu()">▶ TUTORIAL</button>
-  <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#7050c0;color:#c8b8ff;" onclick="openIntro()">▶ INTRO / WORLD</button>
-  <div class="title-home-hint">First time? Start with VS CPU → EASY.<br>Add to Home Screen on mobile.</div>
-  <button class="btn dev-only" id="title-auto-btn" style="font-size:11px;padding:6px 28px;border-color:#203050;color:#4080a0;display:none;" onclick="Analytics.event('title_button_auto'); showScreen('auto-screen')">⚙ AUTO BATTLE</button>
 </div>
 
 <!-- CPU MENU -->
@@ -1244,7 +1441,32 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
     </div>
     <div class="select-poster" id="select-poster">
       <img id="select-poster-img" alt="">
-      <div class="select-poster-placeholder">SELECT<br>FIGHTER</div>
+      <div class="select-poster-placeholder">
+        <div class="fg-title">FIRST PICK</div>
+        <div class="fg-lead">迷ったら RANDOM でOK</div>
+        <div class="fg-copy">最初の1戦は相性よりテンポ優先。選んだらそのまま FIGHT。</div>
+        <div class="fg-random">RANDOM → FIGHT で即プレイ</div>
+        <div class="fg-picks">
+          <div class="fg-pick"><span class="fg-pick-name">NEXUS-7</span><span class="fg-pick-note">balanced / 初回向け</span></div>
+          <div class="fg-pick"><span class="fg-pick-name">NOVA QUEEN</span><span class="fg-pick-note">comeback / 逆転型</span></div>
+        </div>
+        <ul class="fg-steps">
+          <li>1. キャラを選ぶ</li>
+          <li>2. FIGHT を押す</li>
+          <li>3. 同時に技を選んで読み合う</li>
+        </ul>
+        <div class="fg-hint">SELECT A FIGHTER / OR RANDOM</div>
+      </div>
+    </div>
+    <div id="mobile-fighter-guide">
+      <div class="fg-title">FIRST PICK</div>
+      <div class="fg-lead">迷ったら RANDOM</div>
+      <div class="fg-copy">初回は悩まず1戦。選んだら FIGHT。</div>
+      <div class="fg-random">RANDOM → FIGHT</div>
+      <div class="fg-picks">
+        <div class="fg-pick"><span class="fg-pick-name">NEXUS-7</span><span class="fg-pick-note">初回向け</span></div>
+        <div class="fg-pick"><span class="fg-pick-name">NOVA</span><span class="fg-pick-note">逆転型</span></div>
+      </div>
     </div>
     <div class="char-detail" id="char-detail"></div>
   </div>
@@ -1357,8 +1579,8 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
     <button id="hint-toggle" onclick="toggleSubtext()" style="display:none; position:absolute; right:4px; top:1px; font-size:8px; background:transparent; border:1px solid #304060; color:#405060; padding:1px 5px; font-family:inherit; cursor:pointer; letter-spacing:1px;">HINT:ON</button>
   </div>
   <div class="action-area" id="action-area">
-    <div class="col-label">NORMAL</div>
-    <div class="btn-grid">
+    <div class="col-label label-normal">NORMAL</div>
+    <div class="btn-grid grid-normal">
       <button class="action-btn" id="btn-weak" onclick="selectAction('weak')">
         <span id="lbl-weak">弱</span><span class="cost">FREE +15%G</span>
       </button>
@@ -1372,8 +1594,8 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
         <span id="lbl-guard">ガード</span><span class="cost">FREE</span>
       </button>
     </div>
-    <div class="col-label">SPECIAL ATTACK</div>
-    <div class="btn-grid">
+    <div class="col-label label-spatk">SPECIAL ATTACK</div>
+    <div class="btn-grid grid-spatk">
       <button class="action-btn" id="btn-speedatk" onclick="selectAction('speedatk')">
         速度特攻<span class="cost" id="cost-speedatk">25%</span>
       </button>
@@ -1387,8 +1609,8 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
         カウンター<span class="cost" id="cost-counter">25%</span>
       </button>
     </div>
-    <div class="col-label">SPECIAL ACTION</div>
-    <div class="btn-grid">
+    <div class="col-label label-spact">SPECIAL ACTION</div>
+    <div class="btn-grid grid-spact">
       <button class="action-btn" id="btn-accel" onclick="selectAction('accel')">
         加速<span class="cost" id="cost-accel">15%</span>
       </button>
@@ -1402,13 +1624,13 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
         挑発<span class="cost" id="cost-taunt">30%</span>
       </button>
     </div>
-    <div class="btn-grid" style="grid-template-columns:1fr">
+    <div class="btn-grid grid-spact" style="grid-template-columns:1fr">
       <button class="action-btn" id="btn-overclock" onclick="selectAction('overclock')">
         オーバークロック<span class="cost" id="cost-overclock">100%</span>
       </button>
     </div>
-    <div class="col-label">SPECIAL MOVE</div>
-    <div class="btn-grid" style="grid-template-columns:1fr">
+    <div class="col-label label-spmove">SPECIAL MOVE</div>
+    <div class="btn-grid grid-spmove" style="grid-template-columns:1fr">
       <button class="action-btn" id="btn-unique" onclick="selectAction('unique')">
         <span id="btn-unique-name">固有技</span><span class="cost" id="cost-unique">50%</span>
       </button>

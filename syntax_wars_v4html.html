@@ -890,11 +890,8 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 .action-btn:hover { color:#fff; }
 .action-btn:active { transform:scale(0.96); }
 .action-btn.disabled { opacity:0.3; pointer-events:none; }
-/* Normal attack strength hierarchy */
-#btn-weak  { opacity:0.72; font-size:10px; }
-#btn-mid   { font-size:11px; }
-#btn-strong { font-size:12px; font-weight:800; border-color:#1e4070 !important; }
-#btn-strong:not(.selected):not(:hover) { box-shadow:0 0 8px #4a9eff22; }
+.action-btn .action-name { display:block; font-size:11px; font-weight:700; }
+.action-btn .action-tier { display:block; font-size:8px; color:#78a8d8; letter-spacing:1px; margin-top:2px; }
 .action-btn.selected { border-color:#ffff00; color:#ffff00; background:#0a0a00; box-shadow:0 0 8px #ffff0044; }
 .action-btn.selected::before { width:5px; background:#ffff00; opacity:1; box-shadow:0 0 14px #ffff00aa; }
 .action-btn .cost { font-size:8px; color:#506080; display:block; margin-top:2px; }
@@ -1741,16 +1738,16 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
     <div class="col-label label-normal">NORMAL</div>
     <div class="btn-grid grid-normal">
       <button class="action-btn" id="btn-weak" onclick="selectAction('weak')">
-        <span id="lbl-weak">弱</span><span class="cost">FREE +15%G</span>
+        <span class="action-name" id="lbl-weak">ナノブレード</span><span class="action-tier">LIGHT</span><span class="cost">FREE +15%G</span>
       </button>
       <button class="action-btn" id="btn-mid" onclick="selectAction('mid')">
-        <span id="lbl-mid">中</span><span class="cost">FREE +8%G</span>
+        <span class="action-name" id="lbl-mid">EMP波動</span><span class="action-tier">MEDIUM</span><span class="cost">FREE +8%G</span>
       </button>
       <button class="action-btn" id="btn-strong" onclick="selectAction('strong')">
-        <span id="lbl-strong">強</span><span class="cost">FREE +5%G</span>
+        <span class="action-name" id="lbl-strong">プラズマカノン</span><span class="action-tier">HEAVY</span><span class="cost">FREE +5%G</span>
       </button>
       <button class="action-btn" id="btn-guard" onclick="selectAction('guard')">
-        <span id="lbl-guard">ガード</span><span class="cost">FREE</span>
+        <span class="action-name" id="lbl-guard">GUARD</span><span class="cost">FREE</span>
       </button>
     </div>
     <div class="col-label label-spatk">SPECIAL ATTACK</div>
@@ -2655,7 +2652,7 @@ const CHARS = {
     posterSrc:'assets/posters/nexus7_9x16.png', posterMobileSrc:'assets/posters/mobile/nexus7_poster_mobile.jpg',
     catchphrase:'被弾で解析　同属性で破砕',
     passiveKeys:'属性学習で威力2倍 ／ 固有技被ダメ-20%',
-    moves:{ weak:'ナノブレード', mid:'EMP波動', strong:'プラズマカノン', guard:'ガード', unique:'量子ビーム' },
+    moves:{ weak:'ナノブレード', mid:'EMP波動', strong:'プラズマカノン', guard:'GUARD', unique:'量子ビーム' },
     passive:'learning', uniqueName:'量子ビーム',
     passiveDesc:'アドバンスド・ラーニング：相手の属性攻撃がヒットすると学習済みフラグをセット。同じ属性を自分が使う時に威力×2.0（+100%）。発動までフラグを保持。全属性攻撃に固有×1.1バフあり。相手の固有技被ダメ-20%。',
     uniqueDesc:'量子ビーム：45ダメージ・命中でゲージ+25%＋次ターン属性コスト0＆威力+20%',
@@ -2667,7 +2664,7 @@ const CHARS = {
     posterSrc:'assets/posters/shadow_9x16.png', posterMobileSrc:'assets/posters/mobile/shadow_poster_mobile.jpg', imgPosition:'top',
     catchphrase:'超速で回避　反撃で処理',
     passiveKeys:'SPEED差30以上で強攻撃回避 ／ 回避でゲージ+25%',
-    moves:{ weak:'クナイ投げ', mid:'鎖鎌', strong:'影斬り', guard:'ガード', unique:'分身斬り' },
+    moves:{ weak:'クナイ投げ', mid:'鎖鎌', strong:'影斬り', guard:'GUARD', unique:'分身斬り' },
     passive:'shadow', uniqueName:'分身斬り',
     passiveDesc:'絶影：SPEED差30以上で相手の強攻撃を確定回避。通常ダメージ-15%、速度特攻ボーナスはフルで入る。速度差回避でゲージ+25%。2回行動時の2撃目は確定クリティカル。SPEED自然回復なし。',
     uniqueDesc:'分身斬り：ゲージ35%・影斬り×2.0ダメージ＋次の相手の攻撃を1回無効化（ダメージ・追加効果0）',
@@ -2679,7 +2676,7 @@ const CHARS = {
     posterSrc:'assets/posters/nova_9x16.png', posterMobileSrc:'assets/posters/mobile/nova_poster_mobile.jpg', imgPosition:'top',
     catchphrase:'溜めて連打　臨界で撃ち抜く',
     passiveKeys:'HP減るほど星屑砲が強化 ／ CROWD ON FIRE時ゲージ吸収強化',
-    moves:{ weak:'エナジー弾', mid:'次元裂き', strong:'重力場', guard:'ガード', unique:'星屑砲' },
+    moves:{ weak:'エナジー弾', mid:'次元裂き', strong:'重力場', guard:'GUARD', unique:'星屑砲' },
     passive:'nova', uniqueName:'星屑砲',
     passiveDesc:'コズミック・共鳴（瀕死の逆転王）：通常攻撃ゲージ×1.2。ゲージ80%以上で属性攻撃コスト15%。HP48以上で被ダメ-5%。HP40%以下で被ダメ-20%・ゲージ+20%。CROWD ON FIRE時は星屑砲のゲージ吸収が強化。',
     uniqueDesc:'星屑砲：35＋損失HP×0.4ダメージ・相手ゲージ-20%＋属性封じ1ターン',
@@ -2691,7 +2688,7 @@ const CHARS = {
     posterSrc:'assets/posters/titan_9x16.png', posterMobileSrc:'assets/posters/mobile/titan_poster_mobile.jpg', imgPosition:'20% top',
     catchphrase:'遅いほど強い　押して潰す',
     passiveKeys:'SLOW状態で被ダメ-15%＆与ダメ+10% ／ FAST状態でガード不可',
-    moves:{ weak:'鉄拳', mid:'地震砕き', strong:'ギガントプレス', guard:'ガード', unique:'超電磁砲' },
+    moves:{ weak:'鉄拳', mid:'地震砕き', strong:'ギガントプレス', guard:'GUARD', unique:'超電磁砲' },
     passive:'titan', uniqueName:'超電磁砲',
     passiveDesc:'不動の要塞：SLOW状態で被ダメ-15%＆与ダメ+10%（全キャラ共通のSLOWペナルティを無効化＋バフ）。FAST状態（オーバーヒート）で通常攻撃-10%・ガード不可。',
     uniqueDesc:'超電磁砲：残HP50以上→30、30〜49→45、29以下→55ダメージ',
@@ -2703,7 +2700,7 @@ const CHARS = {
     posterSrc:'assets/posters/lyra_9x16.png', posterMobileSrc:'assets/posters/mobile/lyra_poster_mobile.jpg',
     catchphrase:'slowで腐食　持久で削れ',
     passiveKeys:'毎ターン+4HP自動回復 ／ SLOW相手に毎ターン腐食-3HP（TITANは-2）',
-    moves:{ weak:'酸液噴射', mid:'変異爪', strong:'捕縛触手', guard:'ガード', unique:'細胞再生' },
+    moves:{ weak:'酸液噴射', mid:'変異爪', strong:'捕縛触手', guard:'GUARD', unique:'細胞再生' },
     passive:'lyrax', uniqueName:'細胞再生',
     passiveDesc:'バイオ・エボリューション：毎ターン終了時+4HP自動回復。スロー・回復封じ効果が1ターン持続。SLOW状態の相手に毎ターン腐食-3HP（TITANは-2）。',
     uniqueDesc:'細胞再生：35ダメージ・与ダメの30%をHP吸収',
@@ -2871,7 +2868,7 @@ function getEasyCpuTendencyLabel() {
   else if (atk / n >= 0.55) label = '攻め寄り';
 
   const name = a => ({
-    weak:'弱', mid:'中', strong:'強', guard:'ガード',
+    weak:'LIGHT', mid:'MEDIUM', strong:'HEAVY', guard:'GUARD',
     speedatk:'SPEED BREAK', guardbk:'GUARD BREAK', sealatk:'ANTI-HEAL', counter:'COUNTER',
     accel:'BOOST', slow:'SLOW', heal:'HEAL', taunt:'TAUNT', overclock:'OVERCLOCK',
     unique:'固有',
@@ -4214,9 +4211,9 @@ function _renderLogBar() {
 
 // ===== ボタン更新 =====
 function updateButtons(s = pState) {
-  document.getElementById('lbl-weak').textContent = s.moves.weak + '（弱）';
-  document.getElementById('lbl-mid').textContent = s.moves.mid + '（中）';
-  document.getElementById('lbl-strong').textContent = s.moves.strong + '（強）';
+  document.getElementById('lbl-weak').textContent = s.moves.weak;
+  document.getElementById('lbl-mid').textContent = s.moves.mid;
+  document.getElementById('lbl-strong').textContent = s.moves.strong;
   document.getElementById('lbl-guard').textContent = s.moves.guard;
   document.getElementById('btn-unique-name').textContent = s.uniqueName;
   // 固有技コスト表示：BLAZE起爆準備中0%、SHADOW35%、他50%

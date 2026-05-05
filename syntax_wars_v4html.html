@@ -32,10 +32,9 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   background:
     linear-gradient(90deg, #00e5ff10 1px, transparent 1px),
     linear-gradient(180deg, #ff3bd50c 1px, transparent 1px),
-    radial-gradient(circle at 50% 14%, #12345f88, transparent 34%),
-    radial-gradient(circle at 50% 86%, #35114288, transparent 36%),
+    linear-gradient(180deg, #060712 0%, #080514 52%, #04040a 100%),
     #050510;
-  background-size:34px 34px, 34px 34px, auto, auto, auto;
+  background-size:34px 34px, 34px 34px, auto, auto;
   font-family:'Courier New', monospace;
 }
 .title-shell {
@@ -49,6 +48,8 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   box-shadow:0 0 28px #00e5ff22, inset 0 0 36px #000;
   padding:18px;
   position:relative;
+  min-height:min(760px, calc(100vh - 36px));
+  justify-content:center;
 }
 .title-shell::before {
   content:"[ SYNTAX WARS // ARENA TERMINAL ]";
@@ -72,27 +73,34 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   display:inline-flex;
   align-items:center;
   width:max-content;
-  border:1px solid #1b5068;
-  background:#071827;
-  color:#8cdfff;
+  border:1px solid #804020;
+  background:#180a02;
+  color:#ffaa44;
   padding:5px 8px;
   border-radius:0;
   font-size:10px;
   letter-spacing:1px;
 }
 .title-logo {
-  font-size:40px;
-  line-height:1;
+  font-size:clamp(54px, 15vw, 82px);
+  line-height:0.9;
   font-weight:bold;
   color:#a0f0ff;
-  letter-spacing:5px;
+  letter-spacing:2px;
   text-align:center;
   text-shadow:0 0 14px #00e5ff, 0 0 30px #00e5ff55, 3px 3px 0 #ff3bd588;
+}
+.title-logo > span {
+  display:block;
+}
+.title-logo .title-logo-wars {
+  color:#ffffff;
+  text-shadow:0 0 10px #fff, 0 0 22px #ff3bd5, 0 0 36px #ff3bd555, -3px 3px 0 #00e5ff88;
 }
 .title-sub { font-size:12px; color:#5080a0; letter-spacing:3px; }
 .title-sub-copy {
   font-size:11px;
-  color:#8fb9d2;
+  color:#ffaa44;
   letter-spacing:1px;
   line-height:1.6;
   text-align:center;
@@ -105,9 +113,9 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   margin-top:2px;
 }
 .title-value {
-  border:1px solid #183850;
-  background:#060f18;
-  color:#c0eaff;
+  border:1px solid #804020;
+  background:#180a02;
+  color:#ffaa44;
   padding:6px 8px;
   border-radius:0;
   font-size:10px;
@@ -152,10 +160,34 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   min-width:0;
 }
 .title-demo-label {
+  display:flex;
+  align-items:center;
+  gap:8px;
   font-size:10px;
   color:#547894;
   letter-spacing:1px;
   margin-bottom:5px;
+}
+.title-demo-icon {
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid var(--demo-color, #00e5ff);
+  box-shadow:0 0 14px var(--demo-color, #00e5ff);
+  background:#050510;
+  flex-shrink:0;
+}
+.title-demo-name {
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0;
+}
+.title-demo-role {
+  color:#7d9bb0;
+  font-size:9px;
+  letter-spacing:1px;
 }
 .title-demo-move {
   font-size:15px;
@@ -174,40 +206,131 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 .title-demo-result {
   margin-top:12px;
   display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
+  align-items:center;
+  justify-content:center;
   gap:12px;
-  text-align:left;
+  text-align:center;
 }
 .title-demo-result-main {
   color:#ffe08a;
-  font-size:15px;
+  font-size:28px;
   font-weight:bold;
-  letter-spacing:2px;
-  text-shadow:0 0 12px #ffe08a66;
+  letter-spacing:3px;
+  text-shadow:0 0 18px #ffe08aaa, 0 0 34px #ffe08a55;
   white-space:nowrap;
+  transform:rotate(-4deg);
+  display:inline-block;
 }
 .title-demo-result-sub {
-  margin-top:0;
-  font-size:10px;
-  color:#7da2bc;
-  line-height:1.45;
-  letter-spacing:0.5px;
-  text-align:right;
+  display:none;
 }
 .title-primary-btn {
   width:100%;
-  border:2px solid #ffe08a;
+  border:2px solid #40ff80;
   border-radius:0;
-  color:#ffe08a;
-  background:linear-gradient(180deg, #241900, #0d0900);
-  box-shadow:0 0 18px #ffe08a44, inset 0 0 18px #ffe08a18;
+  color:#ffffff;
+  background:#003800;
+  box-shadow:0 0 32px #40ff8099, inset 0 0 24px #40ff8033;
+  font-size:clamp(32px, 9vw, 48px);
+  font-weight:bold;
+  letter-spacing:7px;
+  padding:26px 18px;
+  text-shadow:0 0 14px #40ff80;
+}
+.title-primary-btn:hover { background:#003800; box-shadow:0 0 32px #40ff8099, inset 0 0 24px #40ff8033; }
+.title-quick-btn {
+  width:100%;
+  border:1px solid #80ffb0;
+  background:#003800;
+  color:#ffffff;
+  box-shadow:0 0 20px #40ff8066, inset 0 0 16px #40ff8022;
   font-size:15px;
   font-weight:bold;
   letter-spacing:2px;
-  padding:15px 18px;
+  padding:14px 12px;
+  text-shadow:0 0 12px #40ff80;
 }
-.title-primary-btn:hover { background:#2e2104; box-shadow:0 0 24px #ffe08a77, inset 0 0 18px #ffe08a22; }
+.title-quick-btn:hover {
+  color:#ffffff;
+  border-color:#80ffb0;
+  box-shadow:0 0 20px #40ff8066, inset 0 0 16px #40ff8022;
+}
+.title-entry {
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+.title-menu,
+.title-battle-panel {
+  display:none;
+  flex-direction:column;
+  gap:12px;
+}
+.title-menu.active,
+.title-battle-panel.active {
+  display:flex;
+}
+.title-menu-btn {
+  width:100%;
+  min-height:74px;
+  border:2px solid #00e5ff;
+  background:linear-gradient(90deg, #061722, #090816);
+  color:#dff8ff;
+  box-shadow:0 0 14px #00e5ff2e, inset 0 0 18px #00e5ff12;
+  font-size:22px;
+  font-weight:bold;
+  letter-spacing:4px;
+}
+.title-menu-btn.battle {
+  border-color:#ff5a1f;
+  background:linear-gradient(90deg, #2a0c02, #120605);
+  color:#ffd0a8;
+  box-shadow:0 0 18px #ff5a1f55, inset 0 0 18px #ff5a1f20;
+}
+.title-menu-btn.howto {
+  border-color:#00e5ff;
+  background:linear-gradient(90deg, #041a28, #050c16);
+  color:#dff8ff;
+  box-shadow:0 0 18px #00e5ff55, inset 0 0 18px #00e5ff20;
+}
+.title-menu-btn.intro {
+  border-color:#ff3bd5;
+  background:linear-gradient(90deg, #260624, #100510);
+  color:#ffd8fa;
+  box-shadow:0 0 18px #ff3bd555, inset 0 0 18px #ff3bd520;
+}
+.title-panel-heading {
+  color:#00e5ff;
+  font-size:13px;
+  letter-spacing:4px;
+  text-align:center;
+  text-transform:uppercase;
+}
+.title-panel-sub {
+  color:#6388a2;
+  font-size:10px;
+  letter-spacing:1px;
+  line-height:1.5;
+  text-align:center;
+}
+.title-battle-modes {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+.title-battle-btn {
+  min-height:64px;
+  font-size:18px;
+  font-weight:bold;
+  letter-spacing:3px;
+  width:100%;
+}
+.title-back-btn {
+  border-color:#203850;
+  color:#82a8c0;
+  font-size:12px;
+  padding:10px 16px;
+}
 .title-mode-note {
   font-size:10px;
   color:#4e718a;
@@ -253,7 +376,7 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   #title-screen { padding:18px 12px; }
   .title-shell { gap:11px; }
   .title-topline { font-size:10px; }
-  .title-logo { font-size:38px; }
+  .title-logo { font-size:clamp(50px, 18vw, 68px); }
   .title-sub-copy { font-size:13px; line-height:1.45; }
   .title-value { font-size:11px; padding:6px 8px; }
   .title-demo { padding:12px; }
@@ -262,9 +385,12 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   .title-demo-side { padding:8px; }
   .title-demo-move { font-size:13px; }
   .title-demo-result { display:block; }
-  .title-demo-result-main { font-size:14px; margin-bottom:4px; }
+  .title-demo-result-main { font-size:24px; margin-bottom:4px; }
   .title-demo-result-sub { font-size:11px; text-align:left; }
-  .title-primary-btn { font-size:14px; padding:14px 14px; }
+  .title-primary-btn { font-size:42px; padding:27px 14px; }
+  .title-quick-btn { font-size:14px; padding:13px 10px; }
+  .title-menu-btn { min-height:78px; font-size:21px; }
+  .title-battle-btn { min-height:66px; font-size:17px; }
   .title-sub-btns { grid-template-columns:repeat(3, minmax(0, 1fr)); }
   .title-sub-btn { font-size:10px; padding:8px 5px; }
   .btn { font-size:12px; padding:10px 24px; }
@@ -764,6 +890,11 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 .action-btn:hover { color:#fff; }
 .action-btn:active { transform:scale(0.96); }
 .action-btn.disabled { opacity:0.3; pointer-events:none; }
+/* Normal attack strength hierarchy */
+#btn-weak  { opacity:0.72; font-size:10px; }
+#btn-mid   { font-size:11px; }
+#btn-strong { font-size:12px; font-weight:800; border-color:#1e4070 !important; }
+#btn-strong:not(.selected):not(:hover) { box-shadow:0 0 8px #4a9eff22; }
 .action-btn.selected { border-color:#ffff00; color:#ffff00; background:#0a0a00; box-shadow:0 0 8px #ffff0044; }
 .action-btn.selected::before { width:5px; background:#ffff00; opacity:1; box-shadow:0 0 14px #ffff00aa; }
 .action-btn .cost { font-size:8px; color:#506080; display:block; margin-top:2px; }
@@ -1288,39 +1419,67 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
       <span class="title-chip">browser / mobile</span>
       <span>turn-based fighter</span>
     </div>
-    <div class="title-logo">SYNTAX WARS<span class="dev-badge" id="dev-badge" style="display:none">DEV</span></div>
-    <div class="title-sub-copy">Choose at the same time. Read the enemy. Win the exchange.</div>
-    <div class="title-value-row">
-      <div class="title-value">同時選択</div>
-      <div class="title-value">読み合い</div>
-      <div class="title-value">1 match in minutes</div>
+    <div class="title-logo" id="title-logo-main">
+      <span>SYNTAX</span>
+      <span class="title-logo-wars">WARS<span class="dev-badge" id="dev-badge" style="display:none">DEV</span></span>
     </div>
-    <div class="title-demo">
-      <div class="title-demo-kicker">Live read</div>
-      <div class="title-demo-row">
-        <div class="title-demo-side">
-          <div class="title-demo-label">YOU</div>
-          <div class="title-demo-move" id="demo-you">GUARD</div>
+    <div class="title-sub-copy" id="title-sub-main">Choose at the same time. Outsmart the enemy. Win the exchange.</div>
+
+    <div class="title-entry" id="title-entry">
+      <div class="title-value-row">
+        <div class="title-value">同時に選べ</div>
+        <div class="title-value">相手を出し抜け</div>
+        <div class="title-value">1 match in minutes</div>
+      </div>
+      <button class="btn title-primary-btn" onclick="openTitleMenu()">START</button>
+      <button class="btn title-quick-btn" onclick="startCpuEasyShortcut()">QUICK START: CPU EASY</button>
+    </div>
+
+    <div class="title-menu" id="title-menu">
+      <div class="title-panel-heading">ENTRY MENU</div>
+      <button class="btn title-menu-btn battle" onclick="openTitleBattle()">BATTLE</button>
+      <button class="btn title-menu-btn howto" onclick="openTutorialMenu()">HOW TO</button>
+      <button class="btn title-menu-btn intro" onclick="openIntro()">INTRO</button>
+    </div>
+
+    <div class="title-battle-panel" id="title-battle-panel">
+      <div class="title-panel-heading">SELECT MODE</div>
+      <div class="title-demo">
+        <div class="title-demo-kicker">Live outplay</div>
+        <div class="title-demo-row">
+          <div class="title-demo-side">
+            <div class="title-demo-label" style="--demo-color:#00ffff">
+              <img class="title-demo-icon" src="assets/image/thumbs/nexus7_thumb.jpg" alt="NEXUS-7">
+              <div class="title-demo-name">
+                <span>NEXUS-7</span>
+                <span class="title-demo-role">YOU</span>
+              </div>
+            </div>
+            <div class="title-demo-move" id="demo-you">GUARD</div>
+          </div>
+          <div class="title-demo-vs">VS</div>
+          <div class="title-demo-side">
+            <div class="title-demo-label" style="--demo-color:#ff5500">
+              <img class="title-demo-icon" src="assets/image/thumbs/blaze_thumb.jpg" alt="BLAZE">
+              <div class="title-demo-name">
+                <span>BLAZE</span>
+                <span class="title-demo-role">ENEMY</span>
+              </div>
+            </div>
+            <div class="title-demo-move" id="demo-enemy">HEAVY</div>
+          </div>
         </div>
-        <div class="title-demo-vs">VS</div>
-        <div class="title-demo-side">
-          <div class="title-demo-label">ENEMY</div>
-          <div class="title-demo-move" id="demo-enemy">HEAVY</div>
+        <div class="title-demo-result">
+          <div class="title-demo-result-main" id="demo-result">JUST GUARD!</div>
+          <div class="title-demo-result-sub" id="demo-sub">Read the heavy strike. / 強攻撃を読んだ。</div>
         </div>
       </div>
-      <div class="title-demo-result">
-        <div class="title-demo-result-main" id="demo-result">JUST GUARD!</div>
-        <div class="title-demo-result-sub" id="demo-sub">Read the heavy strike. / 強攻撃を読んだ。</div>
+      <div class="title-battle-modes">
+        <button class="btn title-battle-btn" onclick="openCpuMenu()">VS CPU</button>
+        <button class="btn title-battle-btn" onclick="start2PMode()">2P BATTLE</button>
+        <button class="btn title-battle-btn" onclick="startOnlineMode()">ONLINE</button>
       </div>
-    </div>
-    <button class="btn title-primary-btn" onclick="startCpuEasyShortcut()">START: VS CPU EASY</button>
-    <div class="title-mode-note">Other modes</div>
-    <div class="title-sub-btns">
-      <button class="btn title-sub-btn" onclick="openCpuMenu()">VS CPU</button>
-      <button class="btn title-sub-btn" onclick="start2PMode()">2P</button>
-      <button class="btn title-sub-btn" onclick="startOnlineMode()">ONLINE</button>
-      <button class="btn title-sub-btn" onclick="openTutorialMenu()">TUTORIAL</button>
-      <button class="btn title-sub-btn" onclick="openIntro()">INTRO</button>
+      <button class="btn title-back-btn" onclick="openTitleMenu('back')">← BACK</button>
     </div>
     <button class="btn dev-only" id="title-auto-btn" style="font-size:11px;padding:6px 28px;border-color:#203050;color:#4080a0;display:none;" onclick="Analytics.event('title_button_auto'); showScreen('auto-screen')">⚙ AUTO BATTLE</button>
   </div>
@@ -1335,7 +1494,7 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
     <button class="diff-btn" id="diff-normal" onclick="setDifficulty('normal')">NORMAL</button>
     <button class="diff-btn" id="diff-hard" onclick="setDifficulty('hard')">HARD</button>
   </div>
-  <button class="btn" onclick="startCpuMode()">▶ 単戦</button>
+  <button class="btn" onclick="startCpuMode()">▶ 1戦</button>
   <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#a06000;color:#f0a000;" onclick="startSeriesMode(5)">▶ 5連戦</button>
   <button class="btn" style="font-size:12px;padding:8px 32px;border-color:#304060;color:#506080;" onclick="goToTitle()">← BACK</button>
 </div>
@@ -1597,36 +1756,36 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
     <div class="col-label label-spatk">SPECIAL ATTACK</div>
     <div class="btn-grid grid-spatk">
       <button class="action-btn" id="btn-speedatk" onclick="selectAction('speedatk')">
-        速度特攻<span class="cost" id="cost-speedatk">25%</span>
+        SPEED BREAK<span class="cost" id="cost-speedatk">25%</span>
       </button>
       <button class="action-btn" id="btn-guardbk" onclick="selectAction('guardbk')">
-        ガード貫通<span class="cost" id="cost-guardbk">25%</span>
+        GUARD BREAK<span class="cost" id="cost-guardbk">25%</span>
       </button>
       <button class="action-btn" id="btn-sealatk" onclick="selectAction('sealatk')">
-        回復封じ<span class="cost" id="cost-sealatk">25%</span>
+        ANTI-HEAL<span class="cost" id="cost-sealatk">25%</span>
       </button>
       <button class="action-btn" id="btn-counter" onclick="selectAction('counter')">
-        カウンター<span class="cost" id="cost-counter">25%</span>
+        COUNTER<span class="cost" id="cost-counter">25%</span>
       </button>
     </div>
     <div class="col-label label-spact">SPECIAL ACTION</div>
     <div class="btn-grid grid-spact">
       <button class="action-btn" id="btn-accel" onclick="selectAction('accel')">
-        加速<span class="cost" id="cost-accel">15%</span>
+        BOOST<span class="cost" id="cost-accel">15%</span>
       </button>
       <button class="action-btn" id="btn-slow" onclick="selectAction('slow')">
-        スロー<span class="cost" id="cost-slow">30%</span>
+        SLOW<span class="cost" id="cost-slow">30%</span>
       </button>
       <button class="action-btn" id="btn-heal" onclick="selectAction('heal')">
-        回復<span class="cost" id="cost-heal">30%</span>
+        HEAL<span class="cost" id="cost-heal">30%</span>
       </button>
       <button class="action-btn" id="btn-taunt" onclick="selectAction('taunt')">
-        挑発<span class="cost" id="cost-taunt">30%</span>
+        TAUNT<span class="cost" id="cost-taunt">30%</span>
       </button>
     </div>
     <div class="btn-grid grid-spact" style="grid-template-columns:1fr">
       <button class="action-btn" id="btn-overclock" onclick="selectAction('overclock')">
-        オーバークロック<span class="cost" id="cost-overclock">100%</span>
+        OVERCLOCK<span class="cost" id="cost-overclock">100%</span>
       </button>
     </div>
     <div class="col-label label-spmove">SPECIAL MOVE</div>
@@ -2713,8 +2872,8 @@ function getEasyCpuTendencyLabel() {
 
   const name = a => ({
     weak:'弱', mid:'中', strong:'強', guard:'ガード',
-    speedatk:'速度特攻', guardbk:'貫通', sealatk:'封じ', counter:'カウンター',
-    accel:'加速', slow:'スロー', heal:'回復', taunt:'挑発', overclock:'OC',
+    speedatk:'SPEED BREAK', guardbk:'GUARD BREAK', sealatk:'ANTI-HEAL', counter:'COUNTER',
+    accel:'BOOST', slow:'SLOW', heal:'HEAL', taunt:'TAUNT', overclock:'OVERCLOCK',
     unique:'固有',
   }[a] || a);
   const recent = hist.slice(-4).map(name).join('→');
@@ -2859,10 +3018,10 @@ const TITLE_DEMOS = [
     sub: 'Punish the attack. / 攻撃を読み返した。'
   },
   {
-    you: 'FAST',
-    enemy: 'ATTACK',
-    result: 'SPEED SHIFT!',
-    sub: 'Move first next turn. / 次の一手を先に取る。'
+    you: 'GUARD BREAK',
+    enemy: 'GUARD',
+    result: 'GUARD BREAK!',
+    sub: 'Crush the defense. / ガードを崩した。'
   }
 ];
 let titleDemoIndex = 0;
@@ -3256,7 +3415,31 @@ function primeTitleBgmFromGesture() {
   AudioManager.playBGM('title');
   return true;
 }
-function goToTitle() { clearTimer(); showScreen('title-screen'); updateDevUI(); AudioManager.playBGM('title'); }
+function setTitlePanel(panel) {
+  const entry = document.getElementById('title-entry');
+  const menu = document.getElementById('title-menu');
+  const battle = document.getElementById('title-battle-panel');
+  const logo = document.getElementById('title-logo-main');
+  const sub = document.getElementById('title-sub-main');
+  if (!entry || !menu || !battle) return;
+  entry.style.display = panel === 'entry' ? 'flex' : 'none';
+  menu.classList.toggle('active', panel === 'menu');
+  battle.classList.toggle('active', panel === 'battle');
+  if (logo) logo.style.display = panel === 'entry' ? '' : 'none';
+  if (sub) sub.style.display = panel === 'entry' ? '' : 'none';
+}
+function openTitleMenu(source = 'start') {
+  if (source === 'start') Analytics.event('title_button_start');
+  AudioManager.preloadDeferredAudio();
+  setTitlePanel('menu');
+  AudioManager.playSE('confirm');
+}
+function openTitleBattle() {
+  Analytics.event('title_button_battle');
+  setTitlePanel('battle');
+  AudioManager.playSE('confirm');
+}
+function goToTitle() { clearTimer(); showScreen('title-screen'); setTitlePanel('entry'); updateDevUI(); AudioManager.playBGM('title'); }
 function openCpuMenu(source = 'title') {
   if (source === 'title') Analytics.event('title_button_cpu');
   AudioManager.preloadDeferredAudio();
@@ -4699,8 +4882,8 @@ function resolveActions(pAct, cAct) {
 function actionLabel(act, s) {
   const map = {
     weak: s.moves.weak, mid: s.moves.mid, strong: s.moves.strong, guard: s.moves.guard,
-    speedatk:'速度特攻', guardbk:'ガード貫通', sealatk:'回復封じ', counter:'カウンター',
-    accel:'加速', slow:'スロー', heal:'回復', taunt:'挑発', overclock:'オーバークロック',
+    speedatk:'SPEED BREAK', guardbk:'GUARD BREAK', sealatk:'ANTI-HEAL', counter:'COUNTER',
+    accel:'BOOST', slow:'SLOW', heal:'HEAL', taunt:'TAUNT', overclock:'OVERCLOCK',
     idle:'——（待機）',
     unique: s.uniqueName,
   };

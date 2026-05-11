@@ -507,7 +507,7 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 }
 
 /* ===== GAME SCREEN ===== */
-#game-screen { padding:8px; min-height:100vh; display:flex; flex-direction:column; gap:8px; }
+#game-screen { padding:8px; min-height:100vh; display:flex; flex-direction:column; gap:8px; max-width:720px; margin:0 auto; width:100%; }
 
 .fighter-row { display:flex; gap:8px; }
 .fighter-panel {
@@ -4834,6 +4834,11 @@ function resolveActions(pAct, cAct) {
     addLog(`⚡ 先手で撃破！後手の行動キャンセル！`, 'status');
   } else {
     applyAction(second, first, secondAct);
+  }
+
+  // sealatk: 遅い方がheal/taunt以外を選んでいた場合、封じを次ターンに持ち越す
+  if (firstAct === 'sealatk' && second.sealTurns === 1 && second.hp > 0 && !['heal','taunt'].includes(secondAct)) {
+    second.sealTurns = 2;
   }
 
   // SPEED差70以上で追加行動（forceSim時はなし）

@@ -4958,8 +4958,8 @@ function applyAction(attacker, defender, action, opt) {
       if (titanOverheat) { dmg *= 0.9; addLog(`${aName}オーバーヒート！攻撃-10%・ガード不可！`, 'status'); }
       dmg = Math.round(dmg);
 
-      // ゲージ（弱+15%、中+8%、強+5%）/ NOVA QUEEN通常攻撃ゲージ×1.2（v6.7：旧×1.5）
-      const gaugeGain = { weak:15, mid:8, strong:5 }[action];
+      // ゲージ（弱+10%、中+12%、強+5%・調整: 旧 弱15/中8 → 弱連打のゲージ稼ぎ支配を是正し中攻撃に価値を持たせる）/ NOVA QUEEN通常攻撃ゲージ×1.2（v6.7：旧×1.5）
+      const gaugeGain = { weak:10, mid:12, strong:5 }[action];
       addGauge(attacker, attacker.passive === 'nova' ? gaugeGain * 1.2 : gaugeGain);
       if (attacker.primed) attacker.primed = false;
       // 通常攻撃ではBLAZE自爆なし（v5変更）

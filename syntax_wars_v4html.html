@@ -3377,6 +3377,7 @@ function makeState(charKey, isPlayer) {
     counterConsecutive: 0,   // 連続カウンターカウント
     counterForce: false,     // SHADOW：絶影の反撃（次のカウンター必中）
     lastAction: null,
+    sameStreak: 0,           // 案B：同一行動の連続回数（3連続〜でゲージ獲得×0.7）
     taunt: false,
     primed: false,
     shadowSureHitNext: false, // SHADOW：速度差回避後、次の中/強/カウンターが必中
@@ -4011,6 +4012,7 @@ function serializeState(s) {
     counterForce: s.counterForce,
     shadowSureHitNext: s.shadowSureHitNext,
     lastAction: s.lastAction,
+    sameStreak: s.sameStreak,
     taunt: s.taunt,
     primed: s.primed,
     learned: s.learned,
@@ -4031,7 +4033,7 @@ function serializeState(s) {
 }
 function applySerializedState(s, data) {
   const keys = ['hp','maxHp','speed','baseSpeed','gauge','dmgMod','hitMod','fast','slow',
-    'sealTurns','counterStance','counterParriesLeft','counterConsecutive','counterForce','lastAction','taunt','primed','shadowSureHitNext',
+    'sealTurns','counterStance','counterParriesLeft','counterConsecutive','counterForce','lastAction','sameStreak','taunt','primed','shadowSureHitNext',
     'learned','quantum','corrode','shimaiNext','overclockCooldown','extraTurn',
     'pendingDouble','doubleFromOverclock','totalDmgDealt','guardThisTurn','guardJustCharges','crowdBonusActive','crowdBonusPending'];
   keys.forEach(k => { if (data[k] !== undefined) s[k] = data[k]; });
@@ -4778,7 +4780,12 @@ function preSetDefenseStance(s, act, shadowMirrorCrowdSimul = false, ohkMirrorTu
     } else {
       s.guardThisTurn = true;
       s.guardJustCharges = ohkMirrorTurn ? 2 : 1;
-      addLog(`${aName}がガード構え`, '');
+      // 案D：待ち（ガード）に微ゲージコスト-3%＝にらみ合いに時間圧力。
+      // ジャストガード成功時はdealDamage側で返金＝読み勝ちは罰しない。
+      const before = s.gauge;
+      s.gauge = Math.max(0, s.gauge - 3);
+      const lost = before - s.gauge;
+      addLog(`${aName}がガード構え${lost > 0 ? `（ゲージ-${lost}%）` : ''}`, '');
     }
   }
 }
@@ -4897,6 +4904,8 @@ function applyAction(attacker, defender, action, opt) {
   opt = opt || {};
   const skipGaugeCost = !!opt.skipGaugeCost;
   if (attacker.hp <= 0 || defender.hp <= 0) return;
+  // 案B：同一行動の連続回数を追跡（違う手を挟めばリセット）
+  attacker.sameStreak = (action === attacker.lastAction) ? (attacker.sameStreak || 1) + 1 : 1;
   attacker.lastAction = action;
   const aName = attacker.displayName || (attacker.isPlayer ? 'あなた' : 'CPU');
   const dName = defender.displayName || (defender.isPlayer ? 'あなた' : 'CPU');
@@ -4959,7 +4968,12 @@ function applyAction(attacker, defender, action, opt) {
       dmg = Math.round(dmg);
 
       // ゲージ（弱+10%、中+12%、強+5%・調整: 旧 弱15/中8 → 弱連打のゲージ稼ぎ支配を是正し中攻撃に価値を持たせる）/ NOVA QUEEN通常攻撃ゲージ×1.2（v6.7：旧×1.5）
-      const gaugeGain = { weak:10, mid:12, strong:5 }[action];
+      let gaugeGain = { weak:10, mid:12, strong:5 }[action];
+      // 案B：同一行動3連続〜で観客が飽きてゲージ獲得×0.7（読まれる手の連発を罰し心理戦を促す）
+      if (attacker.sameStreak >= 3) {
+        gaugeGain *= 0.7;
+        addLog(`${aName}：同じ手の連発で観客が飽きた…ゲージ獲得ダウン（×0.7）`, 'status');
+      }
       addGauge(attacker, attacker.passive === 'nova' ? gaugeGain * 1.2 : gaugeGain);
       if (attacker.primed) attacker.primed = false;
       // 通常攻撃ではBLAZE自爆なし（v5変更）
@@ -5461,7 +5475,7 @@ function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
   if (defender.guardThisTurn && !defender.primed && !guardBreak) {
     if (attacker.lastAction === 'strong') {
       finalDmg = 0;
-      defender.gauge = Math.min(100, defender.gauge + 20);
+      defender.gauge = Math.min(100, defender.gauge + 20 + 3); // +20報酬＋案Dガードコスト-3を返金＝強読み勝ちは実質ノーコスト
       let rem = typeof defender.guardJustCharges === 'number' ? defender.guardJustCharges : 1;
       rem--;
       defender.guardJustCharges = rem;

@@ -1738,10 +1738,10 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
     <div class="col-label label-normal">NORMAL</div>
     <div class="btn-grid grid-normal">
       <button class="action-btn" id="btn-weak" onclick="selectAction('weak')">
-        <span class="action-name" id="lbl-weak">ナノブレード</span><span class="action-tier">LIGHT</span><span class="cost">FREE +15%G</span>
+        <span class="action-name" id="lbl-weak">ナノブレード</span><span class="action-tier">LIGHT</span><span class="cost">FREE +10%G</span>
       </button>
       <button class="action-btn" id="btn-mid" onclick="selectAction('mid')">
-        <span class="action-name" id="lbl-mid">EMP波動</span><span class="action-tier">MEDIUM</span><span class="cost">FREE +8%G</span>
+        <span class="action-name" id="lbl-mid">EMP波動</span><span class="action-tier">MEDIUM</span><span class="cost">FREE +12%G</span>
       </button>
       <button class="action-btn" id="btn-strong" onclick="selectAction('strong')">
         <span class="action-name" id="lbl-strong">プラズマカノン</span><span class="action-tier">HEAVY</span><span class="cost">FREE +5%G</span>
@@ -2407,7 +2407,7 @@ const InteractiveTutorial = (() => {
       msg:   '今度はこちらの番だ。\n弱攻撃でゲージを溜めろ。',
       hint:  '▶ 「弱」を選んで READY',
       btn: 'weak', cpuAct: 'guard', cpuSpeed: 55,
-      explain: '弱攻撃は必中・8ダメ・ゲージ +15%。\nゲージは属性攻撃や固有技に使う。\n確実に溜めるならこれだ。',
+      explain: '弱攻撃は必中・8ダメ・ゲージ +10%。\nゲージは属性攻撃や固有技に使う。\n確実に溜めるならこれだ。',
     },
     {
       // STEP 2: 速度差 → 強攻撃が外れる
@@ -2757,7 +2757,7 @@ function canUseUnique(s) {
 
 // ===== コマンドサブテキスト（効果説明＋【重さ】＝GDD 8-3：初心者向けコマンド説明） =====
 const ACTION_SUBTEXT = {
-  weak:     '確実命中・低火力でゲージ+15%\n【重さ】安定枠。読み勝ちは少ないが削りは遅い',
+  weak:     '確実命中・低火力でゲージ+10%\n【重さ】安定枠。読み勝ちは少ないが削りは遅い',
   mid:      '80%命中・標準ダメージ\n【重さ】バランス型。外れたターンは隙あり',
   strong:   '70%命中・ヒット時相手SPEED-10（ガード相手はジャスト扱い）\n【重さ】ハイリスク。相手よりSPEED+20以上低いと確定外れ',
   guard:    '被ダメ半減／相手の強攻撃はジャストでさらに軽減（BLAZEは「起爆準備」扱い）\n【重さ】相手の強・属性を読めた時に価値が跳ねる',
@@ -3133,8 +3133,8 @@ const TUT_PAGES = [
     title: '② 通常行動 ＆ ゲージ',
     html: `
       <div class="tut-h">通常行動（ゲージ不要）</div>
-      <div class="tut-row"><span class="tut-key">弱攻撃</span><span class="tut-val">8ダメ / 必中 / ゲージ+15%　確実に当たる基本技</span></div>
-      <div class="tut-row"><span class="tut-key">中攻撃</span><span class="tut-val">15ダメ / 命中率80% / ゲージ+8%　バランス型</span></div>
+      <div class="tut-row"><span class="tut-key">弱攻撃</span><span class="tut-val">8ダメ / 必中 / ゲージ+10%　確実に当たる基本技</span></div>
+      <div class="tut-row"><span class="tut-key">中攻撃</span><span class="tut-val">15ダメ / 命中率80% / ゲージ+12%　バランス型</span></div>
       <div class="tut-row"><span class="tut-key">強攻撃</span><span class="tut-val">22ダメ / 命中率70% / ゲージ+5%　ヒット時（ジャスト除く）相手SPEED-10</span></div>
       <div class="tut-row"><span class="tut-key">ガード</span><span class="tut-val">被ダメを半分にする。強攻撃をガードするとジャストガード（被ダメ0・ゲージ+20%）</span></div>
 
@@ -6038,7 +6038,7 @@ function abSmartAct(s, opp) {
       else if (canUseUnique(s)) add('unique', 7); // 50〜69%の星屑砲は強すぎない程度に（連打は見せるが勝ち切りすぎない）
 
       // 80%未満フェーズ：カウンターで勝ち切りすぎると「連打」に到達しにくい
-      // → 弱攻撃（ゲージ+15%）と星屑砲（使用後+20%）を厚めにし、カウンターは「相手が攻撃した直後」だけ控えめに入れる
+      // → 弱攻撃（ゲージ+10%）と星屑砲（使用後+20%）を厚めにし、カウンターは「相手が攻撃した直後」だけ控えめに入れる
       if (s.gauge < 80) {
         add('weak', 7);
         if (canUseUnique(s)) add('unique', 4);

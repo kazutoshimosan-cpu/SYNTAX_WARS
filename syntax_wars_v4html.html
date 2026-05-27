@@ -4268,6 +4268,111 @@ function _evalSelfTest(){
 }
 if (typeof window !== 'undefined') window._evalSelfTest = _evalSelfTest;
 
+// ===== Nash CPU Phase③: 利得マトリクス＋regret-matching混合戦略 =====
+// プレイヤーが選べる手と完全一致の合法手判定（ボタン無効化ロジックを抽出・CPU都合の枝刈りは混ぜない）。
+function isActionLegal(s, action) {
+  switch (action) {
+    case 'weak': case 'mid': case 'strong': case 'guard': case 'idle': return true;
+    case 'speedatk': case 'guardbk': case 'sealatk': {
+      if (s.quantum) return true;
+      const atk25 = (s.passive === 'nova' && s.gauge >= 80) ? 15 : 25;
+      return s.gauge >= atk25;
+    }
+    case 'counter': {
+      const atk25 = (s.passive === 'nova' && s.gauge >= 80) ? 15 : 25;
+      return s.gauge >= (s.counterConsecutive > 0 ? 50 : atk25);
+    }
+    case 'accel': return s.gauge >= 15;
+    case 'slow': return s.gauge >= 30;
+    case 'heal': return s.gauge >= 30 && (s.sealTurns || 0) === 0;
+    case 'taunt': return s.gauge >= 30 && (s.sealTurns || 0) === 0;
+    case 'overclock': return s.gauge >= 100;
+    case 'unique': return canUseUnique(s);
+    default: return false;
+  }
+}
+const NASH_ACTIONS = ['weak','mid','strong','guard','counter','speedatk','guardbk','sealatk','accel','slow','heal','taunt','overclock','unique'];
+function legalMoves(s) { return NASH_ACTIONS.filter(a => isActionLegal(s, a)); }
+
+const NASH_SAMPLES = 12;  // 各セルのモンテカルロ試行数（TUNABLE：重ければ減らす）
+const NASH_ITERS = 600;   // regret-matching 反復回数
+
+// 利得マトリクス（行=自分の合法手・列=相手の合法手・値=自分視点の期待evalState）。
+function nashBuildPayoff(state, whoIsMe) {
+  const other = (whoIsMe === 'c') ? 'p' : 'c';
+  const myMoves = legalMoves(state[whoIsMe]);
+  const oppMoves = legalMoves(state[other]);
+  const M = [];
+  for (let i = 0; i < myMoves.length; i++) {
+    const row = [];
+    for (let j = 0; j < oppMoves.length; j++) {
+      const pAct = (whoIsMe === 'p') ? myMoves[i] : oppMoves[j];
+      const cAct = (whoIsMe === 'c') ? myMoves[i] : oppMoves[j];
+      let sum = 0;
+      for (let k = 0; k < NASH_SAMPLES; k++) {
+        const r = simulateTurn(state, pAct, cAct, Math.random);
+        sum += evalState(r[whoIsMe], r[other]);
+      }
+      row.push(sum / NASH_SAMPLES);
+    }
+    M.push(row);
+  }
+  return { M, myMoves, oppMoves };
+}
+
+// ゼロサム行列ゲームを regret-matching（CFR系）で解き、自分の平均戦略（≈ナッシュ混合戦略）を返す。
+function nashSolve(M, iters) {
+  const n = M.length; if (n === 0) return [];
+  const m = M[0].length; if (m === 0) return new Array(n).fill(1 / n);
+  const rMe = new Array(n).fill(0), rOpp = new Array(m).fill(0);
+  const sumMe = new Array(n).fill(0), sumOpp = new Array(m).fill(0);
+  const strat = (reg) => {
+    const pos = reg.map(r => r > 0 ? r : 0);
+    const tot = pos.reduce((a, b) => a + b, 0);
+    return tot > 0 ? pos.map(p => p / tot) : reg.map(() => 1 / reg.length);
+  };
+  for (let t = 0; t < iters; t++) {
+    const sMe = strat(rMe), sOpp = strat(rOpp);
+    for (let i = 0; i < n; i++) sumMe[i] += sMe[i];
+    for (let j = 0; j < m; j++) sumOpp[j] += sOpp[j];
+    let vMe = 0; const uMe = new Array(n);
+    for (let i = 0; i < n; i++) { let u = 0; for (let j = 0; j < m; j++) u += sOpp[j] * M[i][j]; uMe[i] = u; vMe += sMe[i] * u; }
+    for (let i = 0; i < n; i++) rMe[i] += uMe[i] - vMe;
+    let vOpp = 0; const uOpp = new Array(m);
+    for (let j = 0; j < m; j++) { let u = 0; for (let i = 0; i < n; i++) u += sMe[i] * (-M[i][j]); uOpp[j] = u; vOpp += sOpp[j] * u; }
+    for (let j = 0; j < m; j++) rOpp[j] += uOpp[j] - vOpp;
+  }
+  const tot = sumMe.reduce((a, b) => a + b, 0);
+  return tot > 0 ? sumMe.map(s => s / tot) : new Array(n).fill(1 / n);
+}
+
+function nashSample(probs, moves) {
+  let r = Math.random(), acc = 0;
+  for (let i = 0; i < probs.length; i++) { acc += probs[i]; if (r <= acc) return moves[i]; }
+  return moves[moves.length - 1];
+}
+
+// 実戦HARD用：現盤面からナッシュ混合戦略を解いて1手を確率抽選で返す。
+function nashChooseAction(whoIsMe) {
+  const state = cloneBattleState();
+  const built = nashBuildPayoff(state, whoIsMe);
+  if (!built.myMoves.length) return 'weak';
+  return nashSample(nashSolve(built.M, NASH_ITERS), built.myMoves);
+}
+if (typeof window !== 'undefined') window.nashChooseAction = nashChooseAction;
+
+// 検証/可視化用：手と確率（%）＋合法手一覧を返す（DEV）。
+function nashDebug(whoIsMe) {
+  whoIsMe = whoIsMe || 'c';
+  const state = cloneBattleState();
+  const built = nashBuildPayoff(state, whoIsMe);
+  const probs = nashSolve(built.M, NASH_ITERS);
+  const mix = built.myMoves.map((a, i) => ({ act: a, p: Math.round(probs[i] * 1000) / 10 }))
+    .filter(x => x.p >= 0.5).sort((a, b) => b.p - a.p);
+  return { whoIsMe, mix, myMoves: built.myMoves, oppMoves: built.oppMoves };
+}
+if (typeof window !== 'undefined') window.nashDebug = nashDebug;
+
 // ===== オンライン: ホストが記録した戦闘VFXを両端末で再生 =====
 // fx の isPlayer は「ホスト計算時の P1=true / P2=false」。ゲストは pState=P2（左YOU）なので左右を反転する。
 function replayOnlineCombatFx(fxList, isHost) {
@@ -4755,8 +4860,8 @@ function chooseCpuAction() {
     return (avail.length ? avail : ['weak'])[Math.floor(Math.random() * (avail.length || 1))];
   }
 
-  // HARD: abSmartActと共通ロジック
-  if (difficulty === 'hard') return abSmartAct(s, opp);
+  // HARD: Nash CPU（読み合いAI・Phase③）。AUTO BATTLEは引き続き abSmartAct を直接使用。
+  if (difficulty === 'hard') return nashChooseAction('c');
 
 
   // NORMAL: strong/midは事故が起きやすいので控えめ。weakでゲージを溜め、属性/固有へ寄せる。

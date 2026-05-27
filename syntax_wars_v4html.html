@@ -4184,6 +4184,7 @@ const EVAL_W = {
   slowGeneric: 8, slowTitan: 10, slowVsLyra: 6,   // ⑤ SLOW（一般−／TITAN＋／対LYRA腐食で追加−）
   fastShadow: 8, fastTitan: 6,                     // ⑤ FAST（SHADOW＋／TITAN過熱−）
   corrode: 5, seal: 6, primed: 10, learned: 12, quantum: 10, // ⑤ その他キャラ別タグ
+  tempoWaste: 12,   // テンポ：空振りカウンター（反射せず）を打った側の損。差ベース評価で見えない無駄睨み合いを罰す（TUNABLE。0で旧挙動と完全一致）
 };
 const EVAL_TERMINAL = 100000;
 
@@ -4297,33 +4298,45 @@ function legalMoves(s) { return NASH_ACTIONS.filter(a => isActionLegal(s, a)); }
 const NASH_SAMPLES = 12;  // 各セルのモンテカルロ試行数（TUNABLE：重ければ減らす）
 const NASH_ITERS = 600;   // regret-matching 反復回数
 
-// 利得マトリクス（行=自分の合法手・列=相手の合法手・値=自分視点の期待evalState）。
+// 利得マトリクス（行=自分の合法手・列=相手の合法手）。
+// 一般和：自分視点 Mme と相手視点 Mopp を別々に返す（テンポ罰でゼロサムが崩れるため）。
 function nashBuildPayoff(state, whoIsMe) {
   const other = (whoIsMe === 'c') ? 'p' : 'c';
   const myMoves = legalMoves(state[whoIsMe]);
   const oppMoves = legalMoves(state[other]);
-  const M = [];
+  const myHp0 = state[whoIsMe].hp, oppHp0 = state[other].hp;
+  const Mme = [], Mopp = [];
   for (let i = 0; i < myMoves.length; i++) {
-    const row = [];
+    const rowMe = [], rowOpp = [];
     for (let j = 0; j < oppMoves.length; j++) {
-      const pAct = (whoIsMe === 'p') ? myMoves[i] : oppMoves[j];
-      const cAct = (whoIsMe === 'c') ? myMoves[i] : oppMoves[j];
-      let sum = 0;
+      const myAct = myMoves[i], oppAct = oppMoves[j];
+      const pAct = (whoIsMe === 'p') ? myAct : oppAct;
+      const cAct = (whoIsMe === 'c') ? myAct : oppAct;
+      let meSum = 0, oppSum = 0;
       for (let k = 0; k < NASH_SAMPLES; k++) {
         const r = simulateTurn(state, pAct, cAct, Math.random);
-        sum += evalState(r[whoIsMe], r[other]);
+        const base = evalState(r[whoIsMe], r[other]); // 反対称：相手視点は -base
+        let mePay = base, oppPay = -base;
+        // テンポ罰：カウンターを打ったのに相手HPが減っていない＝反射せず空振り。
+        // 差ベース評価では「両者カウンター空振り＝タダ」になり睨み合いが安定するので、
+        // 打った当人だけの損として一般和で計上し、無駄カウンターを抑える（当たるカウンターは無傷）。
+        if (myAct  === 'counter' && r[other].hp    >= oppHp0) mePay  -= EVAL_W.tempoWaste;
+        if (oppAct === 'counter' && r[whoIsMe].hp  >= myHp0)  oppPay -= EVAL_W.tempoWaste;
+        meSum += mePay; oppSum += oppPay;
       }
-      row.push(sum / NASH_SAMPLES);
+      rowMe.push(meSum / NASH_SAMPLES);
+      rowOpp.push(oppSum / NASH_SAMPLES);
     }
-    M.push(row);
+    Mme.push(rowMe); Mopp.push(rowOpp);
   }
-  return { M, myMoves, oppMoves };
+  return { Mme, Mopp, myMoves, oppMoves };
 }
 
-// ゼロサム行列ゲームを regret-matching（CFR系）で解き、自分の平均戦略（≈ナッシュ混合戦略）を返す。
-function nashSolve(M, iters) {
-  const n = M.length; if (n === 0) return [];
-  const m = M[0].length; if (m === 0) return new Array(n).fill(1 / n);
+// 一般和2人行列ゲームを regret-matching（CFR系）で解き、自分の平均戦略（混合戦略）を返す。
+// 各プレイヤーが自分のペイロフ（me=Mme・opp=Mopp）で後悔最小化する。テンポ罰の少差分以外は反対称＝従来のナッシュ挙動を保つ。
+function nashSolve(Mme, Mopp, iters) {
+  const n = Mme.length; if (n === 0) return [];
+  const m = Mme[0].length; if (m === 0) return new Array(n).fill(1 / n);
   const rMe = new Array(n).fill(0), rOpp = new Array(m).fill(0);
   const sumMe = new Array(n).fill(0), sumOpp = new Array(m).fill(0);
   const strat = (reg) => {
@@ -4336,10 +4349,10 @@ function nashSolve(M, iters) {
     for (let i = 0; i < n; i++) sumMe[i] += sMe[i];
     for (let j = 0; j < m; j++) sumOpp[j] += sOpp[j];
     let vMe = 0; const uMe = new Array(n);
-    for (let i = 0; i < n; i++) { let u = 0; for (let j = 0; j < m; j++) u += sOpp[j] * M[i][j]; uMe[i] = u; vMe += sMe[i] * u; }
+    for (let i = 0; i < n; i++) { let u = 0; for (let j = 0; j < m; j++) u += sOpp[j] * Mme[i][j]; uMe[i] = u; vMe += sMe[i] * u; }
     for (let i = 0; i < n; i++) rMe[i] += uMe[i] - vMe;
     let vOpp = 0; const uOpp = new Array(m);
-    for (let j = 0; j < m; j++) { let u = 0; for (let i = 0; i < n; i++) u += sMe[i] * (-M[i][j]); uOpp[j] = u; vOpp += sOpp[j] * u; }
+    for (let j = 0; j < m; j++) { let u = 0; for (let i = 0; i < n; i++) u += sMe[i] * Mopp[i][j]; uOpp[j] = u; vOpp += sOpp[j] * u; }
     for (let j = 0; j < m; j++) rOpp[j] += uOpp[j] - vOpp;
   }
   const tot = sumMe.reduce((a, b) => a + b, 0);
@@ -4357,7 +4370,7 @@ function nashChooseAction(whoIsMe) {
   const state = cloneBattleState();
   const built = nashBuildPayoff(state, whoIsMe);
   if (!built.myMoves.length) return 'weak';
-  return nashSample(nashSolve(built.M, NASH_ITERS), built.myMoves);
+  return nashSample(nashSolve(built.Mme, built.Mopp, NASH_ITERS), built.myMoves);
 }
 if (typeof window !== 'undefined') window.nashChooseAction = nashChooseAction;
 
@@ -4366,7 +4379,7 @@ function nashDebug(whoIsMe) {
   whoIsMe = whoIsMe || 'c';
   const state = cloneBattleState();
   const built = nashBuildPayoff(state, whoIsMe);
-  const probs = nashSolve(built.M, NASH_ITERS);
+  const probs = nashSolve(built.Mme, built.Mopp, NASH_ITERS);
   const mix = built.myMoves.map((a, i) => ({ act: a, p: Math.round(probs[i] * 1000) / 10 }))
     .filter(x => x.p >= 0.5).sort((a, b) => b.p - a.p);
   return { whoIsMe, mix, myMoves: built.myMoves, oppMoves: built.oppMoves };

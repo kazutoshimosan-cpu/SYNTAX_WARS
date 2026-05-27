@@ -5858,8 +5858,10 @@ function abSmartAct(s, opp) {
   const pool = [];
   const add = (a, w) => { for (let i = 0; i < w; i++) pool.push(a); };
   const novaVsLyra = s.passive === 'nova' && opp.passive === 'lyrax';
-  // 方針：strong/midは事故が起きやすいので控えめ。weakでゲージを溜め、属性/固有へ寄せる。
-  add('weak',6); add('mid',2); add('strong',1); add('guard', novaVsLyra ? 1 : 2);
+  // 方針（新メタ）：中+12がゲージ源として弱+10を上回るため、弱偏重を是正し中を混ぜたテンポ重視に。
+  // 案B対応のアンチストリークロジックは switch 直前に配置。
+  // 案D対応：guard選択でゲージ-3%がかかるため、汎用guardを軽微に削減。
+  add('weak',3); add('mid',4); add('strong',1); add('guard', novaVsLyra ? 1 : 1);
   if (s.gauge >= atk25) {
     if (!novaVsLyra) add('speedatk', 2); // LYRAは自前加速しないことが多く速度特攻の旨味が薄い
     add('guardbk', 2); add('sealatk', 2);
@@ -5869,13 +5871,36 @@ function abSmartAct(s, opp) {
   if (s.gauge >= 30 && opp.passive !== 'titan' && !novaVsLyra) { add('slow',2); if (turn >= 3 && !s.sealTurns) { add('heal',1); add('taunt',2); } }
   if (s.gauge >= 100)    add('overclock',1);
   if (canUseUnique(s)) add('unique',2);
+  // ===== 案B：アンチストリーク（全キャラ共通）=====
+  // s.sameStreak は行動解決時に更新される。選択時点では「直前までの連続回数」。
+  // sameStreak >= 2 かつ lastAction が通常攻撃の場合、ここでその攻撃を再び選ぶと解決後3連目 → ×0.7ペナルティ。
+  // → その行動のエントリを半分以下に削り、代わりに mid / guard を補填してペナルティを自発的に踏まないようにする。
+  {
+    const streakAction = s.lastAction;
+    const normalAtks = ['weak','mid','strong'];
+    if (normalAtks.includes(streakAction) && s.sameStreak >= 2) {
+      // streakAction のエントリを 70% 削除（切り捨て）してペナルティ回避インセンティブを作る
+      const keepRatio = 0.3;
+      let removed = 0;
+      const targetRemove = Math.floor(pool.filter(a => a === streakAction).length * (1 - keepRatio));
+      for (let i = pool.length - 1; i >= 0 && removed < targetRemove; i--) {
+        if (pool[i] === streakAction) { pool.splice(i, 1); removed++; }
+      }
+      // 別の通常攻撃・ガードを補填（プール全体の多様性を保つ）
+      if (streakAction !== 'mid')    add('mid', 4);
+      if (streakAction !== 'weak')   add('weak', 2);
+      if (streakAction !== 'strong') add('strong', 1);
+      add('guard', 1);
+    }
+  }
+  // ===== / アンチストリーク =====
   switch (s.passive) {
     case 'titan':
       if (canUseUnique(s)) add('unique', 2);                        // HP関係なく超電磁砲使う
       if (s.hp <= 40 && canUseUnique(s)) add('unique', 3);         // 低HP時はさらに優先
-      // weak多めで貯めて固有/属性へ
-      add('weak', 10);
-      add('mid', 1);
+      // 耐えて固有/属性へ（新メタ：弱偏重を是正し中を混ぜたテンポに）
+      add('weak', 6);
+      add('mid', 3);
       add('strong', 0);
       if (s.gauge >= ccost) add('counter', 2); // strongは速度差で外れるので除外
       if (s.gauge >= atk25) { add('speedatk', 2); add('guardbk', 2); add('sealatk', 2); } // 属性攻撃（控えめ）
@@ -5901,7 +5926,7 @@ function abSmartAct(s, opp) {
       const tPick = pool.filter(titanFilter).filter(a => cpuPoolAffordable(s, opp, a));
       return tPick[Math.floor(Math.random() * tPick.length)] || 'mid';
     case 'blaze': {
-      add('weak', 8);
+      add('weak', 5); add('mid', 2); // 新メタ：弱偏重是正（起爆準備フェーズ前の通常攻撃を中寄りに）
       // 方針（AUTO/HARD）：
       // - 起爆準備（guard）はゲージ50%以上を目安に（30で即起爆しない）
       // - 起爆後（primed）は属性/固有を優先し、たまにguardでフェイント
@@ -5935,8 +5960,8 @@ function abSmartAct(s, opp) {
       }
       break;
     }
-    case 'lyrax': // LYRA-X: slowで腐食を稼ぎ、回復封じで長期戦制圧（weak多め）
-      add('weak', 6);
+    case 'lyrax': // LYRA-X: slowで腐食を稼ぎ、回復封じで長期戦制圧（新メタ：弱偏重是正）
+      add('weak', 3); add('mid', 3);
       // CPU（HARD/AUTO）用：SHADOW以外には早期（1〜2T）にSLOWを入れて主導権を作る
       if (turn <= 2 && opp.passive !== 'shadow' && s.gauge >= 30 && !opp.slow) return 'slow';
       if (s.gauge >= 30) {
@@ -5954,13 +5979,13 @@ function abSmartAct(s, opp) {
         else add('weak', 2); // 少し貯めて細胞再生へ
       }
       break;
-    case 'shadow': { // SHADOW: weakで貯めつつ、属性・固有への枝を厚め（AUTO/HARD）
+    case 'shadow': { // SHADOW: 速度・固有軸を主軸に（新メタ：弱偏重是正）
       if (s.speed < 70 && s.gauge >= 15) add('accel', 2);   // 最終手段（事故回避用）
       if (!s.fast && s.gauge >= 15) add('accel', 1);        // 同上
       if (opp.passive === 'learning') {
-        add('weak', 8);
+        add('weak', 5);
         add('strong', 3);
-        add('mid', 4);
+        add('mid', 6);
         if (s.gauge >= 40) add('speedatk', 4);
         if (s.fast && s.gauge >= ccost) add('counter', 5);
         if (s.gauge >= atk25) { add('guardbk', 5); add('sealatk', 6); }
@@ -5991,9 +6016,9 @@ function abSmartAct(s, opp) {
           if (canUseUnique(s)) add('unique', 12);
         }
       } else {
-        add('weak', 12);
+        add('weak', 6);
         add('strong', 2);
-        add('mid', 2);
+        add('mid', 4);
         if (s.gauge >= 40) add('speedatk', 3);
         if (s.fast && s.gauge >= ccost) add('counter', 7);
         if (s.gauge >= atk25) { add('guardbk', 5); add('sealatk', 5); }
@@ -6009,10 +6034,10 @@ function abSmartAct(s, opp) {
       }
       break;
     }
-    case 'learning': // NEXUS-7: weakで溜めて属性を回す（strong/mid控えめ）
-      add('weak', 12);
+    case 'learning': // NEXUS-7: 属性を回す（新メタ：弱偏重是正・中を増やして効率UP）
+      add('weak', 6);
       add('strong', 1);
-      add('mid', 1);
+      add('mid', 4);
       if (s.gauge >= atk25) {
         add('speedatk',8); add('guardbk',8); add('sealatk',8); // +8（合計10）
         if (s.learned) { // 学習済みなら対応攻撃を最優先
@@ -6038,9 +6063,9 @@ function abSmartAct(s, opp) {
       else if (canUseUnique(s)) add('unique', 7); // 50〜69%の星屑砲は強すぎない程度に（連打は見せるが勝ち切りすぎない）
 
       // 80%未満フェーズ：カウンターで勝ち切りすぎると「連打」に到達しにくい
-      // → 弱攻撃（ゲージ+10%）と星屑砲（使用後+20%）を厚めにし、カウンターは「相手が攻撃した直後」だけ控えめに入れる
+      // → 中(+12%)の方がゲージ効率が高いため弱から中寄りに。固有・弱も混在させてテンポよく80%到達を目指す。
       if (s.gauge < 80) {
-        add('weak', 7);
+        add('weak', 4); add('mid', 2);
         if (canUseUnique(s)) add('unique', 4);
         if (!vsLyra) add('guard', 2); // LYRA戦はガード厚盛りが無駄打ちになりやすいので積まない
         if (s.gauge >= ccost) {
@@ -6056,9 +6081,10 @@ function abSmartAct(s, opp) {
         else if (hpRate < 0.6) add('heal', 6);   // HP60%未満→回復を選択肢に
         else if (hpRate < 0.75) add('heal', 3);  // HP75%未満→少し意識
       }
-      // 対LYRA：序盤は弱連打でゲージを作り、80%到達後はコスト15%の属性連打で削る。回復・星屑砲も状況で混ぜる。
+      // 対LYRA：序盤はゲージを作り、80%到達後はコスト15%の属性連打で削る。回復・星屑砲も状況で混ぜる。
       if (vsLyra) {
-        if (turn <= 2) add('weak', 12); // 初回から弱連打
+        if (turn <= 2) add('weak', 5);
+        add('mid', 3); // 新メタ：vsLyra全体で中を追加（弱のゲージ効率が中より低くなったため）
         if (s.gauge >= 80) { add('guardbk', 8); add('sealatk', 8); add('mid', 4); } // LYRA戦は速度特攻より封じ・貫通・中火力
         if (canUseUnique(s)) add('unique', 3);
         // 腐食タグ付き＝LYRAのSLOW軸で削られている局面。相手にSLOWを振っても腐食は解けずゲージの無駄になりやすい→属性・固有で踏み込む

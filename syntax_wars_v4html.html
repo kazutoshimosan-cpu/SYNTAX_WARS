@@ -4168,6 +4168,106 @@ function _simSelfTest(n) {
 }
 if (typeof window !== 'undefined') window._simSelfTest = _simSelfTest;
 
+// ===== Nash CPU Phase②: 評価関数 evalState =====
+// 方針：欲張らず「1手先読みでは見えない危険項」中心。細かい有利不利は探索(Phase③)が担う。
+// evalState(me,opp) は me視点の符号付き優勢度（大=me有利）。各項を反対称に組むため
+// evalState(a,b) ≈ -evalState(b,a) が成立（マトリクスのゼロサム性をコードで担保）。
+// 重みは全て仮（TUNABLE）。Phase④で対戦しながら肌調整する前提。HP差=1pt/1HPを基準に相対化。
+const EVAL_DEATH_FRAC = 0.40; // 瀕死圏 = HP ≤ maxHp×40%（実装の瀕死判定に一致）
+const EVAL_W = {
+  hp: 1.0,          // ② HP差（王様）
+  nearDeath: 35,    // ③ 瀕死の非線形（相手瀕死=詰め＋／自分瀕死=恐れ−・両者瀕死で相殺）
+  winConfirm: 55,   // ④ 無防備（低HP×低ゲージ）＝勝ち確／被勝ち確
+  myGauge: 0.10,    // ④ ゲージ差＝攻めの手数（小さめ）
+  burst: 15,        // ④ NOVA星屑砲/TITAN超電磁砲＝遠いキル脅威
+  killRace: 25,     // ⑥ 両者瀕死×速度有利（先に当てたもん勝ち）
+  slowGeneric: 8, slowTitan: 10, slowVsLyra: 6,   // ⑤ SLOW（一般−／TITAN＋／対LYRA腐食で追加−）
+  fastShadow: 8, fastTitan: 6,                     // ⑤ FAST（SHADOW＋／TITAN過熱−）
+  corrode: 5, seal: 6, primed: 10, learned: 12, quantum: 10, // ⑤ その他キャラ別タグ
+};
+const EVAL_TERMINAL = 100000;
+
+// 瀕死度 0..1（HPが瀕死圏でゼロ→深いほど1）
+function _prox(s){ const th = s.maxHp * EVAL_DEATH_FRAC; if (s.hp <= 0) return 1; if (s.hp >= th) return 0; return (th - s.hp) / th; }
+// ゲージの「守りの完備度」0..1（50%でカウンター/逆転技が撃てる＝守れる）
+function _gaugeSafe(s){ return Math.max(0, Math.min(1, s.gauge / 50)); }
+// s自身のステータスがsにとって持つ価値（＋=s有利）。oppは対面依存項(腐食)のため受け取る。
+function _statusValue(s, opp){
+  let v = 0;
+  if (s.slow){ v += (s.passive==='titan') ? EVAL_W.slowTitan : -EVAL_W.slowGeneric; if (opp.passive==='lyrax') v -= EVAL_W.slowVsLyra; }
+  if (s.fast){ if (s.passive==='shadow') v += EVAL_W.fastShadow; else if (s.passive==='titan') v -= EVAL_W.fastTitan; }
+  if (s.corrode) v -= EVAL_W.corrode;
+  if (s.sealTurns > 0) v -= EVAL_W.seal;
+  if (s.primed) v += EVAL_W.primed;
+  if (s.learned) v += EVAL_W.learned;
+  if (s.quantum) v += EVAL_W.quantum;
+  return v;
+}
+
+function evalState(me, opp){
+  // 終局（このエンジンは相互KOがほぼ起きない＝両者0は念のため）
+  const meDead = me.hp <= 0, oppDead = opp.hp <= 0;
+  if (meDead || oppDead){ if (meDead && oppDead) return -EVAL_TERMINAL * 0.5; return oppDead ? EVAL_TERMINAL : -EVAL_TERMINAL; }
+  let s = 0;
+  const pm = _prox(me), po = _prox(opp);
+  // ② HP差（土台）
+  s += EVAL_W.hp * (me.hp - opp.hp);
+  // ③ 瀕死の非線形（対称＝両者同程度の瀕死なら相殺し、判断を④⑥へ明け渡す）
+  s += EVAL_W.nearDeath * (po - pm);
+  // ④ 無防備＝低HP×低ゲージ。高ゲージ側は (1-gaugeSafe) が小さくなり勝ち確が自動で割り引かれる（逆転カウンター警戒）
+  s += EVAL_W.winConfirm * (po*(1-_gaugeSafe(opp)) - pm*(1-_gaugeSafe(me)));
+  // ④ ゲージ差＝攻めの手数（小さめ）
+  s += EVAL_W.myGauge * (me.gauge - opp.gauge);
+  // ④ NOVA/TITANの決め筋＝相手が低HPのとき仕留めうる遠いキル脅威
+  if ((me.passive==='nova' ||me.passive==='titan')  && me.gauge  >= 50) s += EVAL_W.burst * po;
+  if ((opp.passive==='nova'||opp.passive==='titan') && opp.gauge >= 50) s -= EVAL_W.burst * pm;
+  // ⑤ キャラ別ステータス（速度の良し悪しもここに畳む）
+  s += _statusValue(me, opp) - _statusValue(opp, me);
+  // ⑥ キルレース：両者瀕死(pm*po)でだけ速度有利が効く。差±20で飽和。同速なら0→④のゲージ差が割る
+  const speedEdge = Math.max(-1, Math.min(1, (me.speed - opp.speed) / 20));
+  s += EVAL_W.killRace * pm * po * speedEdge;
+  return s;
+}
+if (typeof window !== 'undefined') window.evalState = evalState;
+
+// evalState の妥当性自己テスト（DEVツール）。要・対戦初期化済み。手作り盤面で不等式を確認。
+function _evalSelfTest(){
+  if (!pState || !cState) return { error: '対戦が初期化されていません' };
+  const P = () => JSON.parse(JSON.stringify(pState));
+  const C = () => JSON.parse(JSON.stringify(cState));
+  const me = (o) => Object.assign(P(), o);
+  const op = (o) => Object.assign(C(), o);
+  const checks = [];
+  const ck = (name, cond, detail) => checks.push({ name, pass: !!cond, detail });
+  // 1. HP単調：相手HPが低いほどme有利
+  ck('hp_monotonic',
+     evalState(me({hp:90}), op({hp:30})) > evalState(me({hp:90}), op({hp:80})));
+  // 2. 勝ち確：相手 低HP×低ゲージ ＞ 低HP×高ゲージ（カウンター警戒で後者は下がる）
+  ck('winconfirm_gauge',
+     evalState(me({hp:90,gauge:50}), op({hp:8,gauge:0})) > evalState(me({hp:90,gauge:50}), op({hp:8,gauge:100})));
+  // 3. 自分瀕死＝マイナス
+  ck('self_neardeath_neg', evalState(me({hp:8,gauge:0}), op({hp:90,gauge:50})) < 0);
+  // 4. 反対称 eval(a,b) ≈ -eval(b,a)
+  let worst = 0;
+  for (let i=0;i<60;i++){
+    const x = me({hp:1+Math.random()*100, gauge:Math.random()*100, speed:20+Math.random()*80, fast:false, slow:false});
+    const y = op({hp:1+Math.random()*100, gauge:Math.random()*100, speed:20+Math.random()*80, fast:false, slow:false});
+    worst = Math.max(worst, Math.abs(evalState(x,y) + evalState(y,x)));
+  }
+  ck('antisymmetric', worst < 1e-6, { worst });
+  // 5. 終局
+  ck('terminal_win',  evalState(me({hp:50}), op({hp:0}))  >  9000);
+  ck('terminal_lose', evalState(me({hp:0}),  op({hp:50})) < -9000);
+  // 6. 両者瀕死の役割交代：速い方が有利／速度互角ならゲージ多い方が有利
+  ck('killrace_speed',
+     evalState(me({hp:8,gauge:20,speed:80}), op({hp:8,gauge:20,speed:50})) >
+     evalState(me({hp:8,gauge:20,speed:50}), op({hp:8,gauge:20,speed:80})));
+  ck('neardeath_gauge_tiebreak',
+     evalState(me({hp:8,gauge:60,speed:50}), op({hp:8,gauge:0,speed:50})) > 0);
+  return { pass: checks.every(c=>c.pass), checks };
+}
+if (typeof window !== 'undefined') window._evalSelfTest = _evalSelfTest;
+
 // ===== オンライン: ホストが記録した戦闘VFXを両端末で再生 =====
 // fx の isPlayer は「ホスト計算時の P1=true / P2=false」。ゲストは pState=P2（左YOU）なので左右を反転する。
 function replayOnlineCombatFx(fxList, isHost) {

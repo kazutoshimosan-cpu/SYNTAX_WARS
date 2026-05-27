@@ -2823,6 +2823,8 @@ let _onlineHostComputing  = false; // ホスト計算中フラグ（endOfTurnの
 const AUDIENCE_MAX = 10;
 let crowdOnFireNext = false;
 let autoMode = false;
+let _sim = false;            // AI内部シミュレーション中フラグ（不可逆な副作用を抑止）
+let _rng = Math.random;      // 解決パスの乱数源（既定=本物。シミュ時のみ注入差し替え）
 let autoResults = null;
 let abDetailLogs = []; // turn-by-turn logs for ALL battles (auto battle detail CSV)
 
@@ -2893,6 +2895,7 @@ function buildNormalBattleHintLines() {
 }
 
 function renderBattleHint(selectedAction) {
+  if (autoMode || _sim) return;
   // オンラインホスト計算中はDOMに触らない（SSOT）
   if (_onlineTurnLogCapture !== null) return;
   const wrap = document.getElementById('battle-hint-wrap');
@@ -3061,6 +3064,7 @@ function devForce(who, state) {
 
 // 1ターン巻き戻し
 function devSaveUndo() {
+  if (_sim) return;
   if (!devMode) return;
   devSaved = {
     p: JSON.parse(JSON.stringify(pState)),
@@ -3253,6 +3257,7 @@ function setDifficulty(d, track = true) {
 
 // ===== 画面中央フラッシュ =====
 function showBattleFlash(text, type, delay = 0) {
+  if (autoMode || _sim) return;
   const displayMs =
     type === 'miss' ? 1000
     : type === 'counter' ? 2300
@@ -4040,6 +4045,129 @@ function applySerializedState(s, data) {
   if (data.actionHistory) s.actionHistory = [...data.actionHistory];
 }
 
+// ===== Nash CPU Phase①: 副作用なし1ターンシミュレータ =====
+// 本番の resolveActions をそのまま呼び、副作用（DOM/音/VFX/タイマー/統計）だけを抑止して
+// クローン盤面に1ターン適用する。ロジックを複製しないので AI と本番が絶対にズレない。
+// 忠実度は _simSelfTest() で担保する。
+
+// 現在の盤面を丸ごとスナップショット（2体＋バトルメタ）。
+function cloneBattleState() {
+  return {
+    p: JSON.parse(JSON.stringify(pState)),
+    c: JSON.parse(JSON.stringify(cState)),
+    turn: turn,
+    audienceGauge: audienceGauge,
+    crowdOnFireNext: crowdOnFireNext,
+  };
+}
+
+// state: cloneBattleState() の戻り（または同形）。pAct/cAct: 各自の行動キー。
+// rng: ()=>[0,1) を返す関数（省略時=本物の乱数）。
+// 戻り値: 1ターン解決後のスナップショット（cloneBattleStateと同形）＋ pDead/cDead。
+// グローバル(pState等)は退避→差込→必ず復元するので、呼び出し前後で現実の盤面は不変。
+function simulateTurn(state, pAct, cAct, rng) {
+  const sv = {
+    p: pState, c: cState, turn: turn, audienceGauge: audienceGauge, crowdOnFireNext: crowdOnFireNext,
+    autoMode: autoMode, sim: _sim, rng: _rng, waitingResult: waitingResult, logLines: _logLines,
+  };
+  try {
+    pState = JSON.parse(JSON.stringify(state.p));
+    cState = JSON.parse(JSON.stringify(state.c));
+    turn = state.turn | 0;
+    audienceGauge = state.audienceGauge || 0;
+    crowdOnFireNext = !!state.crowdOnFireNext;
+    autoMode = true;   // 既存AUTO BATTLE抑止パスを継承（addLog/HUD/timer/showResult等）
+    _sim = true;       // AB非干渉の追加抑止（matchStats/devSaveUndo）
+    _rng = (typeof rng === 'function') ? rng : Math.random;
+    resolveActions(pAct, cAct);
+    return {
+      p: JSON.parse(JSON.stringify(pState)),
+      c: JSON.parse(JSON.stringify(cState)),
+      turn: turn, audienceGauge: audienceGauge, crowdOnFireNext: crowdOnFireNext,
+      pDead: pState.hp <= 0, cDead: cState.hp <= 0,
+    };
+  } finally {
+    pState = sv.p; cState = sv.c; turn = sv.turn;
+    audienceGauge = sv.audienceGauge; crowdOnFireNext = sv.crowdOnFireNext;
+    autoMode = sv.autoMode; _sim = sv.sim; _rng = sv.rng;
+    waitingResult = sv.waitingResult; _logLines = sv.logLines;
+  }
+}
+
+// 忠実度の自己テスト（DEVツール）。要・対戦初期化済み（pState/cState 存在）。
+// 検証3点：①無リーク（simulateTurn後に現実の盤面・主要グローバルが不変）
+//          ②決定性（同一seedで同一結果）
+//          ③_sim中立性（autoMode下で _sim on/off の終了ファイター状態が一致＝抑止が状態数学を変えない）
+// ブラウザで window._simSelfTest(300) を呼ぶと {pass,total,fails} を返す。
+function _simSelfTest(n) {
+  n = n || 300;
+  if (!pState || !cState) return { error: '対戦が初期化されていません（キャラ選択後に実行）' };
+  function mkRng(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const ACTS = ['weak','mid','strong','guard','counter','speedatk','guardbk','sealatk','accel','slow','heal','taunt','overclock','unique','idle'];
+  const base = cloneBattleState();
+  const eq = (x, y) => JSON.stringify(x) === JSON.stringify(y);
+  // _sim を明示指定できる制御ランナー（中立性テスト用）。simulateTurnと同じ退避/復元。
+  function runCtl(state, pAct, cAct, rng, simFlag) {
+    const sv = { p: pState, c: cState, turn, audienceGauge, crowdOnFireNext, autoMode, sim: _sim, rng: _rng, waitingResult, logLines: _logLines };
+    try {
+      pState = JSON.parse(JSON.stringify(state.p));
+      cState = JSON.parse(JSON.stringify(state.c));
+      turn = state.turn | 0; audienceGauge = state.audienceGauge || 0; crowdOnFireNext = !!state.crowdOnFireNext;
+      autoMode = true; _sim = simFlag; _rng = rng;
+      resolveActions(pAct, cAct);
+      return { p: JSON.parse(JSON.stringify(pState)), c: JSON.parse(JSON.stringify(cState)), turn, audienceGauge, crowdOnFireNext };
+    } finally {
+      pState = sv.p; cState = sv.c; turn = sv.turn; audienceGauge = sv.audienceGauge; crowdOnFireNext = sv.crowdOnFireNext;
+      autoMode = sv.autoMode; _sim = sv.sim; _rng = sv.rng; waitingResult = sv.waitingResult; _logLines = sv.logLines;
+    }
+  }
+  function scenario(rng) {
+    const s = JSON.parse(JSON.stringify(base));
+    s.p.hp = 1 + Math.floor(rng() * s.p.maxHp);
+    s.c.hp = 1 + Math.floor(rng() * s.c.maxHp);
+    s.p.gauge = Math.floor(rng() * 101);
+    s.c.gauge = Math.floor(rng() * 101);
+    s.p.speed = 20 + Math.floor(rng() * 81);
+    s.c.speed = 20 + Math.floor(rng() * 81);
+    s.audienceGauge = Math.floor(rng() * (AUDIENCE_MAX + 1));
+    return s;
+  }
+  const fails = [];
+  // 無リーク基準（テスト全体で現実の盤面が汚れていないこと）
+  const matchStatsBackup = JSON.parse(JSON.stringify(matchStats || {}));
+  const before = { p: JSON.parse(JSON.stringify(pState)), c: JSON.parse(JSON.stringify(cState)), turn, audienceGauge, crowdOnFireNext, autoMode, sim: _sim };
+  const pick = (rng) => ACTS[Math.floor(rng() * ACTS.length)];
+  for (let i = 0; i < n; i++) {
+    const gen = mkRng(0xA53 + i * 2654435761);
+    const st = scenario(gen);
+    const a = pick(gen), b = pick(gen);
+    const seed = (i * 1103515245 + 12345) >>> 0;
+    // ②決定性
+    const r1 = simulateTurn(st, a, b, mkRng(seed));
+    const r2 = simulateTurn(st, a, b, mkRng(seed));
+    if (!eq(r1, r2)) fails.push({ i, kind: 'determinism', a, b });
+    // ③_sim中立性（同一seedで _sim on/off のファイター状態一致）
+    const on = runCtl(st, a, b, mkRng(seed), true);
+    const off = runCtl(st, a, b, mkRng(seed), false);
+    if (!eq(on.p, off.p) || !eq(on.c, off.c)) fails.push({ i, kind: 'sim-neutrality', a, b, on: { php: on.p.hp, chp: on.c.hp }, off: { php: off.p.hp, chp: off.c.hp } });
+  }
+  // ①無リーク
+  const after = { p: JSON.parse(JSON.stringify(pState)), c: JSON.parse(JSON.stringify(cState)), turn, audienceGauge, crowdOnFireNext, autoMode, sim: _sim };
+  if (!eq(before, after)) fails.push({ kind: 'leak', before, after });
+  // matchStats も元に戻す（_sim=false ランで腐食統計が動いた分を打ち消す）
+  if (typeof matchStats !== 'undefined' && matchStats) { Object.keys(matchStatsBackup).forEach(k => matchStats[k] = matchStatsBackup[k]); }
+  return { pass: fails.length === 0, total: n, fails: fails.slice(0, 20), failCount: fails.length };
+}
+if (typeof window !== 'undefined') window._simSelfTest = _simSelfTest;
+
 // ===== オンライン: ホストが記録した戦闘VFXを両端末で再生 =====
 // fx の isPlayer は「ホスト計算時の P1=true / P2=false」。ゲストは pState=P2（左YOU）なので左右を反転する。
 function replayOnlineCombatFx(fxList, isHost) {
@@ -4203,6 +4331,7 @@ function addLog(text, cls='') {
 }
 
 function _renderLogBar() {
+  if (autoMode || _sim) return;
   const bar = document.getElementById('last-log-bar');
   if (!bar) return;
   bar.innerHTML = _logLines.map(l => {
@@ -4945,7 +5074,7 @@ function applyAction(attacker, defender, action, opt) {
       // SHADOW：速度差回避後の「反撃必中」は中/強に適用（カウンターは別処理）
       const shadowSureHit = attacker.passive === 'shadow' && attacker.shadowSureHitNext && (action === 'mid' || action === 'strong');
       const blazePrimedBefore = attacker.passive === 'blaze' && attacker.primed;
-      if (action !== 'weak' && !_tutForceHit && !shadowSureHit && Math.random() * 100 > hitRate) {
+      if (action !== 'weak' && !_tutForceHit && !shadowSureHit && _rng() * 100 > hitRate) {
         const gaugeOnMiss = action === 'strong' ? 5 : 8;
         addLog(`– ${aName}の攻撃がはずれた`, 'log-miss');
         showBattleFlash('MISS', 'miss');
@@ -5052,7 +5181,7 @@ function applyAction(attacker, defender, action, opt) {
         else clearCounterStance(defender);
         // かすりダメージあり（完全防御でない）場合のみSLOW適用
         if (selfDmg > 0 && defender.hp > 0) {
-          const reduction = 10 + Math.round(Math.random() * 5);
+          const reduction = 10 + Math.round(_rng() * 5);
           defender.speed = Math.max(0, defender.speed - reduction);
           defender.slow = defender.speed <= 35;
           if (defender.slow) addLog(`${dName}がSLOW状態に！（かすり貫通）`, 'status');
@@ -5066,7 +5195,7 @@ function applyAction(attacker, defender, action, opt) {
         if (attacker.passive === 'blaze' && !speedatkWasPrimed) applyBlazeJibaku(attacker, defender, finalDmg, aName, dName);
         // 通常ヒット時SLOW付与
         if (defender.hp > 0) {
-          const reduction = 10 + Math.round(Math.random() * 5);
+          const reduction = 10 + Math.round(_rng() * 5);
           defender.speed = Math.max(0, defender.speed - reduction);
           defender.slow = defender.speed <= 35;
           if (defender.slow) addLog(`${dName}がSLOW状態に！`, 'status');
@@ -5175,7 +5304,7 @@ function applyAction(attacker, defender, action, opt) {
       if (!skipGaugeCost && attacker.gauge < 15) break;
       AudioManager.playSE('accel');
       if (!skipGaugeCost) attacker.gauge -= 15;
-      const gain = 20 + Math.round(Math.random() * 10);
+      const gain = 20 + Math.round(_rng() * 10);
       attacker.speed = Math.min(100, attacker.speed + gain);
       attacker.fast = attacker.speed >= 70;
       attacker.slow = attacker.speed <= 35;
@@ -5188,7 +5317,7 @@ function applyAction(attacker, defender, action, opt) {
       if (!skipGaugeCost && attacker.gauge < 30) break;
       AudioManager.playSE('slow');
       if (!skipGaugeCost) attacker.gauge -= 30;
-      const reduction = 15 + Math.round(Math.random() * 10);
+      const reduction = 15 + Math.round(_rng() * 10);
       defender.speed = Math.max(0, defender.speed - reduction);
       defender.slow = defender.speed <= 35;
       defender.fast = defender.speed >= 70;
@@ -5203,7 +5332,7 @@ function applyAction(attacker, defender, action, opt) {
       if (!skipGaugeCost && attacker.gauge < 30) break;
       AudioManager.playSE('heal');
       if (!skipGaugeCost) attacker.gauge -= 30;
-      const healAmt = 15 + Math.round(Math.random() * 10);
+      const healAmt = 15 + Math.round(_rng() * 10);
       attacker.hp = Math.min(attacker.maxHp, attacker.hp + healAmt);
       showDmgPopup(attacker.isPlayer, healAmt, 'heal');
       addLog(`${aName}が回復！ +${healAmt}HP`, 'heal');
@@ -5301,7 +5430,7 @@ function applyCounter(counterUser, attacker, incomingDmg) {
   const selfMsg = selfDmg > 0 ? `（${cName}かすり -${selfDmg}）` : '（完全シャットアウト）';
   let hit = false;
   const force = !!counterUser.counterForce;
-  if (force || _tutForceCounter || Math.random() < 0.8) {
+  if (force || _tutForceCounter || _rng() < 0.8) {
     hit = true;
     AudioManager.playSE('counter');
     addLog(`⚡ カウンター成功！${incomingDmg}ダメージ返し！${selfMsg}`, 'log-counter');
@@ -5554,8 +5683,7 @@ function endOfTurn() {
       AudioManager.playSE('corrosion');
       const corrodeDmg = (s.passive === 'titan') ? 2 : 3;
       s.hp -= corrodeDmg;
-      if (s.isPlayer) matchStats.pCorrosionDmg += corrodeDmg;
-      else matchStats.cCorrosionDmg += corrodeDmg;
+      if (!_sim) { if (s.isPlayer) matchStats.pCorrosionDmg += corrodeDmg; else matchStats.cCorrosionDmg += corrodeDmg; }
       screenShake(s.isPlayer);
       showDmgPopup(s.isPlayer, corrodeDmg);
       addLog(`${name}が腐食ダメージ -${corrodeDmg}HP`, 'hit');

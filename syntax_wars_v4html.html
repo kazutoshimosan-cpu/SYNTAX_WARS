@@ -2678,7 +2678,7 @@ const CHARS = {
     passiveKeys:'HP減るほど星屑砲が強化 ／ CROWD ON FIRE時ゲージ吸収強化',
     moves:{ weak:'エナジー弾', mid:'次元裂き', strong:'重力場', guard:'GUARD', unique:'星屑砲' },
     passive:'nova', uniqueName:'星屑砲',
-    passiveDesc:'コズミック・共鳴（瀕死の逆転王）：通常攻撃ゲージ×1.5。ゲージ80%以上で属性攻撃コスト15%。HP48以上で被ダメ-10%。HP40%以下で被ダメ-25%・ゲージ+20%。CROWD ON FIRE時は星屑砲のゲージ吸収が強化。',
+    passiveDesc:'コズミック・共鳴（瀕死の逆転王）：通常攻撃ゲージ×1.5。ゲージ80%以上で属性攻撃コスト15%。HP48以上で被ダメ-10%。HP40%以下で被ダメ-25%・ゲージ+20%・星屑砲コスト30%。HP20%以下で星屑砲コスト20%。CROWD ON FIRE時は星屑砲のゲージ吸収が強化。',
     uniqueDesc:'星屑砲：35＋損失HP×0.4ダメージ・相手ゲージ-20%＋属性封じ1ターン',
   },
   titan: {
@@ -2743,12 +2743,18 @@ function updateSelectPoster(c) {
   wrap.classList.add('has-image');
 }
 
-/** 固有技のゲージコスト%（BLAZE起爆準備中は0、SHADOW分身斬り35、その他50） */
+/** 固有技のゲージコスト%（BLAZE起爆準備中は0、SHADOW分身斬り45、NOVA瀕死で軽減、その他50） */
 function uniqueGaugeCost(s) {
   if (!s) return 50;
   // GDD v6 line 157：BLAZE は起爆準備（primed）中の「1回だけ」0%。2回目以降は通常 cost 50。
   if (s.passive === 'blaze' && s.primed && !s.blazePrimedUsed) return 0;
   if (s.passive === 'shadow') return 45;
+  // NOVA：瀕死ほど星屑砲を撃ちやすく（2026-05-28追加・「コストが状況に合わない」体感への対応）
+  // HP20%以下＝20%、HP40%以下＝30%、それ以外＝50%
+  if (s.passive === 'nova') {
+    if (s.hp <= Math.floor(s.maxHp * 0.2)) return 20;
+    if (s.hp <= Math.floor(s.maxHp * 0.4)) return 30;
+  }
   return 50;
 }
 /** 固有技を選択可能か（BLAZE起爆中はコスト0扱い・ただし初回のみ） */
@@ -2775,7 +2781,7 @@ const ACTION_SUBTEXT = {
 const UNIQUE_SUBTEXT = {
   learning: '45ダメージ・命中でゲージ+25%＋次ターン属性コスト0 / 量子強化：威力+20%も付与\n【重さ】当てれば次ターンが大きく伸びる',
   shadow:   '次の攻撃を1回無効化 / ダメージも追加効果もすべて0に\n【重さ】ゲージ45%。相手の大技を1回だけ潰す保険',
-  nova:     '35＋損失HP×0.4ダメージ・相手ゲージ-20% / 属性攻撃1ターン封じ\n【重さ】ゲージ50%。瀕死ほど火力が跳ねる',
+  nova:     '35＋損失HP×0.4ダメージ・相手ゲージ-20% / 属性攻撃1ターン封じ\n【重さ】ゲージ50%／HP40%以下:30%／HP20%以下:20%。瀕死ほど火力が跳ねる',
   titan:    'HP残量で威力変化・瀕死で最大55ダメージ\n【重さ】残HPテーブル。ガード不可のFAST時は注意',
   lyrax:    '35ダメージ・与ダメの30%をHP吸収\n【重さ】CROWD中は吸収率アップ（キャラボーナス）',
   blaze:    '43ダメージ・自爆20% / 起爆準備後なら56ダメージ＆自爆なし\n【重さ】起爆後はリスク激減で一気に決まる',
@@ -4477,6 +4483,43 @@ function __nashMatch(c1, c2) {
   }
 }
 if (typeof window !== 'undefined') window.__nashMatch = __nashMatch;
+
+// ターン詳細を返すログ版（DEV／サンプル検証用）
+function __nashMatchLog(c1, c2) {
+  const _p = pState, _c = cState, _t = turn, _ag = audienceGauge, _cn = crowdOnFireNext,
+        _am = autoMode, _s = _sim, _r = _rng, _wr = waitingResult, _ll = _logLines;
+  try {
+    pState = makeState(c1, true);
+    cState = makeState(c2, false);
+    turn = 1; audienceGauge = 0; crowdOnFireNext = false;
+    autoMode = true; _sim = true; _rng = Math.random; waitingResult = false;
+    const log = [];
+    let winner = 'draw', turnsPlayed = 0;
+    for (let t = 0; t < 60; t++) {
+      const pAct = nashChooseAction('p');
+      const cAct = nashChooseAction('c');
+      const pre = { t: t+1, pAct, cAct, pHp: pState.hp, cHp: cState.hp, pG: Math.round(pState.gauge), cG: Math.round(cState.gauge) };
+      resolveActions(pAct, cAct);
+      turnsPlayed = t+1;
+      const post = { pHp: pState.hp, cHp: cState.hp, pG: Math.round(pState.gauge), cG: Math.round(cState.gauge),
+                     pLast: pState.lastAction || '', cLast: cState.lastAction || '',
+                     pSeal: pState.sealTurns|0, cSeal: cState.sealTurns|0,
+                     pPrimed: !!pState.primed, cPrimed: !!cState.primed };
+      log.push({ ...pre, post });
+      if (pState.hp <= 0 || cState.hp <= 0) {
+        if (pState.hp > 0) winner = 'p';
+        else if (cState.hp > 0) winner = 'c';
+        break;
+      }
+      turn = t + 2;
+    }
+    return { winner, turns: turnsPlayed, log };
+  } finally {
+    pState = _p; cState = _c; turn = _t; audienceGauge = _ag; crowdOnFireNext = _cn;
+    autoMode = _am; _sim = _s; _rng = _r; waitingResult = _wr; _logLines = _ll;
+  }
+}
+if (typeof window !== 'undefined') window.__nashMatchLog = __nashMatchLog;
 
 // ===== オンライン: ホストが記録した戦闘VFXを両端末で再生 =====
 // fx の isPlayer は「ホスト計算時の P1=true / P2=false」。ゲストは pState=P2（左YOU）なので左右を反転する。

@@ -2654,7 +2654,7 @@ const CHARS = {
     passiveKeys:'属性学習で威力2倍 ／ 固有技被ダメ-20%',
     moves:{ weak:'ナノブレード', mid:'EMP波動', strong:'プラズマカノン', guard:'GUARD', unique:'量子ビーム' },
     passive:'learning', uniqueName:'量子ビーム',
-    passiveDesc:'アドバンスド・ラーニング：相手の属性攻撃がヒットすると学習済みフラグをセット。同じ属性を自分が使う時に威力×2.0（+100%）。発動までフラグを保持。全属性攻撃に固有×1.1バフあり。相手の固有技被ダメ-20%。',
+    passiveDesc:'アドバンスド・ラーニング：相手の属性攻撃がヒットすると学習済みフラグをセット。同じ属性を自分が使う時に威力×2.0（+100%）。発動までフラグを保持。全属性攻撃に固有×1.3バフあり。相手の固有技被ダメ-30%。回復封じ持続+1T。',
     uniqueDesc:'量子ビーム：45ダメージ・命中でゲージ+25%＋次ターン属性コスト0＆威力+20%',
   },
   shadow: {
@@ -2678,7 +2678,7 @@ const CHARS = {
     passiveKeys:'HP減るほど星屑砲が強化 ／ CROWD ON FIRE時ゲージ吸収強化',
     moves:{ weak:'エナジー弾', mid:'次元裂き', strong:'重力場', guard:'GUARD', unique:'星屑砲' },
     passive:'nova', uniqueName:'星屑砲',
-    passiveDesc:'コズミック・共鳴（瀕死の逆転王）：通常攻撃ゲージ×1.2。ゲージ80%以上で属性攻撃コスト15%。HP48以上で被ダメ-5%。HP40%以下で被ダメ-20%・ゲージ+20%。CROWD ON FIRE時は星屑砲のゲージ吸収が強化。',
+    passiveDesc:'コズミック・共鳴（瀕死の逆転王）：通常攻撃ゲージ×1.5。ゲージ80%以上で属性攻撃コスト15%。HP48以上で被ダメ-10%。HP40%以下で被ダメ-25%・ゲージ+20%。CROWD ON FIRE時は星屑砲のゲージ吸収が強化。',
     uniqueDesc:'星屑砲：35＋損失HP×0.4ダメージ・相手ゲージ-20%＋属性封じ1ターン',
   },
   titan: {
@@ -2707,15 +2707,15 @@ const CHARS = {
   },
   blaze: {
     name:'BLAZE 🔥', type:'爆発型', hp:100, speed:50, gauge:30,
-    dmgMod:1.2, hitMod:0, gaugeIncMod:1.0,
+    dmgMod:1.13, hitMod:0, gaugeIncMod:1.0,
     themeColor:'#ff5500', emoji:'🔥', imgSrc:'assets/image/thumbs/blaze_thumb.jpg',
     posterSrc:'assets/posters/blaze_9x16.png', posterMobileSrc:'assets/posters/mobile/blaze_poster_mobile.jpg',
     catchphrase:'起爆して煽れ　ドカンと決めろ',
-    passiveKeys:'全攻撃+20% ／ 起爆準備で自爆回避＆火力UP',
+    passiveKeys:'全攻撃+13% ／ 起爆準備で自爆回避＆火力UP',
     moves:{ weak:'ファイアボール', mid:'火炎放射', strong:'マグマストライク', guard:'起爆準備', unique:'爆裂拳' },
     passive:'blaze', uniqueName:'爆裂拳',
-    passiveDesc:'エクスプローシブ：全攻撃+20%。属性攻撃は×1.2の専用倍率追加・固有技使用時は確定自爆（与ダメ10%反射、誘爆50%）。起爆準備で自爆回避＆確定クリティカル。',
-    uniqueDesc:'爆裂拳：45ダメージ・自爆20%／起爆準備後は58ダメージ＆自爆なし',
+    passiveDesc:'エクスプローシブ：全攻撃+13%。属性攻撃は×1.2の専用倍率追加・固有技使用時は確定自爆（与ダメ10%反射、誘爆50%）。起爆準備で自爆回避＆確定クリティカル。',
+    uniqueDesc:'爆裂拳：43ダメージ・自爆20%／起爆準備後は56ダメージ＆自爆なし',
   },
 };
 
@@ -2778,7 +2778,7 @@ const UNIQUE_SUBTEXT = {
   nova:     '35＋損失HP×0.4ダメージ・相手ゲージ-20% / 属性攻撃1ターン封じ\n【重さ】ゲージ50%。瀕死ほど火力が跳ねる',
   titan:    'HP残量で威力変化・瀕死で最大55ダメージ\n【重さ】残HPテーブル。ガード不可のFAST時は注意',
   lyrax:    '35ダメージ・与ダメの30%をHP吸収\n【重さ】CROWD中は吸収率アップ（キャラボーナス）',
-  blaze:    '45ダメージ・自爆20% / 起爆準備後なら58ダメージ＆自爆なし\n【重さ】起爆後はリスク激減で一気に決まる',
+  blaze:    '43ダメージ・自爆20% / 起爆準備後なら56ダメージ＆自爆なし\n【重さ】起爆後はリスク激減で一気に決まる',
 };
 // EASYナビ用：一行の「重さ」ラベル（NORMALのナビには出さない）
 const ACTION_WEIGHT_NAV = {
@@ -3198,7 +3198,7 @@ const TUT_PAGES = [
       <div class="tut-row"><span class="tut-key">NOVA QUEEN 🔮</span><span class="tut-val">星屑砲：相手ゲージ-20%＆次の属性攻撃を封じる</span></div>
       <div class="tut-row"><span class="tut-key">TITAN 🦾</span><span class="tut-val">超電磁砲：残HP少ないほど威力アップ（29以下で55ダメ）</span></div>
       <div class="tut-row"><span class="tut-key">LYRA-X 🧬</span><span class="tut-val">細胞再生：35ダメ＆与ダメの30%をHP吸収</span></div>
-      <div class="tut-row"><span class="tut-key">BLAZE 🔥</span><span class="tut-val">爆裂拳：固定45ダメ。使うと自爆（与ダメ×0.2）。「起爆準備」で自爆回避＆×1.3</span></div>
+      <div class="tut-row"><span class="tut-key">BLAZE 🔥</span><span class="tut-val">爆裂拳：固定43ダメ。使うと自爆（与ダメ×0.2）。「起爆準備」で自爆回避＆×1.3</span></div>
     `
   },
   {
@@ -4434,6 +4434,50 @@ function nashDebug(whoIsMe) {
 }
 if (typeof window !== 'undefined') window.nashDebug = nashDebug;
 
+// 計測ハーネス：Nash-vs-Nash 1試合（副作用なし・モジュールスコープでpState/cState差し替え）
+function __nashMatch(c1, c2) {
+  const _p = pState, _c = cState, _t = turn, _ag = audienceGauge, _cn = crowdOnFireNext,
+        _am = autoMode, _s = _sim, _r = _rng, _wr = waitingResult, _ll = _logLines;
+  try {
+    pState = makeState(c1, true);
+    cState = makeState(c2, false);
+    turn = 1; audienceGauge = 0; crowdOnFireNext = false;
+    autoMode = true; _sim = true; _rng = Math.random; waitingResult = false;
+    const stat = { p:{att:0,exec:0,hit:0,refl:0}, c:{att:0,exec:0,hit:0,refl:0} };
+    let winner = 'draw', turnsPlayed = 0;
+    for (let t = 0; t < 60; t++) {
+      const pAct = nashChooseAction('p');
+      const cAct = nashChooseAction('c');
+      const bp = pState.hp, bc = cState.hp;
+      if (pAct === 'unique') stat.p.att++;
+      if (cAct === 'unique') stat.c.att++;
+      resolveActions(pAct, cAct);
+      turnsPlayed = t+1;
+      if (pAct === 'unique' && pState.lastAction === 'unique') {
+        stat.p.exec++;
+        if (cState.hp < bc) stat.p.hit++;
+        if (pState.hp < bp && cAct === 'counter') stat.p.refl++;
+      }
+      if (cAct === 'unique' && cState.lastAction === 'unique') {
+        stat.c.exec++;
+        if (pState.hp < bp) stat.c.hit++;
+        if (cState.hp < bc && pAct === 'counter') stat.c.refl++;
+      }
+      if (pState.hp <= 0 || cState.hp <= 0) {
+        if (pState.hp > 0) winner = 'p';
+        else if (cState.hp > 0) winner = 'c';
+        break;
+      }
+      turn = t + 2;
+    }
+    return { winner, turns: turnsPlayed, stat };
+  } finally {
+    pState = _p; cState = _c; turn = _t; audienceGauge = _ag; crowdOnFireNext = _cn;
+    autoMode = _am; _sim = _s; _rng = _r; waitingResult = _wr; _logLines = _ll;
+  }
+}
+if (typeof window !== 'undefined') window.__nashMatch = __nashMatch;
+
 // ===== オンライン: ホストが記録した戦闘VFXを両端末で再生 =====
 // fx の isPlayer は「ホスト計算時の P1=true / P2=false」。ゲストは pState=P2（左YOU）なので左右を反転する。
 function replayOnlineCombatFx(fxList, isHost) {
@@ -5362,14 +5406,14 @@ function applyAction(attacker, defender, action, opt) {
       if (titanOverheat) { dmg *= 0.9; addLog(`${aName}オーバーヒート！攻撃-10%・ガード不可！`, 'status'); }
       dmg = Math.round(dmg);
 
-      // ゲージ（弱+10%、中+12%、強+5%・調整: 旧 弱15/中8 → 弱連打のゲージ稼ぎ支配を是正し中攻撃に価値を持たせる）/ NOVA QUEEN通常攻撃ゲージ×1.2（v6.7：旧×1.5）
+      // ゲージ（弱+10%、中+12%、強+5%・調整: 旧 弱15/中8 → 弱連打のゲージ稼ぎ支配を是正し中攻撃に価値を持たせる）/ NOVA QUEEN通常攻撃ゲージ×1.5（v6.7：×1.5→×1.2 ナーフ → 2026-05-28：全戻し）
       let gaugeGain = { weak:10, mid:12, strong:5 }[action];
       // 案B：同一行動3連続〜で観客が飽きてゲージ獲得×0.7（読まれる手の連発を罰し心理戦を促す）
       if (attacker.sameStreak >= 3) {
         gaugeGain *= 0.7;
         addLog(`${aName}：同じ手の連発で観客が飽きた…ゲージ獲得ダウン（×0.7）`, 'status');
       }
-      addGauge(attacker, attacker.passive === 'nova' ? gaugeGain * 1.2 : gaugeGain);
+      addGauge(attacker, attacker.passive === 'nova' ? gaugeGain * 1.5 : gaugeGain);
       if (attacker.primed) attacker.primed = false;
       // 通常攻撃ではBLAZE自爆なし（v5変更）
 
@@ -5430,7 +5474,7 @@ function applyAction(attacker, defender, action, opt) {
       if (attacker.taunt) { dmg *= 1.3; attacker.taunt = false; }
       let totalDmg = Math.round(dmg * attacker.dmgMod + bonusDmg);
       if (hadQuantum) totalDmg = Math.round(totalDmg * 1.2); // 量子強化：威力+20%（v6.5）
-      if (attacker.passive === 'learning') totalDmg = Math.round(totalDmg * 1.2); // NEXUS-7 属性バフ
+      if (attacker.passive === 'learning') totalDmg = Math.round(totalDmg * 1.3); // NEXUS-7 属性バフ（2026-05-28: ×1.2→×1.3）
       if (attacker.passive === 'learning' && attacker.crowdBonusActive) { totalDmg = Math.round(totalDmg * 1.2); attacker.crowdBonusActive = false; addLog(`🤖 CROWD BONUS！量子増幅+20%！`, 'status'); } // NEXUS-7 CROWD ON FIRE（v6.5）
       if (attacker.passive === 'blaze') totalDmg = Math.round(totalDmg * 1.2);    // BLAZE 属性倍率（2026-05-28: 1.4→1.2 属性連打抑制）
       if (attacker.learned === 'speedatk') { const lm = 2.0; totalDmg = Math.round(totalDmg * lm); attacker.learned = null; attacker.crowdBonusActive = false; } // v6.5: 1.8→2.0
@@ -5488,7 +5532,7 @@ function applyAction(attacker, defender, action, opt) {
       if (attacker.learned === 'guardbk') { const lm = 2.0; dmg *= lm; attacker.learned = null; attacker.crowdBonusActive = false; } // v6.5: 1.8→2.0
       dmg = Math.round(dmg * attacker.dmgMod);
       if (hadQuantum) dmg = Math.round(dmg * 1.2); // 量子強化：威力+20%（v6.5）
-      if (attacker.passive === 'learning') dmg = Math.round(dmg * 1.2); // NEXUS-7 属性バフ
+      if (attacker.passive === 'learning') dmg = Math.round(dmg * 1.3); // NEXUS-7 属性バフ（2026-05-28: ×1.2→×1.3）
       if (attacker.passive === 'learning' && attacker.crowdBonusActive) { dmg = Math.round(dmg * 1.2); attacker.crowdBonusActive = false; addLog(`🤖 CROWD BONUS！量子増幅+20%！`, 'status'); } // NEXUS-7 CROWD ON FIRE（v6.5）
       if (attacker.passive === 'blaze') dmg = Math.round(dmg * 1.2);    // BLAZE 属性倍率（2026-05-28: 1.4→1.2 属性連打抑制）
       const guardbkWasPrimed = attacker.primed;
@@ -5532,7 +5576,7 @@ function applyAction(attacker, defender, action, opt) {
       if (attacker.learned === 'sealatk') { const lm = 2.0; dmg *= lm; attacker.learned = null; attacker.crowdBonusActive = false; } // v6.5: 1.8→2.0
       dmg = Math.round(dmg * attacker.dmgMod);
       if (hadQuantum) dmg = Math.round(dmg * 1.2); // 量子強化：威力+20%（v6.5）
-      if (attacker.passive === 'learning') dmg = Math.round(dmg * 1.2); // NEXUS-7 属性バフ
+      if (attacker.passive === 'learning') dmg = Math.round(dmg * 1.3); // NEXUS-7 属性バフ（2026-05-28: ×1.2→×1.3）
       if (attacker.passive === 'learning' && attacker.crowdBonusActive) { dmg = Math.round(dmg * 1.2); attacker.crowdBonusActive = false; addLog(`🤖 CROWD BONUS！量子増幅+20%！`, 'status'); } // NEXUS-7 CROWD ON FIRE（v6.5）
       if (attacker.passive === 'blaze') dmg = Math.round(dmg * 1.2);    // BLAZE 属性倍率（2026-05-28: 1.4→1.2 属性連打抑制）
       const sealatkWasPrimed = attacker.primed;
@@ -5544,8 +5588,9 @@ function applyAction(attacker, defender, action, opt) {
         if (hit) resolveCounterStanceAfterHit(defender);
         else clearCounterStance(defender);
         if (selfDmg > 0 && defender.hp > 0) {
-          defender.sealTurns = 1;
-          addLog(`${dName}に回復封じ1T！（かすり貫通）`, 'status');
+          const sealDur = (attacker.passive === 'learning') ? 2 : 1; // NEXUS-7：回復封じ持続+1T（2026-05-28追加）
+          defender.sealTurns = sealDur;
+          addLog(`${dName}に回復封じ${sealDur}T！（かすり貫通）`, 'status');
         }
       } else if (defender.shimaiNext) {
         defender.shimaiNext = false;
@@ -5553,8 +5598,9 @@ function applyAction(attacker, defender, action, opt) {
       } else {
         const finalDmg = dealDamage(attacker, defender, dmg, aName, dName);
         if (attacker.passive === 'blaze' && !sealatkWasPrimed) applyBlazeJibaku(attacker, defender, finalDmg, aName, dName);
-        defender.sealTurns = 1;
-        addLog(`${dName}に回復封じ1T！`, 'status');
+        const sealDur = (attacker.passive === 'learning') ? 2 : 1; // NEXUS-7：回復封じ持続+1T（2026-05-28追加）
+        defender.sealTurns = sealDur;
+        addLog(`${dName}に回復封じ${sealDur}T！`, 'status');
         if (defender.passive === 'learning') defender.learned = 'sealatk';
       }
       break;
@@ -5723,7 +5769,7 @@ function applyUnique(attacker, defender, aName, dName) {
   switch(attacker.passive) {
     case 'learning': { // NEXUS-7 量子ビーム
       AudioManager.playSE('nexus_unique');
-      let dmg = 45;
+      let dmg = 45;  // 2026-05-28: 50→45 戻し（強化が逆効果＝読まれて反射悪化のため）
       dmg = applySlowMod(attacker, dmg);
       if (attacker.taunt) { dmg = Math.round(dmg * 1.3); attacker.taunt = false; }
       dmg = Math.round(dmg * attacker.dmgMod);
@@ -5842,9 +5888,9 @@ function applyUnique(attacker, defender, aName, dName) {
       }
       break;
     }
-    case 'blaze': { // BLAZE 爆裂拳（固定45ダメージ）
+    case 'blaze': { // BLAZE 爆裂拳（固定43ダメージ・2026-05-28: 45→43）
       AudioManager.playSE('blaze_unique');
-      let dmg = 45;
+      let dmg = 43;
       dmg = applySlowMod(attacker, dmg);
       if (attacker.taunt) { dmg *= 1.3; attacker.taunt = false; }
       const wasPrimed = attacker.primed;
@@ -5896,12 +5942,12 @@ function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
   // TITAN被ダメ軽減
   if (defender.passive === 'titan' && defender.slow) finalDmg = Math.round(finalDmg * 0.85);
   // NOVA QUEEN HP閾値
-  // NEXUS-7 アドバンスド・ラーニング：相手の固有技被ダメ-20%（v6.4）
-  if (defender.passive === 'learning' && attacker.lastAction === 'unique') finalDmg = Math.round(finalDmg * 0.8);
-  // NOVA QUEEN 瀕死の逆転王: HP40%以下で被ダメ-20%（maxHp可変に追従）
-  if (defender.passive === 'nova' && defender.hp <= Math.floor(defender.maxHp * 0.4)) finalDmg = Math.round(finalDmg * 0.8);
-  // NOVA QUEEN 序盤パッシブ: HP48以上で被ダメ-5%
-  if (defender.passive === 'nova' && defender.hp >= 48) finalDmg = Math.round(finalDmg * 0.95);
+  // NEXUS-7 アドバンスド・ラーニング：相手の固有技被ダメ-30%（2026-05-28: -20%→-30% 装甲強化）
+  if (defender.passive === 'learning' && attacker.lastAction === 'unique') finalDmg = Math.round(finalDmg * 0.7);
+  // NOVA QUEEN 瀕死の逆転王: HP40%以下で被ダメ-25%（maxHp可変に追従）（2026-05-28: -20%→-25% 救済）
+  if (defender.passive === 'nova' && defender.hp <= Math.floor(defender.maxHp * 0.4)) finalDmg = Math.round(finalDmg * 0.75);
+  // NOVA QUEEN 序盤パッシブ: HP48以上で被ダメ-10%（2026-05-28: -5%→-10% 救済）
+  if (defender.passive === 'nova' && defender.hp >= 48) finalDmg = Math.round(finalDmg * 0.90);
   finalDmg = Math.max(0, finalDmg);
   defender.hp -= finalDmg;
   attacker.totalDmgDealt += finalDmg;

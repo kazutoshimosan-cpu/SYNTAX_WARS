@@ -2667,7 +2667,7 @@ const CHARS = {
     moves:{ weak:'クナイ投げ', mid:'鎖鎌', strong:'影斬り', guard:'GUARD', unique:'分身斬り' },
     passive:'shadow', uniqueName:'分身斬り',
     passiveDesc:'絶影：SPEED差30以上で相手の強攻撃を確定回避。通常ダメージ-15%、速度特攻ボーナスはフルで入る。速度差回避でゲージ+25%。2回行動時の2撃目は確定クリティカル。SPEED自然回復なし。',
-    uniqueDesc:'分身斬り：ゲージ35%・影斬り×2.0ダメージ＋次の相手の攻撃を1回無効化（ダメージ・追加効果0）',
+    uniqueDesc:'分身斬り：ゲージ45%・影斬り×2.0ダメージ＋次の相手の攻撃を1回無効化（ダメージ・追加効果0）',
   },
   novaqueen: {
     name:'NOVA QUEEN 🔮', type:'属性型', hp:95, speed:50, gauge:30,
@@ -2707,14 +2707,14 @@ const CHARS = {
   },
   blaze: {
     name:'BLAZE 🔥', type:'爆発型', hp:100, speed:50, gauge:30,
-    dmgMod:1.3, hitMod:0, gaugeIncMod:1.0,
+    dmgMod:1.2, hitMod:0, gaugeIncMod:1.0,
     themeColor:'#ff5500', emoji:'🔥', imgSrc:'assets/image/thumbs/blaze_thumb.jpg',
     posterSrc:'assets/posters/blaze_9x16.png', posterMobileSrc:'assets/posters/mobile/blaze_poster_mobile.jpg',
     catchphrase:'起爆して煽れ　ドカンと決めろ',
-    passiveKeys:'全攻撃+30% ／ 起爆準備で自爆回避＆火力UP',
+    passiveKeys:'全攻撃+20% ／ 起爆準備で自爆回避＆火力UP',
     moves:{ weak:'ファイアボール', mid:'火炎放射', strong:'マグマストライク', guard:'起爆準備', unique:'爆裂拳' },
     passive:'blaze', uniqueName:'爆裂拳',
-    passiveDesc:'エクスプローシブ：全攻撃+30%。属性攻撃は×1.4の専用倍率追加・固有技使用時は確定自爆（与ダメ20%反射、誘爆50%）。起爆準備で自爆回避＆確定クリティカル。',
+    passiveDesc:'エクスプローシブ：全攻撃+20%。属性攻撃は×1.2の専用倍率追加・固有技使用時は確定自爆（与ダメ10%反射、誘爆50%）。起爆準備で自爆回避＆確定クリティカル。',
     uniqueDesc:'爆裂拳：45ダメージ・自爆20%／起爆準備後は58ダメージ＆自爆なし',
   },
 };
@@ -2746,13 +2746,14 @@ function updateSelectPoster(c) {
 /** 固有技のゲージコスト%（BLAZE起爆準備中は0、SHADOW分身斬り35、その他50） */
 function uniqueGaugeCost(s) {
   if (!s) return 50;
-  if (s.passive === 'blaze' && s.primed) return 0;
-  if (s.passive === 'shadow') return 35;
+  // GDD v6 line 157：BLAZE は起爆準備（primed）中の「1回だけ」0%。2回目以降は通常 cost 50。
+  if (s.passive === 'blaze' && s.primed && !s.blazePrimedUsed) return 0;
+  if (s.passive === 'shadow') return 45;
   return 50;
 }
-/** 固有技を選択可能か（BLAZE起爆中はコスト0扱い） */
+/** 固有技を選択可能か（BLAZE起爆中はコスト0扱い・ただし初回のみ） */
 function canUseUnique(s) {
-  return Boolean(s.passive === 'blaze' && s.primed) || s.gauge >= uniqueGaugeCost(s);
+  return Boolean(s.passive === 'blaze' && s.primed && !s.blazePrimedUsed) || s.gauge >= uniqueGaugeCost(s);
 }
 
 // ===== コマンドサブテキスト（効果説明＋【重さ】＝GDD 8-3：初心者向けコマンド説明） =====
@@ -2773,7 +2774,7 @@ const ACTION_SUBTEXT = {
 };
 const UNIQUE_SUBTEXT = {
   learning: '45ダメージ・命中でゲージ+25%＋次ターン属性コスト0 / 量子強化：威力+20%も付与\n【重さ】当てれば次ターンが大きく伸びる',
-  shadow:   '次の攻撃を1回無効化 / ダメージも追加効果もすべて0に\n【重さ】ゲージ35%。相手の大技を1回だけ潰す保険',
+  shadow:   '次の攻撃を1回無効化 / ダメージも追加効果もすべて0に\n【重さ】ゲージ45%。相手の大技を1回だけ潰す保険',
   nova:     '35＋損失HP×0.4ダメージ・相手ゲージ-20% / 属性攻撃1ターン封じ\n【重さ】ゲージ50%。瀕死ほど火力が跳ねる',
   titan:    'HP残量で威力変化・瀕死で最大55ダメージ\n【重さ】残HPテーブル。ガード不可のFAST時は注意',
   lyrax:    '35ダメージ・与ダメの30%をHP吸収\n【重さ】CROWD中は吸収率アップ（キャラボーナス）',
@@ -3385,6 +3386,7 @@ function makeState(charKey, isPlayer) {
     sameStreak: 0,           // 案B：同一行動の連続回数（3連続〜でゲージ獲得×0.7）
     taunt: false,
     primed: false,
+    blazePrimedUsed: false,   // BLAZE：初回起爆（primed×cost0）を消費したか。2回目以降はcost 50（GDD v6 line 157）
     shadowSureHitNext: false, // SHADOW：速度差回避後、次の中/強/カウンターが必中
     learned: null,
     quantum: false,
@@ -4185,7 +4187,8 @@ const EVAL_W = {
   fastShadow: 8, fastTitan: 6,                     // ⑤ FAST（SHADOW＋／TITAN過熱−）
   corrode: 5, seal: 6, primed: 10, learned: 12, quantum: 10, // ⑤ その他キャラ別タグ
   tempoWaste: 12,   // テンポ：空振りカウンター（反射せず）を打った側の損。差ベース評価で見えない無駄睨み合いを罰す（TUNABLE。0で旧挙動と完全一致）
-  finisher: 80,     // 固有技レディネス：ゲージを"何が撃てるか"で評価。固有コストへの近さ×固有威力。投資/逆転型(NOVA星屑砲・NEXUS量子)が多ターン投資を勝ち筋と認識できるようにする（TUNABLE。0で無効。要・体感確定）
+  finisher: 80,     // 固有技発動報酬（nashBuildPayoff側）：uniqueを実際に撃てた当事者だけにキャラ別・HP連動の即時加点を与える（TUNABLE。0で報酬無効）
+  buildup: 12,      // 固有技準備価値（evalState側）：撃てない gauge<cost の時だけready²で評価。撃てる状態は0＝発動報酬に明け渡す。長期投資動機の維持（TUNABLE。0で温存動機なし）
 };
 const EVAL_TERMINAL = 100000;
 
@@ -4220,14 +4223,19 @@ function _uniquePotency(s){
   }
 }
 // キャラ別 finisher 係数：固有技が勝ち筋の"中心"かで増減。NOVA/NEXUS=固有が本体(1.0)／SHADOW・BLAZE=固有は強い一手(中)／LYRA=持久が本体で固有は補助(低)／TITAN=タンク殴りが本体・固有死蔵を防ぐため0。TUNABLE・体感で確定。
-const FINISHER_SCALE = { nova:1.0, learning:1.0, shadow:0.6, blaze:0.5, lyrax:1.0, titan:0.0 };
-// 固有技レディネス 0..~0.75：固有コストへの近さ × 威力 × キャラ別係数。ゲージ温存→必殺解放の多ターン投資を1-ply評価で価値化。
-function _finisherReady(s){
+const FINISHER_SCALE = { nova:1.0, learning:1.15, shadow:0.6, blaze:0.3, lyrax:1.0, titan:0.0 };
+// 固有技準備価値 0..1：撃てない gauge<cost の時だけ ready² で評価（非線形・ゴール直前ほど価値伸び）。
+// 撃てる状態(gauge≥cost)は 0＝発動報酬(nashBuildPayoff側)に明け渡す。これで「保持中毒」を防ぎつつ
+// 長期投資動機(NEXUS：50まで貯めて量子ビーム発動 等)を1-ply評価で維持できる。
+function _finisherBuildup(s){
+  if (!s) return 0;
   const scale = (s.passive in FINISHER_SCALE) ? FINISHER_SCALE[s.passive] : 0.5;
-  if (scale <= 0) return 0;
+  if (scale <= 0) return 0;            // TITAN等の死蔵防止キャラはゲージ温存も価値0
   const cost = uniqueGaugeCost(s);
-  const ready = cost <= 0 ? 1 : Math.max(0, Math.min(1, s.gauge / cost));
-  return scale * ready * (_uniquePotency(s) / 100);
+  if (cost <= 0) return 0;             // BLAZE primed等は既に撃てる
+  const ready = Math.max(0, Math.min(1, s.gauge / cost));
+  if (ready >= 1) return 0;            // 撃てる状態は0（発動報酬に明け渡す）
+  return ready * ready;                // 0..1 非線形
 }
 
 function evalState(me, opp){
@@ -4249,8 +4257,8 @@ function evalState(me, opp){
   if ((opp.passive==='nova'||opp.passive==='titan') && opp.gauge >= 50) s -= EVAL_W.burst * pm;
   // ⑤ キャラ別ステータス（速度の良し悪しもここに畳む）
   s += _statusValue(me, opp) - _statusValue(opp, me);
-  // ④' 固有技レディネス：ゲージを"何が撃てるか"で評価。投資/逆転型が必殺技に向けゲージを温存する多ターン投資を価値化（1-ply近視眼の穴埋め）
-  s += EVAL_W.finisher * (_finisherReady(me) - _finisherReady(opp));
+  // ④' 固有技準備価値：撃てない時(gauge<cost)だけ ready² で長期投資動機を残す。撃てる状態は0で発動報酬(nashBuildPayoff側)に明け渡す。
+  s += EVAL_W.buildup * (_finisherBuildup(me) - _finisherBuildup(opp));
   // ⑥ キルレース：両者瀕死(pm*po)でだけ速度有利が効く。差±20で飽和。同速なら0→④のゲージ差が割る
   const speedEdge = Math.max(-1, Math.min(1, (me.speed - opp.speed) / 20));
   s += EVAL_W.killRace * pm * po * speedEdge;
@@ -4332,6 +4340,14 @@ function nashBuildPayoff(state, whoIsMe) {
   const myMoves = legalMoves(state[whoIsMe]);
   const oppMoves = legalMoves(state[other]);
   const myHp0 = state[whoIsMe].hp, oppHp0 = state[other].hp;
+  // 固有技発動報酬：unique を実際に撃てた時のみ（撃つ意思ではなく実行報酬）。
+  // 行動非依存（i,jループ外）で事前計算。事前にコスト払える状態の場合のみ非ゼロ。
+  // 報酬値は EVAL_W.finisher × FINISHER_SCALE[passive] × (_uniquePotency/100) ＝ HP連動。
+  const meBefore  = state[whoIsMe], oppBefore = state[other];
+  const meCanFire  = canUseUnique(meBefore);
+  const oppCanFire = canUseUnique(oppBefore);
+  const meFireBonus  = meCanFire  ? EVAL_W.finisher * ((FINISHER_SCALE[meBefore.passive]  != null) ? FINISHER_SCALE[meBefore.passive]  : 0.5) * (_uniquePotency(meBefore)  / 100) : 0;
+  const oppFireBonus = oppCanFire ? EVAL_W.finisher * ((FINISHER_SCALE[oppBefore.passive] != null) ? FINISHER_SCALE[oppBefore.passive] : 0.5) * (_uniquePotency(oppBefore) / 100) : 0;
   const Mme = [], Mopp = [];
   for (let i = 0; i < myMoves.length; i++) {
     const rowMe = [], rowOpp = [];
@@ -4349,6 +4365,11 @@ function nashBuildPayoff(state, whoIsMe) {
         // 打った当人だけの損として一般和で計上し、無駄カウンターを抑える（当たるカウンターは無傷）。
         if (myAct  === 'counter' && r[other].hp    >= oppHp0) mePay  -= EVAL_W.tempoWaste;
         if (oppAct === 'counter' && r[whoIsMe].hp  >= myHp0)  oppPay -= EVAL_W.tempoWaste;
+        // 発動報酬：「実際に撃てた」当事者の payoff だけに加点（一般和・反対称崩し）。
+        // applyAction 冒頭の `if(hp<=0) return` で先手キル時は lastAction が更新されない＝
+        // r[*].lastAction === 'unique' チェックで先手キルキャンセル時の誤付与を除外。
+        if (myAct  === 'unique' && meCanFire  && r[whoIsMe].lastAction === 'unique') mePay  += meFireBonus;
+        if (oppAct === 'unique' && oppCanFire && r[other].lastAction   === 'unique') oppPay += oppFireBonus;
         meSum += mePay; oppSum += oppPay;
       }
       rowMe.push(meSum / NASH_SAMPLES);
@@ -5411,7 +5432,7 @@ function applyAction(attacker, defender, action, opt) {
       if (hadQuantum) totalDmg = Math.round(totalDmg * 1.2); // 量子強化：威力+20%（v6.5）
       if (attacker.passive === 'learning') totalDmg = Math.round(totalDmg * 1.2); // NEXUS-7 属性バフ
       if (attacker.passive === 'learning' && attacker.crowdBonusActive) { totalDmg = Math.round(totalDmg * 1.2); attacker.crowdBonusActive = false; addLog(`🤖 CROWD BONUS！量子増幅+20%！`, 'status'); } // NEXUS-7 CROWD ON FIRE（v6.5）
-      if (attacker.passive === 'blaze') totalDmg = Math.round(totalDmg * 1.4);    // BLAZE 属性倍率
+      if (attacker.passive === 'blaze') totalDmg = Math.round(totalDmg * 1.2);    // BLAZE 属性倍率（2026-05-28: 1.4→1.2 属性連打抑制）
       if (attacker.learned === 'speedatk') { const lm = 2.0; totalDmg = Math.round(totalDmg * lm); attacker.learned = null; attacker.crowdBonusActive = false; } // v6.5: 1.8→2.0
       const speedatkWasPrimed = attacker.primed;
       if (attacker.primed) attacker.primed = false;
@@ -5469,7 +5490,7 @@ function applyAction(attacker, defender, action, opt) {
       if (hadQuantum) dmg = Math.round(dmg * 1.2); // 量子強化：威力+20%（v6.5）
       if (attacker.passive === 'learning') dmg = Math.round(dmg * 1.2); // NEXUS-7 属性バフ
       if (attacker.passive === 'learning' && attacker.crowdBonusActive) { dmg = Math.round(dmg * 1.2); attacker.crowdBonusActive = false; addLog(`🤖 CROWD BONUS！量子増幅+20%！`, 'status'); } // NEXUS-7 CROWD ON FIRE（v6.5）
-      if (attacker.passive === 'blaze') dmg = Math.round(dmg * 1.4);    // BLAZE 属性倍率
+      if (attacker.passive === 'blaze') dmg = Math.round(dmg * 1.2);    // BLAZE 属性倍率（2026-05-28: 1.4→1.2 属性連打抑制）
       const guardbkWasPrimed = attacker.primed;
       if (attacker.primed) attacker.primed = false;
       if (defender.guardThisTurn) {
@@ -5513,7 +5534,7 @@ function applyAction(attacker, defender, action, opt) {
       if (hadQuantum) dmg = Math.round(dmg * 1.2); // 量子強化：威力+20%（v6.5）
       if (attacker.passive === 'learning') dmg = Math.round(dmg * 1.2); // NEXUS-7 属性バフ
       if (attacker.passive === 'learning' && attacker.crowdBonusActive) { dmg = Math.round(dmg * 1.2); attacker.crowdBonusActive = false; addLog(`🤖 CROWD BONUS！量子増幅+20%！`, 'status'); } // NEXUS-7 CROWD ON FIRE（v6.5）
-      if (attacker.passive === 'blaze') dmg = Math.round(dmg * 1.4);    // BLAZE 属性倍率
+      if (attacker.passive === 'blaze') dmg = Math.round(dmg * 1.2);    // BLAZE 属性倍率（2026-05-28: 1.4→1.2 属性連打抑制）
       const sealatkWasPrimed = attacker.primed;
       if (attacker.primed) attacker.primed = false;
       addLog(`${aName}の回復封じ！`, '');
@@ -5617,8 +5638,10 @@ function applyAction(attacker, defender, action, opt) {
         addGauge(attacker, 8);
       }
       // primedはapplyUnique内（BLAZEの爆裂拳）で参照するのでここでは消さない
+      const blazePrimedFireUnique = attacker.passive === 'blaze' && attacker.primed;
       applyUnique(attacker, defender, aName, dName);
       if (attacker.primed) attacker.primed = false; // applyUnique後にリセット
+      if (blazePrimedFireUnique) attacker.blazePrimedUsed = true; // 初回 cost 0 を消費（GDD v6 line 157）
       break;
     }
   }

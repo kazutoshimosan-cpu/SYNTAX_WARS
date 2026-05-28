@@ -4185,6 +4185,7 @@ const EVAL_W = {
   fastShadow: 8, fastTitan: 6,                     // ⑤ FAST（SHADOW＋／TITAN過熱−）
   corrode: 5, seal: 6, primed: 10, learned: 12, quantum: 10, // ⑤ その他キャラ別タグ
   tempoWaste: 12,   // テンポ：空振りカウンター（反射せず）を打った側の損。差ベース評価で見えない無駄睨み合いを罰す（TUNABLE。0で旧挙動と完全一致）
+  finisher: 80,     // 固有技レディネス：ゲージを"何が撃てるか"で評価。固有コストへの近さ×固有威力。投資/逆転型(NOVA星屑砲・NEXUS量子)が多ターン投資を勝ち筋と認識できるようにする（TUNABLE。0で無効。要・体感確定）
 };
 const EVAL_TERMINAL = 100000;
 
@@ -4203,6 +4204,30 @@ function _statusValue(s, opp){
   if (s.learned) v += EVAL_W.learned;
   if (s.quantum) v += EVAL_W.quantum;
   return v;
+}
+
+// 固有技の概算インパクト（HP依存のものは現HPで評価）。レディネス項の威力スケール。
+function _uniquePotency(s){
+  const lost = Math.max(0, s.maxHp - s.hp);
+  switch(s.passive){
+    case 'nova':     return 35 + lost*0.4;                      // 星屑砲：失HPで伸びる（瀕死で最大）
+    case 'titan':    return s.hp>=50 ? 30 : (s.hp>=30 ? 45 : 55); // 超電磁砲：低HPで増
+    case 'shadow':   return 44;                                 // 分身斬り(影斬り×2)＋無敵
+    case 'learning': return 45;                                 // 量子ビーム＋quantum起点
+    case 'lyrax':    return 35;                                 // 細胞再生＋吸収
+    case 'blaze':    return 35;                                 // 爆裂拳
+    default:         return 35;
+  }
+}
+// キャラ別 finisher 係数：固有技が勝ち筋の"中心"かで増減。NOVA/NEXUS=固有が本体(1.0)／SHADOW・BLAZE=固有は強い一手(中)／LYRA=持久が本体で固有は補助(低)／TITAN=タンク殴りが本体・固有死蔵を防ぐため0。TUNABLE・体感で確定。
+const FINISHER_SCALE = { nova:1.0, learning:1.0, shadow:0.6, blaze:0.5, lyrax:1.0, titan:0.0 };
+// 固有技レディネス 0..~0.75：固有コストへの近さ × 威力 × キャラ別係数。ゲージ温存→必殺解放の多ターン投資を1-ply評価で価値化。
+function _finisherReady(s){
+  const scale = (s.passive in FINISHER_SCALE) ? FINISHER_SCALE[s.passive] : 0.5;
+  if (scale <= 0) return 0;
+  const cost = uniqueGaugeCost(s);
+  const ready = cost <= 0 ? 1 : Math.max(0, Math.min(1, s.gauge / cost));
+  return scale * ready * (_uniquePotency(s) / 100);
 }
 
 function evalState(me, opp){
@@ -4224,6 +4249,8 @@ function evalState(me, opp){
   if ((opp.passive==='nova'||opp.passive==='titan') && opp.gauge >= 50) s -= EVAL_W.burst * pm;
   // ⑤ キャラ別ステータス（速度の良し悪しもここに畳む）
   s += _statusValue(me, opp) - _statusValue(opp, me);
+  // ④' 固有技レディネス：ゲージを"何が撃てるか"で評価。投資/逆転型が必殺技に向けゲージを温存する多ターン投資を価値化（1-ply近視眼の穴埋め）
+  s += EVAL_W.finisher * (_finisherReady(me) - _finisherReady(opp));
   // ⑥ キルレース：両者瀕死(pm*po)でだけ速度有利が効く。差±20で飽和。同速なら0→④のゲージ差が割る
   const speedEdge = Math.max(-1, Math.min(1, (me.speed - opp.speed) / 20));
   s += EVAL_W.killRace * pm * po * speedEdge;

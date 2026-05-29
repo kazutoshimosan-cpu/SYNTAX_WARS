@@ -4418,6 +4418,25 @@ function _strategySelfTest(){
     ck('axis_scale_zero_off', approx(_axisStrategy(meStrong, oppWeak), 0));
     window.__nashTune({ axisScale: (_save==null?25:_save) });
   }
+  // --- nashShape（キャップ/リーサル/温度）の検証（Task 3 で実装） ---
+  const sum1 = (a) => Math.abs(a.reduce((x,y)=>x+y,0) - 1) < 1e-6;
+  // ① キャップ：最大手が上限(0.8)を超えない／合計1
+  window.__nashTune({ mainCap: 0.8, temp: 1.0 });
+  const capped = nashShape([0.95, 0.03, 0.02], [false,false,false]);
+  ck('cap_max_le_080', Math.max(...capped) <= 0.8 + 1e-9);
+  ck('cap_sum_1', sum1(capped));
+  // ② リーサル例外：確殺手があればキャップしない（撃ち切る）
+  const lethal = nashShape([0.95, 0.03, 0.02], [true,false,false]);
+  ck('lethal_bypass_cap', Math.abs(lethal[0] - 0.95) < 1e-9);
+  // ③ 温度=1 は恒等／温度>1 は平坦化（最大値が下がる）
+  const id = nashShape([0.7,0.2,0.1], [false,false,false]);
+  ck('temp1_identity', Math.abs(id[0]-0.7) < 1e-9 && sum1(id));
+  window.__nashTune({ temp: 2.0 });
+  const flat = nashShape([0.7,0.2,0.1], [false,false,false]);
+  ck('temp_hi_flattens', Math.max(...flat) < 0.7 && sum1(flat));
+  window.__nashTune({ temp: 1.0, mainCap: 0.8 }); // 後始末
+  // 単一手はそのまま
+  ck('single_move_passthrough', Math.abs(nashShape([1.0],[false])[0] - 1.0) < 1e-9);
   return { pass: checks.every(c=>c.pass), checks };
 }
 if (typeof window !== 'undefined') window._strategySelfTest = _strategySelfTest;
@@ -4467,15 +4486,19 @@ function nashBuildPayoff(state, whoIsMe) {
   const meFireBonus  = meCanFire  ? EVAL_W.finisher * ((FINISHER_SCALE[meBefore.passive]  != null) ? FINISHER_SCALE[meBefore.passive]  : 0.5) * (_uniquePotency(meBefore)  / 100) : 0;
   const oppFireBonus = oppCanFire ? EVAL_W.finisher * ((FINISHER_SCALE[oppBefore.passive] != null) ? FINISHER_SCALE[oppBefore.passive] : 0.5) * (_uniquePotency(oppBefore) / 100) : 0;
   const Mme = [], Mopp = [];
+  const lethalByMove = []; // 各 myMove が「相手の全合法手・全サンプルで相手HP≤0」＝確殺か
   for (let i = 0; i < myMoves.length; i++) {
     const rowMe = [], rowOpp = [];
+    let rowLethal = true; // この手が全 oppMove に対し確殺なら true
     for (let j = 0; j < oppMoves.length; j++) {
       const myAct = myMoves[i], oppAct = oppMoves[j];
       const pAct = (whoIsMe === 'p') ? myAct : oppAct;
       const cAct = (whoIsMe === 'c') ? myAct : oppAct;
       let meSum = 0, oppSum = 0;
+      let cellKillAll = true; // このセルの全サンプルで相手が死ぬなら true
       for (let k = 0; k < NASH_SAMPLES; k++) {
         const r = simulateTurn(state, pAct, cAct, Math.random);
+        if (r[other].hp > 0) cellKillAll = false;
         const base = evalState(r[whoIsMe], r[other]); // 反対称：相手視点は -base
         let mePay = base, oppPay = -base;
         // 二軸戦略（一般和補正・各自の AXIS_W で評価）：finisher/tempo と同じ流儀で payoff 側に加算。
@@ -4496,10 +4519,12 @@ function nashBuildPayoff(state, whoIsMe) {
       }
       rowMe.push(meSum / NASH_SAMPLES);
       rowOpp.push(oppSum / NASH_SAMPLES);
+      if (!cellKillAll) rowLethal = false;
     }
     Mme.push(rowMe); Mopp.push(rowOpp);
+    lethalByMove.push(rowLethal);
   }
-  return { Mme, Mopp, myMoves, oppMoves };
+  return { Mme, Mopp, myMoves, oppMoves, lethalByMove };
 }
 
 // 一般和2人行列ゲームを regret-matching（CFR系）で解き、自分の平均戦略（混合戦略）を返す。
@@ -4535,12 +4560,47 @@ function nashSample(probs, moves) {
   return moves[moves.length - 1];
 }
 
+// 主筋キャップ（どの1手も約この上限を超えない＝読み合いの枝を残す）と難易度温度（DEV: __nashTune）。
+let NASH_MAIN_CAP = 0.80; // 0.5以上であること（1パス再配分で上限保証が成立する前提）
+let NASH_TEMP = 1.0;      // 1.0=恒等／>1平坦化（弱く・倒しやすい）／<1鋭く（最上位）
+
+// 混合戦略を「強いが毎回同じではない」形へ整える。①温度→②リーサル例外→③主筋キャップ の順。
+function nashShape(probs, lethalByMove){
+  const n = probs.length;
+  if (n <= 1) return probs.slice();
+  let p = probs.slice();
+  // ① 難易度温度：p_i^(1/T) → 正規化
+  if (NASH_TEMP !== 1.0 && NASH_TEMP > 0){
+    const inv = 1 / NASH_TEMP;
+    p = p.map(x => Math.pow(Math.max(0, x), inv));
+    const t = p.reduce((a,b)=>a+b,0);
+    p = t > 0 ? p.map(x => x / t) : probs.slice();
+  }
+  // ② リーサル例外：確殺手があればキャップしない（変化のために勝ちを取り逃がさない）
+  if (Array.isArray(lethalByMove) && lethalByMove.some(Boolean)) return p;
+  // ③ 主筋キャップ：最大手が上限超なら上限へ丸め、超過分を残り手へ比例配分
+  const cap = NASH_MAIN_CAP;
+  let idx = 0; for (let i = 1; i < n; i++) if (p[i] > p[idx]) idx = i;
+  if (p[idx] <= cap) return p;
+  const excess = p[idx] - cap;
+  const restTot = 1 - p[idx];
+  p[idx] = cap;
+  if (restTot > 1e-12){
+    for (let i = 0; i < n; i++) if (i !== idx) p[i] += excess * (p[i] / restTot);
+  } else {
+    for (let i = 0; i < n; i++) if (i !== idx) p[i] = excess / (n - 1);
+  }
+  return p;
+}
+if (typeof window !== 'undefined') window.nashShape = nashShape;
+
 // 実戦HARD用：現盤面からナッシュ混合戦略を解いて1手を確率抽選で返す。
 function nashChooseAction(whoIsMe) {
   const state = cloneBattleState();
   const built = nashBuildPayoff(state, whoIsMe);
   if (!built.myMoves.length) return 'weak';
-  return nashSample(nashSolve(built.Mme, built.Mopp, NASH_ITERS), built.myMoves);
+  const probs = nashShape(nashSolve(built.Mme, built.Mopp, NASH_ITERS), built.lethalByMove);
+  return nashSample(probs, built.myMoves);
 }
 if (typeof window !== 'undefined') window.nashChooseAction = nashChooseAction;
 
@@ -4549,7 +4609,7 @@ function nashDebug(whoIsMe) {
   whoIsMe = whoIsMe || 'c';
   const state = cloneBattleState();
   const built = nashBuildPayoff(state, whoIsMe);
-  const probs = nashSolve(built.Mme, built.Mopp, NASH_ITERS);
+  const probs = nashShape(nashSolve(built.Mme, built.Mopp, NASH_ITERS), built.lethalByMove);
   const mix = built.myMoves.map((a, i) => ({ act: a, p: Math.round(probs[i] * 1000) / 10 }))
     .filter(x => x.p >= 0.5).sort((a, b) => b.p - a.p);
   return { whoIsMe, mix, myMoves: built.myMoves, oppMoves: built.oppMoves };

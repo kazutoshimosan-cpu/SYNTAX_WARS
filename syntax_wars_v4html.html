@@ -2695,7 +2695,7 @@ const CHARS = {
   },
   lyrax: {
     name:'LYRA-X 🧬', type:'デバフ型', hp:100, speed:50, gauge:30,
-    dmgMod:0.9, hitMod:0, gaugeIncMod:0.8,
+    dmgMod:0.9, hitMod:0, gaugeIncMod:1.0,
     themeColor:'#39ff14', emoji:'🧬', imgSrc:'assets/image/thumbs/lyra_thumb.jpg',
     posterSrc:'assets/posters/lyra_9x16.png', posterMobileSrc:'assets/posters/mobile/lyra_poster_mobile.jpg',
     catchphrase:'slowで腐食　持久で削れ',
@@ -2744,7 +2744,7 @@ function updateSelectPoster(c) {
 }
 
 /** 固有技のゲージコスト%（BLAZE起爆準備中は0、SHADOW分身斬り45、NOVA瀕死で軽減、その他50） */
-function uniqueGaugeCost(s) {
+function uniqueGaugeCost(s, opp) {
   if (!s) return 50;
   // GDD v6 line 157：BLAZE は起爆準備（primed）中の「1回だけ」0%。2回目以降は通常 cost 50。
   if (s.passive === 'blaze' && s.primed && !s.blazePrimedUsed) return 0;
@@ -2755,11 +2755,20 @@ function uniqueGaugeCost(s) {
     if (s.hp <= Math.floor(s.maxHp * 0.2)) return 20;
     if (s.hp <= Math.floor(s.maxHp * 0.4)) return 30;
   }
+  // TITAN（撃つ＋勝率中立・2026-05-30）：超電磁砲は瀕死ほど強いカムバック技だが、到達ゲージ天井(~40)に cost50 が永遠に届かず死蔵していた。
+  // 自HPで段階化＝瀕死ほど撃ちやすく（NOVA式）。実ダメ(30/45/55)は不変。撃てる分の火力増は通常 dmgMod を下げて総合勝率を中立に保つ（別途調整）。
+  if (s.passive === 'titan') {
+    if (s.hp <= Math.floor(s.maxHp * 0.3)) return 25;
+    if (s.hp <= Math.floor(s.maxHp * 0.5)) return 35;
+  }
+  // LYRA（option B改・2026-05-30）：勝ち筋＝拘束（相手SLOW）が立った時だけ細胞再生を撃ちやすく。cost30＝到達天井(~38)の下に置き実際に撃てるように（40では届かず不発だった）。
+  // 相手情報(opp)を渡された時だけ適用。未指定の呼び出しは従来どおり cost 50（安全側＝割引が出ないだけ）。
+  if (s.passive === 'lyrax' && opp && opp.slow) return 30;
   return 50;
 }
-/** 固有技を選択可能か（BLAZE起爆中はコスト0扱い・ただし初回のみ） */
-function canUseUnique(s) {
-  return Boolean(s.passive === 'blaze' && s.primed && !s.blazePrimedUsed) || s.gauge >= uniqueGaugeCost(s);
+/** 固有技を選択可能か（BLAZE起爆中はコスト0扱い・ただし初回のみ）。opp は LYRA の状況依存コスト判定用（省略可）。 */
+function canUseUnique(s, opp) {
+  return Boolean(s.passive === 'blaze' && s.primed && !s.blazePrimedUsed) || s.gauge >= uniqueGaugeCost(s, opp);
 }
 
 // ===== コマンドサブテキスト（効果説明＋【重さ】＝GDD 8-3：初心者向けコマンド説明） =====
@@ -4220,16 +4229,19 @@ function _uniquePotency(s){
   const lost = Math.max(0, s.maxHp - s.hp);
   switch(s.passive){
     case 'nova':     return 35 + lost*0.4;                      // 星屑砲：失HPで伸びる（瀕死で最大）
-    case 'titan':    return s.hp>=50 ? 30 : (s.hp>=30 ? 45 : 55); // 超電磁砲：低HPで増
+    case 'titan':    return 30 + lost*0.25;                     // 超電磁砲：失HPで線形に増（中盤でも撃つ価値が出るよう平準化＝time-mismatch解消）
     case 'shadow':   return 44;                                 // 分身斬り(影斬り×2)＋無敵
     case 'learning': return 45;                                 // 量子ビーム＋quantum起点
-    case 'lyrax':    return 35;                                 // 細胞再生＋吸収
+    case 'lyrax':    return 35 + lost*0.4;                      // 細胞再生＋吸収：失HPで伸びる（傷ついた時ほど吸収が活きる＝低HPで撃つ動機。実ダメは不変・評価専用）
     case 'blaze':    return 35;                                 // 爆裂拳
     default:         return 35;
   }
 }
-// キャラ別 finisher 係数：固有技が勝ち筋の"中心"かで増減。NOVA/NEXUS=固有が本体(1.0)／SHADOW・BLAZE=固有は強い一手(中)／LYRA=持久が本体で固有は補助(低)／TITAN=タンク殴りが本体・固有死蔵を防ぐため0。TUNABLE・体感で確定。
-const FINISHER_SCALE = { nova:1.0, learning:1.15, shadow:0.6, blaze:0.3, lyrax:1.0, titan:0.0 };
+// キャラ別 finisher 係数：固有技が勝ち筋の"中心"かで増減。NOVA/NEXUS=固有が本体(1.0)／SHADOW・BLAZE=固有は強い一手(中)／LYRA=持久が本体で固有は補助(中)／TITAN=タンク殴りが本体だが瀕死で超電磁砲を撃つのが勝ち筋(中)。TUNABLE・体感で確定。
+const FINISHER_SCALE = { nova:1.0, learning:1.15, shadow:0.6, blaze:0.3, lyrax:1.0, titan:0.70 };
+// TITAN 到達支援係数（option A）：撃てない時(gauge<50)だけ「相手瀕死×ゲージ接近」で超電磁砲到達を後押し。
+// <1 で到達時 burst(15) を超えない＝接近価値 < 発動価値の順序を保つ（溜め込み罠の回避）。相手健康時は po≈0 で平時無害。TUNABLE。
+let TITAN_REACH_K = 0.6;
 // 二軸戦略の重み（passive キー）：a=自分の勝ち筋促進／b=相手の勝ち筋抑制。FINISHER_SCALE と同じ作り。
 // 設計書 §6 確定値（TUNABLE・6×6マトリクスを見ながら調整）。
 const AXIS_W = {
@@ -4243,11 +4255,11 @@ const AXIS_W = {
 // 固有技準備価値 0..1：撃てない gauge<cost の時だけ ready² で評価（非線形・ゴール直前ほど価値伸び）。
 // 撃てる状態(gauge≥cost)は 0＝発動報酬(nashBuildPayoff側)に明け渡す。これで「保持中毒」を防ぎつつ
 // 長期投資動機(NEXUS：50まで貯めて量子ビーム発動 等)を1-ply評価で維持できる。
-function _finisherBuildup(s){
+function _finisherBuildup(s, opp){
   if (!s) return 0;
   const scale = (s.passive in FINISHER_SCALE) ? FINISHER_SCALE[s.passive] : 0.5;
   if (scale <= 0) return 0;            // TITAN等の死蔵防止キャラはゲージ温存も価値0
-  const cost = uniqueGaugeCost(s);
+  const cost = uniqueGaugeCost(s, opp);
   if (cost <= 0) return 0;             // BLAZE primed等は既に撃てる
   const ready = Math.max(0, Math.min(1, s.gauge / cost));
   if (ready >= 1) return 0;            // 撃てる状態は0（発動報酬に明け渡す）
@@ -4298,6 +4310,12 @@ function _axisStrategy(me, opp){
   return AXIS_SCALE * (aw.a * winProgress(me, opp) - aw.b * winProgress(opp, me));
 }
 
+// TITAN 到達支援（純粋・テスト可能）：撃てない時(gauge<50)だけ EVAL_W.burst×相手瀕死(_prox)×ゲージ接近×K。
+// 非TITAN・撃てる状態(gauge≥50)・相手健康 のいずれかで 0。係数Kは到達時 burst を超えない範囲（<1）。
+function _titanReach(s, opp){
+  if (!s || s.passive !== 'titan' || s.gauge >= 50) return 0;
+  return EVAL_W.burst * _prox(opp) * (s.gauge / 50) * TITAN_REACH_K;
+}
 function evalState(me, opp){
   // 終局（このエンジンは相互KOがほぼ起きない＝両者0は念のため）
   const meDead = me.hp <= 0, oppDead = opp.hp <= 0;
@@ -4315,10 +4333,13 @@ function evalState(me, opp){
   // ④ NOVA/TITANの決め筋＝相手が低HPのとき仕留めうる遠いキル脅威
   if ((me.passive==='nova' ||me.passive==='titan')  && me.gauge  >= 50) s += EVAL_W.burst * po;
   if ((opp.passive==='nova'||opp.passive==='titan') && opp.gauge >= 50) s -= EVAL_W.burst * pm;
+  // TITAN 到達支援（option A）：撃てない時(gauge<50)だけ、相手瀕死×ゲージ接近で「貯めて超電磁砲で仕留める」を後押し。
+  // 相手が健康なら _prox(opp)≈0 → 平時は無害（要塞スタンスの読み筋 winProgress は不変のまま）。係数<1 で到達時 burst を超えない。
+  s += _titanReach(me, opp) - _titanReach(opp, me);
   // ⑤ キャラ別ステータス（速度の良し悪しもここに畳む）
   s += _statusValue(me, opp) - _statusValue(opp, me);
   // ④' 固有技準備価値：撃てない時(gauge<cost)だけ ready² で長期投資動機を残す。撃てる状態は0で発動報酬(nashBuildPayoff側)に明け渡す。
-  s += EVAL_W.buildup * (_finisherBuildup(me) - _finisherBuildup(opp));
+  s += EVAL_W.buildup * (_finisherBuildup(me, opp) - _finisherBuildup(opp, me));
   // ⑥ キルレース：両者瀕死(pm*po)でだけ速度有利が効く。差±20で飽和。同速なら0→④のゲージ差が割る
   const speedEdge = Math.max(-1, Math.min(1, (me.speed - opp.speed) / 20));
   s += EVAL_W.killRace * pm * po * speedEdge;
@@ -4405,6 +4426,37 @@ function _strategySelfTest(){
   let safe = true;
   try { winProgress({passive:'???'}, {}); winProgress(S({passive:'nova'}), S({})); } catch(e){ safe = false; }
   ck('no_throw_on_missing', safe);
+  // --- 固有技発動報酬の不変条件（option A：勝ち筋＝固有技を撃たせる） ---
+  // TITAN：瀕死で超電磁砲を撃つのが勝ち筋＝発動報酬が有効(>0)であること（係数0への回帰を防ぐ）
+  ck('titan_finisher_reward_on', FINISHER_SCALE.titan > 0);
+  // LYRA：吸収は傷ついた時ほど活きる＝potency は低HP>満タン（HP単調）。満タン発射事故を抑える土台
+  ck('lyra_potency_hp_monotonic', _uniquePotency(S({passive:'lyrax',hp:20,maxHp:100})) > _uniquePotency(S({passive:'lyrax',hp:100,maxHp:100})));
+  // TITAN：potency も低HPで増（瀕死で最大）＝低HP発火が報酬上も有利になる
+  ck('titan_potency_hp_monotonic', _uniquePotency(S({passive:'titan',hp:20,maxHp:100})) > _uniquePotency(S({passive:'titan',hp:100,maxHp:100})));
+  // --- LYRA 状況付きコスト（option B改・2026-05-30：相手SLOW＝拘束が立った時だけ細胞再生 cost 30・到達天井~38の下／実ダメ不変） ---
+  ck('lyra_cost_slow_30',   uniqueGaugeCost(S({passive:'lyrax',gauge:0}), S({slow:true}))  === 30); // 拘束中は割引(到達域)
+  ck('lyra_cost_noslow_50', uniqueGaugeCost(S({passive:'lyrax',gauge:0}), S({slow:false})) === 50); // 非拘束は据置
+  ck('lyra_cost_no_opp_50', uniqueGaugeCost(S({passive:'lyrax',gauge:0}))                  === 50); // opp未指定は安全側(割引なし)
+  ck('lyra_canfire_slow_at30',    canUseUnique(S({passive:'lyrax',gauge:30}), S({slow:true}))  === true);  // gauge30＋拘束で撃てる
+  ck('lyra_cantfire_noslow_at30', canUseUnique(S({passive:'lyrax',gauge:30}), S({slow:false})) === false); // 非拘束では gauge30 で撃てない
+  ck('lyra_buildup_firable_zero', approx(_finisherBuildup(S({passive:'lyrax',gauge:30}), S({slow:true})), 0)); // 撃てる状態の buildup は 0（発動報酬に明け渡す）
+  // --- TITAN 状況付きコスト（撃つ＋勝率中立・2026-05-30：自HPで段階化＝瀕死ほど超電磁砲を撃ちやすく／実ダメ不変） ---
+  ck('titan_cost_full_50',     uniqueGaugeCost(S({passive:'titan',gauge:0,hp:100,maxHp:100})) === 50); // 満HPは据置
+  ck('titan_cost_mid_35',      uniqueGaugeCost(S({passive:'titan',gauge:0,hp:50,maxHp:100}))  === 35); // HP50%以下で35
+  ck('titan_cost_low_25',      uniqueGaugeCost(S({passive:'titan',gauge:0,hp:30,maxHp:100}))  === 25); // HP30%以下で25
+  ck('titan_canfire_low_at35', canUseUnique(S({passive:'titan',gauge:35,hp:30,maxHp:100}))    === true); // 瀕死＋gauge35で撃てる
+  // --- TITAN 到達支援 _titanReach の検証（option A：撃てない時だけ瀕死の相手へ接近を後押し） ---
+  const trDying   = _titanReach(S({passive:'titan',gauge:45}), S({hp:1,maxHp:100}));    // 相手瀕死
+  const trHealthy = _titanReach(S({passive:'titan',gauge:45}), S({hp:100,maxHp:100}));  // 相手健康
+  ck('titan_reach_dying_positive', trDying > 0);                 // 仕留め盤面で接近を評価
+  ck('titan_reach_healthy_zero', approx(trHealthy, 0));          // 平時(_prox=0)は無害＝要塞読み筋を歪めない
+  ck('titan_reach_gauge_monotonic',                              // ゲージが多いほど接近価値大（貯める動機）
+     trDying > _titanReach(S({passive:'titan',gauge:20}), S({hp:1,maxHp:100})));
+  ck('titan_reach_below_burst',                                  // 接近価値 < 到達時 burst（溜め込み罠回避：撃つ方が得）
+     _titanReach(S({passive:'titan',gauge:49}), S({hp:0,maxHp:100})) < EVAL_W.burst);
+  ck('titan_reach_offstate_zero',                                // 非TITAN・撃てる状態は0
+     approx(_titanReach(S({passive:'learning',gauge:45}), S({hp:1,maxHp:100})), 0) &&
+     approx(_titanReach(S({passive:'titan',gauge:50}),    S({hp:1,maxHp:100})), 0));
   // --- 二軸項 _axisStrategy の検証 ---
   // 自分の勝ち筋だけが進む盤面：axis(me,opp) は正
   const meStrong = S({passive:'titan', slow:true, fast:false, hp:100, maxHp:100});
@@ -4443,7 +4495,7 @@ if (typeof window !== 'undefined') window._strategySelfTest = _strategySelfTest;
 
 // ===== Nash CPU Phase③: 利得マトリクス＋regret-matching混合戦略 =====
 // プレイヤーが選べる手と完全一致の合法手判定（ボタン無効化ロジックを抽出・CPU都合の枝刈りは混ぜない）。
-function isActionLegal(s, action) {
+function isActionLegal(s, action, opp) {
   switch (action) {
     case 'weak': case 'mid': case 'strong': case 'guard': case 'idle': return true;
     case 'speedatk': case 'guardbk': case 'sealatk': {
@@ -4460,12 +4512,12 @@ function isActionLegal(s, action) {
     case 'heal': return s.gauge >= 30 && (s.sealTurns || 0) === 0;
     case 'taunt': return s.gauge >= 30 && (s.sealTurns || 0) === 0;
     case 'overclock': return s.gauge >= 100;
-    case 'unique': return canUseUnique(s);
+    case 'unique': return canUseUnique(s, opp);
     default: return false;
   }
 }
 const NASH_ACTIONS = ['weak','mid','strong','guard','counter','speedatk','guardbk','sealatk','accel','slow','heal','taunt','overclock','unique'];
-function legalMoves(s) { return NASH_ACTIONS.filter(a => isActionLegal(s, a)); }
+function legalMoves(s, opp) { return NASH_ACTIONS.filter(a => isActionLegal(s, a, opp)); }
 
 const NASH_SAMPLES = 12;  // 各セルのモンテカルロ試行数（TUNABLE：重ければ減らす）
 const NASH_ITERS = 600;   // regret-matching 反復回数
@@ -4474,15 +4526,15 @@ const NASH_ITERS = 600;   // regret-matching 反復回数
 // 一般和：自分視点 Mme と相手視点 Mopp を別々に返す（テンポ罰でゼロサムが崩れるため）。
 function nashBuildPayoff(state, whoIsMe) {
   const other = (whoIsMe === 'c') ? 'p' : 'c';
-  const myMoves = legalMoves(state[whoIsMe]);
-  const oppMoves = legalMoves(state[other]);
+  const myMoves = legalMoves(state[whoIsMe], state[other]);
+  const oppMoves = legalMoves(state[other], state[whoIsMe]);
   const myHp0 = state[whoIsMe].hp, oppHp0 = state[other].hp;
   // 固有技発動報酬：unique を実際に撃てた時のみ（撃つ意思ではなく実行報酬）。
   // 行動非依存（i,jループ外）で事前計算。事前にコスト払える状態の場合のみ非ゼロ。
   // 報酬値は EVAL_W.finisher × FINISHER_SCALE[passive] × (_uniquePotency/100) ＝ HP連動。
   const meBefore  = state[whoIsMe], oppBefore = state[other];
-  const meCanFire  = canUseUnique(meBefore);
-  const oppCanFire = canUseUnique(oppBefore);
+  const meCanFire  = canUseUnique(meBefore, oppBefore);
+  const oppCanFire = canUseUnique(oppBefore, meBefore);
   const meFireBonus  = meCanFire  ? EVAL_W.finisher * ((FINISHER_SCALE[meBefore.passive]  != null) ? FINISHER_SCALE[meBefore.passive]  : 0.5) * (_uniquePotency(meBefore)  / 100) : 0;
   const oppFireBonus = oppCanFire ? EVAL_W.finisher * ((FINISHER_SCALE[oppBefore.passive] != null) ? FINISHER_SCALE[oppBefore.passive] : 0.5) * (_uniquePotency(oppBefore) / 100) : 0;
   const Mme = [], Mopp = [];
@@ -4903,14 +4955,14 @@ function _renderLogBar() {
 }
 
 // ===== ボタン更新 =====
-function updateButtons(s = pState) {
+function updateButtons(s = pState, opp = (s === pState ? cState : pState)) {
   document.getElementById('lbl-weak').textContent = s.moves.weak;
   document.getElementById('lbl-mid').textContent = s.moves.mid;
   document.getElementById('lbl-strong').textContent = s.moves.strong;
   document.getElementById('lbl-guard').textContent = s.moves.guard;
   document.getElementById('btn-unique-name').textContent = s.uniqueName;
-  // 固有技コスト表示：BLAZE起爆準備中0%、SHADOW35%、他50%
-  document.getElementById('cost-unique').textContent = `${uniqueGaugeCost(s)}%`;
+  // 固有技コスト表示：BLAZE起爆準備中0%、SHADOW45%、NOVA瀕死で軽減、LYRA拘束中30%、TITAN自HPで25/35/50、他50%
+  document.getElementById('cost-unique').textContent = `${uniqueGaugeCost(s, opp)}%`;
 
   const atk25 = (s.passive === 'nova' && s.gauge >= 80) ? 15 : 25;
   const counterCost = s.counterConsecutive > 0 ? 50 : atk25;
@@ -4930,7 +4982,7 @@ function updateButtons(s = pState) {
   document.getElementById('btn-heal').classList.toggle('disabled', s.gauge < 30 || s.sealTurns > 0);
   document.getElementById('btn-taunt').classList.toggle('disabled', s.gauge < 30 || s.sealTurns > 0);
   document.getElementById('btn-overclock').classList.toggle('disabled', s.gauge < 100);
-  document.getElementById('btn-unique').classList.toggle('disabled', !canUseUnique(s));
+  document.getElementById('btn-unique').classList.toggle('disabled', !canUseUnique(s, opp));
 }
 
 // ===== プレイヤー行動選択（2ステップ） =====
@@ -5926,7 +5978,7 @@ function applyAction(attacker, defender, action, opt) {
 
     // ===== 固有技 =====
     case 'unique': {
-      const uniqueCost = uniqueGaugeCost(attacker);
+      const uniqueCost = uniqueGaugeCost(attacker, defender);
       if (!skipGaugeCost && attacker.gauge < uniqueCost) {
         addLog(`– ${aName}の${attacker.uniqueName || '固有技'}がゲージ不足で不発`, 'log-miss');
         break;

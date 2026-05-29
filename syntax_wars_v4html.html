@@ -4288,6 +4288,15 @@ function winProgress(me, opp){
   }
 }
 if (typeof window !== 'undefined') window.winProgress = winProgress;
+// 二軸戦略の全体倍率（DEV: window.__nashTune で実行時変更可・ON/OFF比較用）。winProgressは0..1なので
+// EVAL_W 各項（hp:1.0/HP, finisher:80 等）と同じ単位。初期は控えめ＝後押し程度（設計書 §6）。
+let AXIS_SCALE = 25;
+// 二軸項：自分=me 視点の戦略価値。+a×自分の勝ち筋 −b×相手の勝ち筋（meの軸重みで評価）。
+function _axisStrategy(me, opp){
+  if (AXIS_SCALE === 0 || !me) return 0;
+  const aw = (me.passive in AXIS_W) ? AXIS_W[me.passive] : { a: 0.5, b: 0.5 };
+  return AXIS_SCALE * (aw.a * winProgress(me, opp) - aw.b * winProgress(opp, me));
+}
 
 function evalState(me, opp){
   // 終局（このエンジンは相互KOがほぼ起きない＝両者0は念のため）
@@ -4396,6 +4405,19 @@ function _strategySelfTest(){
   let safe = true;
   try { winProgress({passive:'???'}, {}); winProgress(S({passive:'nova'}), S({})); } catch(e){ safe = false; }
   ck('no_throw_on_missing', safe);
+  // --- 二軸項 _axisStrategy の検証 ---
+  // 自分の勝ち筋だけが進む盤面：axis(me,opp) は正
+  const meStrong = S({passive:'titan', slow:true, fast:false, hp:100, maxHp:100});
+  const oppWeak  = S({passive:'lyrax', hp:100, maxHp:100}); // 相手は相手をslowにできてない＝勝ち筋低
+  const axMe = _axisStrategy(meStrong, oppWeak);
+  ck('axis_me_positive', axMe > 0);
+  // AXIS_SCALE=0 で二軸項が消える（__nashTune 経由で実行時トグル）
+  const _save = (typeof window!=='undefined' && window.__nashTune) ? window.__nashTune().AXIS_SCALE : null;
+  if (typeof window!=='undefined' && window.__nashTune){
+    window.__nashTune({ axisScale: 0 });
+    ck('axis_scale_zero_off', approx(_axisStrategy(meStrong, oppWeak), 0));
+    window.__nashTune({ axisScale: (_save==null?25:_save) });
+  }
   return { pass: checks.every(c=>c.pass), checks };
 }
 if (typeof window !== 'undefined') window._strategySelfTest = _strategySelfTest;
@@ -4456,6 +4478,10 @@ function nashBuildPayoff(state, whoIsMe) {
         const r = simulateTurn(state, pAct, cAct, Math.random);
         const base = evalState(r[whoIsMe], r[other]); // 反対称：相手視点は -base
         let mePay = base, oppPay = -base;
+        // 二軸戦略（一般和補正・各自の AXIS_W で評価）：finisher/tempo と同じ流儀で payoff 側に加算。
+        // evalState は純粋・反対称のまま保つ（_evalSelfTest の antisymmetric を壊さない）。
+        mePay  += _axisStrategy(r[whoIsMe], r[other]);
+        oppPay += _axisStrategy(r[other], r[whoIsMe]);
         // テンポ罰：カウンターを打ったのに相手HPが減っていない＝反射せず空振り。
         // 差ベース評価では「両者カウンター空振り＝タダ」になり睨み合いが安定するので、
         // 打った当人だけの損として一般和で計上し、無駄カウンターを抑える（当たるカウンターは無傷）。
@@ -4573,6 +4599,15 @@ function __nashMatch(c1, c2) {
   }
 }
 if (typeof window !== 'undefined') window.__nashMatch = __nashMatch;
+// DEV: 戦略つまみを実行時に変更（ON/OFF比較・マトリクス調整用）。指定キーのみ更新。
+if (typeof window !== 'undefined') window.__nashTune = function(o){
+  o = o || {};
+  if (typeof o.axisScale === 'number') AXIS_SCALE = o.axisScale;
+  if (typeof o.mainCap  === 'number') NASH_MAIN_CAP = o.mainCap;   // Task 3 で定義
+  if (typeof o.temp     === 'number') NASH_TEMP = o.temp;          // Task 3 で定義
+  return { AXIS_SCALE, NASH_MAIN_CAP: (typeof NASH_MAIN_CAP!=='undefined'?NASH_MAIN_CAP:null),
+           NASH_TEMP: (typeof NASH_TEMP!=='undefined'?NASH_TEMP:null) };
+};
 
 // ターン詳細を返すログ版（DEV／サンプル検証用）
 function __nashMatchLog(c1, c2) {

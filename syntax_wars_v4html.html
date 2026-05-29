@@ -4668,6 +4668,30 @@ if (typeof window !== 'undefined') window.__nashTune = function(o){
   return { AXIS_SCALE, NASH_MAIN_CAP: (typeof NASH_MAIN_CAP!=='undefined'?NASH_MAIN_CAP:null),
            NASH_TEMP: (typeof NASH_TEMP!=='undefined'?NASH_TEMP:null) };
 };
+// DEV: 全6キャラ総当たり 6×6 勝率マトリクス＋総勝率（設計書 §11B 固定フォーマット）。
+// matrix[a][b] = a を先手(p)・b を後手(c) にして games 試合した a の勝率(%)。
+// 対角線（ミラー）は総勝率から除外（サニティチェック用に表には残す）。
+if (typeof window !== 'undefined') window.__nashMatrix = function(games){
+  games = games || 20;
+  const keys = ['nexus','shadow','novaqueen','titan','lyrax','blaze'];
+  const matrix = {}, totals = {};
+  keys.forEach(a => { matrix[a] = {}; totals[a] = { win: 0, games: 0 }; });
+  for (const a of keys){
+    for (const b of keys){
+      let aWins = 0;
+      for (let g = 0; g < games; g++){
+        const res = __nashMatch(a, b); // a=pState(先手), b=cState
+        if (res.winner === 'p') aWins++;
+      }
+      matrix[a][b] = Math.round((aWins / games) * 1000) / 10;
+      if (a !== b){ totals[a].win += aWins; totals[a].games += games; }
+    }
+  }
+  const winrate = {};
+  keys.forEach(a => winrate[a] = totals[a].games
+    ? Math.round((totals[a].win / totals[a].games) * 1000) / 10 : 0);
+  return { games, keys, matrix, winrate };
+};
 
 // ターン詳細を返すログ版（DEV／サンプル検証用）
 function __nashMatchLog(c1, c2) {

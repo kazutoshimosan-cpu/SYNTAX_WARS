@@ -4230,6 +4230,16 @@ function _uniquePotency(s){
 }
 // キャラ別 finisher 係数：固有技が勝ち筋の"中心"かで増減。NOVA/NEXUS=固有が本体(1.0)／SHADOW・BLAZE=固有は強い一手(中)／LYRA=持久が本体で固有は補助(低)／TITAN=タンク殴りが本体・固有死蔵を防ぐため0。TUNABLE・体感で確定。
 const FINISHER_SCALE = { nova:1.0, learning:1.15, shadow:0.6, blaze:0.3, lyrax:1.0, titan:0.0 };
+// 二軸戦略の重み（passive キー）：a=自分の勝ち筋促進／b=相手の勝ち筋抑制。FINISHER_SCALE と同じ作り。
+// 設計書 §6 確定値（TUNABLE・6×6マトリクスを見ながら調整）。
+const AXIS_W = {
+  learning: { a: 0.65, b: 0.35 },   // NEXUS-7
+  shadow:   { a: 0.60, b: 0.40 },
+  nova:     { a: 0.70, b: 0.30 },
+  titan:    { a: 0.75, b: 0.25 },
+  lyrax:    { a: 0.35, b: 0.65 },
+  blaze:    { a: 0.75, b: 0.25 },
+};
 // 固有技準備価値 0..1：撃てない gauge<cost の時だけ ready² で評価（非線形・ゴール直前ほど価値伸び）。
 // 撃てる状態(gauge≥cost)は 0＝発動報酬(nashBuildPayoff側)に明け渡す。これで「保持中毒」を防ぎつつ
 // 長期投資動機(NEXUS：50まで貯めて量子ビーム発動 等)を1-ply評価で維持できる。
@@ -4243,6 +4253,41 @@ function _finisherBuildup(s){
   if (ready >= 1) return 0;            // 撃てる状態は0（発動報酬に明け渡す）
   return ready * ready;                // 0..1 非線形
 }
+
+// 勝ち筋メーター 0..1：このキャラが勝ち筋をどれだけ実行できているか。
+// 「準備度」項は ready（撃てる状態）で頭打ち＝溜め込みでは軸Aを稼げない（溜め込み中毒防止）。
+// 未設定フラグは 0 扱い。例外で停止しない（データ欠損耐性）。
+function winProgress(me, opp){
+  if (!me) return 0;
+  const clamp01 = (x) => x < 0 ? 0 : (x > 1 ? 1 : x);
+  const hpFrac  = (me.maxHp > 0) ? clamp01(me.hp / me.maxHp) : 0;
+  const oppSlow = !!(opp && opp.slow);
+  switch (me.passive){
+    case 'learning': // NEXUS-7：コンボ準備度（量子ビーム cost 50）
+      return clamp01(0.5*clamp01(me.gauge/50) + 0.3*(me.learned?1:0) + 0.2*(me.quantum?1:0));
+    case 'shadow': { // 速度支配度（分身斬り cost 45・自然回復なしなので差を保つ手が高評価）
+      const spd = clamp01(((me.speed||0) - (opp ? (opp.speed||0) : 0)) / 20);
+      return clamp01(0.7*spd + 0.3*clamp01(me.gauge/45));
+    }
+    case 'titan': // 要塞スタンス維持度（FASTになると第1項0＝過熱を自動回避。超電磁砲は既存固有報酬で保険）
+      return clamp01(0.7*((me.slow && !me.fast)?1:0) + 0.3*hpFrac);
+    case 'lyrax': // 拘束＋持久度（ゲージは勝ち筋でないので入れない）
+      return clamp01(0.6*(oppSlow?1:0) + 0.4*hpFrac);
+    case 'blaze': // 安全火力の構え度（生unprimed連打は primed項0＆自HP減で自然抑制）
+      return clamp01(0.6*(me.primed?1:0) + 0.4*(canUseUnique(me)?1:0));
+    case 'nova': { // 逆転の武装度（HPが減るほど跳ねる。フリップをwinProgress側に集約＝軸重みは1組）
+      const cost = uniqueGaugeCost(me);
+      const ready = (cost > 0) ? clamp01(me.gauge / cost) : 1;
+      const lostFrac = (me.maxHp > 0) ? clamp01((me.maxHp - me.hp) / me.maxHp) : 0;
+      const canFire = canUseUnique(me) ? 1 : 0;
+      const deathBand = (me.hp <= 0.40 * me.maxHp) ? 1 : 0;
+      return clamp01(0.4*ready + 0.4*lostFrac*canFire + 0.2*deathBand);
+    }
+    default:
+      return 0;
+  }
+}
+if (typeof window !== 'undefined') window.winProgress = winProgress;
 
 function evalState(me, opp){
   // 終局（このエンジンは相互KOがほぼ起きない＝両者0は念のため）
@@ -4309,6 +4354,51 @@ function _evalSelfTest(){
   return { pass: checks.every(c=>c.pass), checks };
 }
 if (typeof window !== 'undefined') window._evalSelfTest = _evalSelfTest;
+
+// ===== 二軸戦略 DEV セルフテスト（決定論・対戦初期化不要） =====
+function _strategySelfTest(){
+  const checks = [];
+  const ck = (name, cond, detail) => checks.push({ name, pass: !!cond, detail });
+  const approx = (a,b,eps) => Math.abs(a-b) <= (eps==null?1e-6:eps);
+  const S = (o) => Object.assign({ passive:'', hp:100, maxHp:100, gauge:0, speed:50,
+                                   slow:false, fast:false, primed:false, learned:false,
+                                   quantum:false, blazePrimedUsed:false, sealTurns:0 }, o);
+  // NEXUS(learning)：ゲージ満・学習・量子で 1.0／無で 0
+  ck('nexus_full', approx(winProgress(S({passive:'learning',gauge:50,learned:true,quantum:true}), S({})), 1.0));
+  ck('nexus_zero', approx(winProgress(S({passive:'learning',gauge:0}), S({})), 0));
+  ck('nexus_half_gauge', approx(winProgress(S({passive:'learning',gauge:25}), S({})), 0.25)); // 0.5×0.5
+  // SHADOW：速度差+20以上＝飽和＆ゲージ満 → 1.0／同速ゲージ0 → 0
+  ck('shadow_full', approx(winProgress(S({passive:'shadow',speed:65,gauge:45}), S({speed:45})), 1.0));
+  ck('shadow_zero', approx(winProgress(S({passive:'shadow',speed:50,gauge:0}), S({speed:50})), 0));
+  // TITAN：slow&&!fast かつ満HP → 1.0／fastになると第1項0
+  ck('titan_fortress', approx(winProgress(S({passive:'titan',slow:true,fast:false,hp:100,maxHp:100}), S({})), 1.0));
+  ck('titan_fast_drop', winProgress(S({passive:'titan',slow:true,fast:true,hp:100,maxHp:100}), S({})) < 0.5);
+  // LYRA：相手slow＆満HP → 1.0／相手非slow → 0.4（自HP項のみ）
+  ck('lyra_full', approx(winProgress(S({passive:'lyrax',hp:100,maxHp:100}), S({slow:true})), 1.0));
+  ck('lyra_noslow', approx(winProgress(S({passive:'lyrax',hp:100,maxHp:100}), S({slow:false})), 0.4));
+  // BLAZE：primed かつ大技撃てる → 1.0（primed初回はコスト0で canUseUnique=true）
+  ck('blaze_full', approx(winProgress(S({passive:'blaze',primed:true,blazePrimedUsed:false,gauge:0}), S({})), 1.0));
+  ck('blaze_zero', approx(winProgress(S({passive:'blaze',primed:false,gauge:0}), S({})), 0));
+  // NOVA：瀕死(hp=20%,cost=20)＆ゲージ満で星屑砲撃てる → 高い／満HP低ゲージ → 低い
+  const novaLow = winProgress(S({passive:'nova',hp:20,maxHp:100,gauge:20}), S({}));
+  const novaHi  = winProgress(S({passive:'nova',hp:100,maxHp:100,gauge:0}), S({}));
+  ck('nova_lowhp_high', novaLow > 0.7);
+  ck('nova_fullhp_low', novaHi < 0.3);
+  ck('nova_monotonic', novaLow > novaHi);
+  // 全 winProgress は 0..1 にクランプ
+  let inRange = true;
+  ['learning','shadow','nova','titan','lyrax','blaze'].forEach(p => {
+    const v = winProgress(S({passive:p,gauge:100,hp:1,maxHp:100,slow:true,learned:true,quantum:true,primed:true}), S({slow:true}));
+    if (v < 0 || v > 1) inRange = false;
+  });
+  ck('winprogress_in_0_1', inRange);
+  // データ欠損で落ちない（未知passive・空オブジェクト）
+  let safe = true;
+  try { winProgress({passive:'???'}, {}); winProgress(S({passive:'nova'}), S({})); } catch(e){ safe = false; }
+  ck('no_throw_on_missing', safe);
+  return { pass: checks.every(c=>c.pass), checks };
+}
+if (typeof window !== 'undefined') window._strategySelfTest = _strategySelfTest;
 
 // ===== Nash CPU Phase③: 利得マトリクス＋regret-matching混合戦略 =====
 // プレイヤーが選べる手と完全一致の合法手判定（ボタン無効化ロジックを抽出・CPU都合の枝刈りは混ぜない）。

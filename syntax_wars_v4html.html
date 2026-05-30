@@ -4191,11 +4191,13 @@ if (typeof window !== 'undefined') window._simSelfTest = _simSelfTest;
 // evalState(a,b) ≈ -evalState(b,a) が成立（マトリクスのゼロサム性をコードで担保）。
 // 重みは全て仮（TUNABLE）。Phase④で対戦しながら肌調整する前提。HP差=1pt/1HPを基準に相対化。
 const EVAL_DEATH_FRAC = 0.40; // 瀕死圏 = HP ≤ maxHp×40%（実装の瀕死判定に一致）
+const EVAL_GAUGE_FLOOR = 25;  // ゲージ予備ライン＝カウンター/ガードブレイクの最低コスト。これを割ると守れず一方的にハメられる（実機で発見）
 const EVAL_W = {
   hp: 1.0,          // ② HP差（王様）
   nearDeath: 35,    // ③ 瀕死の非線形（相手瀕死=詰め＋／自分瀕死=恐れ−・両者瀕死で相殺）
   winConfirm: 55,   // ④ 無防備（低HP×低ゲージ）＝勝ち確／被勝ち確
-  myGauge: 0.10,    // ④ ゲージ差＝攻めの手数（小さめ）
+  myGauge: 0.10,    // ④ ゲージ差＝攻めの手数（小さめ・線形）
+  gaugeFloor: 20,   // ④ ゲージ枯渇の非線形罰：予備ライン(EVAL_GAUGE_FLOOR)を割るほど lack² で急増。cheap-bait カウンターでの自己ゲージ枯らし→ガード一択ハメ（実機発見）を防ぐ。閾値以上は0＝平時無害（TUNABLE。0で旧挙動）
   burst: 15,        // ④ NOVA星屑砲/TITAN超電磁砲＝遠いキル脅威
   killRace: 25,     // ⑥ 両者瀕死×速度有利（先に当てたもん勝ち）
   slowGeneric: 8, slowTitan: 10, slowVsLyra: 6,   // ⑤ SLOW（一般−／TITAN＋／対LYRA腐食で追加−）
@@ -4211,6 +4213,8 @@ const EVAL_TERMINAL = 100000;
 function _prox(s){ const th = s.maxHp * EVAL_DEATH_FRAC; if (s.hp <= 0) return 1; if (s.hp >= th) return 0; return (th - s.hp) / th; }
 // ゲージの「守りの完備度」0..1（50%でカウンター/逆転技が撃てる＝守れる）
 function _gaugeSafe(s){ return Math.max(0, Math.min(1, s.gauge / 50)); }
+// ゲージ枯渇度 0..1（予備ラインEVAL_GAUGE_FLOORを割ると非線形に増・閾値以上は0）。守る手(カウンター/ガードブレイク)が一切撃てない手詰まりを罰す。
+function _gaugeStarve(s){ if (!s || s.gauge >= EVAL_GAUGE_FLOOR) return 0; const lack = (EVAL_GAUGE_FLOOR - s.gauge) / EVAL_GAUGE_FLOOR; return lack * lack; }
 // s自身のステータスがsにとって持つ価値（＋=s有利）。oppは対面依存項(腐食)のため受け取る。
 function _statusValue(s, opp){
   let v = 0;
@@ -4328,8 +4332,10 @@ function evalState(me, opp){
   s += EVAL_W.nearDeath * (po - pm);
   // ④ 無防備＝低HP×低ゲージ。高ゲージ側は (1-gaugeSafe) が小さくなり勝ち確が自動で割り引かれる（逆転カウンター警戒）
   s += EVAL_W.winConfirm * (po*(1-_gaugeSafe(opp)) - pm*(1-_gaugeSafe(me)));
-  // ④ ゲージ差＝攻めの手数（小さめ）
+  // ④ ゲージ差＝攻めの手数（小さめ・線形）
   s += EVAL_W.myGauge * (me.gauge - opp.gauge);
+  // ④ ゲージ枯渇の非線形罰：予備ラインを割ると lack² で急増。自己ゲージ枯らし→守れず一方的にハメられる罠を回避（cheap-bait カウンター抑止）。反対称。
+  s += EVAL_W.gaugeFloor * (_gaugeStarve(opp) - _gaugeStarve(me));
   // ④ NOVA/TITANの決め筋＝相手が低HPのとき仕留めうる遠いキル脅威
   if ((me.passive==='nova' ||me.passive==='titan')  && me.gauge  >= 50) s += EVAL_W.burst * po;
   if ((opp.passive==='nova'||opp.passive==='titan') && opp.gauge >= 50) s -= EVAL_W.burst * pm;
@@ -4381,6 +4387,13 @@ function _evalSelfTest(){
      evalState(me({hp:8,gauge:20,speed:50}), op({hp:8,gauge:20,speed:80})));
   ck('neardeath_gauge_tiebreak',
      evalState(me({hp:8,gauge:60,speed:50}), op({hp:8,gauge:0,speed:50})) > 0);
+  // 7. ゲージ枯渇罰の凸性：予備ラインを割る 25→0 の損 ＞ 余裕圏 50→25 の損（cheap-bait カウンター抑止の核）
+  {
+    const base = (g) => evalState(me({hp:90,gauge:g,speed:50}), op({hp:90,gauge:25,speed:50}));
+    const dLow  = base(25) - base(0);   // 予備ラインを割る（非線形罰が乗る）
+    const dHigh = base(50) - base(25);  // 余裕圏（線形のみ）
+    ck('gauge_starve_convex', dLow > dHigh, { dLow, dHigh });
+  }
   return { pass: checks.every(c=>c.pass), checks };
 }
 if (typeof window !== 'undefined') window._evalSelfTest = _evalSelfTest;
@@ -4719,8 +4732,9 @@ if (typeof window !== 'undefined') window.__nashTune = function(o){
   if (typeof o.axisScale === 'number') AXIS_SCALE = o.axisScale;
   if (typeof o.mainCap  === 'number') NASH_MAIN_CAP = o.mainCap;   // Task 3 で定義
   if (typeof o.temp     === 'number') NASH_TEMP = o.temp;          // Task 3 で定義
+  if (typeof o.gaugeFloor === 'number') EVAL_W.gaugeFloor = o.gaugeFloor; // ゲージ枯渇罰のON/OFF・強度比較用（0で旧挙動）
   return { AXIS_SCALE, NASH_MAIN_CAP: (typeof NASH_MAIN_CAP!=='undefined'?NASH_MAIN_CAP:null),
-           NASH_TEMP: (typeof NASH_TEMP!=='undefined'?NASH_TEMP:null) };
+           NASH_TEMP: (typeof NASH_TEMP!=='undefined'?NASH_TEMP:null), gaugeFloor: EVAL_W.gaugeFloor };
 };
 // DEV: 全6キャラ総当たり 6×6 勝率マトリクス＋総勝率（設計書 §11B 固定フォーマット）。
 // matrix[a][b] = a を先手(p)・b を後手(c) にして games 試合した a の勝率(%)。

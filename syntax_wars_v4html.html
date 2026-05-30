@@ -4256,6 +4256,10 @@ const AXIS_W = {
   lyrax:    { a: 0.35, b: 0.65 },
   blaze:    { a: 0.75, b: 0.25 },
 };
+// LYRA-X 拘束の効き（いやらしい攻め化・2026-05-30）。AIは触らず"締め付け"だけ強化＝最適手は同じでも沼が深く速くなる。
+// 旧挙動（ライブ版）は __nashTune({lyraLock:{corrode:3,corrodeTitan:2,strongSpdDrop:10,corrodeSpdRot:0}}) で復元・ON/OFF比較可（TUNABLE）。
+// corrode/corrodeTitan=SLOW相手への毎ターン腐食HP／strongSpdDrop=LYの強攻撃ヒット時の相手SPEED低下量（非LYは固定10）／corrodeSpdRot=SLOW中の相手が腐食で毎ターン失うSPEED（"速度も腐る"＝抜け出しにくさ）。
+let LYRA_LOCK = { corrode: 4, corrodeTitan: 3, strongSpdDrop: 14, corrodeSpdRot: 2 };
 // 固有技準備価値 0..1：撃てない gauge<cost の時だけ ready² で評価（非線形・ゴール直前ほど価値伸び）。
 // 撃てる状態(gauge≥cost)は 0＝発動報酬(nashBuildPayoff側)に明け渡す。これで「保持中毒」を防ぎつつ
 // 長期投資動機(NEXUS：50まで貯めて量子ビーム発動 等)を1-ply評価で維持できる。
@@ -4733,8 +4737,10 @@ if (typeof window !== 'undefined') window.__nashTune = function(o){
   if (typeof o.mainCap  === 'number') NASH_MAIN_CAP = o.mainCap;   // Task 3 で定義
   if (typeof o.temp     === 'number') NASH_TEMP = o.temp;          // Task 3 で定義
   if (typeof o.gaugeFloor === 'number') EVAL_W.gaugeFloor = o.gaugeFloor; // ゲージ枯渇罰のON/OFF・強度比較用（0で旧挙動）
+  if (o.lyraLock && typeof o.lyraLock === 'object') Object.assign(LYRA_LOCK, o.lyraLock); // LYRA拘束の効き（旧挙動 {corrode:3,corrodeTitan:2,strongSpdDrop:10,corrodeSpdRot:0}）
   return { AXIS_SCALE, NASH_MAIN_CAP: (typeof NASH_MAIN_CAP!=='undefined'?NASH_MAIN_CAP:null),
-           NASH_TEMP: (typeof NASH_TEMP!=='undefined'?NASH_TEMP:null), gaugeFloor: EVAL_W.gaugeFloor };
+           NASH_TEMP: (typeof NASH_TEMP!=='undefined'?NASH_TEMP:null), gaugeFloor: EVAL_W.gaugeFloor,
+           lyraLock: Object.assign({}, LYRA_LOCK) };
 };
 // DEV: 全6キャラ総当たり 6×6 勝率マトリクス＋総勝率（設計書 §11B 固定フォーマット）。
 // matrix[a][b] = a を先手(p)・b を後手(c) にして games 試合した a の勝率(%)。
@@ -4775,7 +4781,8 @@ function __nashMatchLog(c1, c2) {
     for (let t = 0; t < 60; t++) {
       const pAct = nashChooseAction('p');
       const cAct = nashChooseAction('c');
-      const pre = { t: t+1, pAct, cAct, pHp: pState.hp, cHp: cState.hp, pG: Math.round(pState.gauge), cG: Math.round(cState.gauge) };
+      const pre = { t: t+1, pAct, cAct, pHp: pState.hp, cHp: cState.hp, pG: Math.round(pState.gauge), cG: Math.round(cState.gauge),
+                    pSlow: !!pState.slow, cSlow: !!cState.slow, pSpd: Math.round(pState.speed), cSpd: Math.round(cState.speed) };  // DEV計測用：解決前のSLOW/SPEED
       resolveActions(pAct, cAct);
       turnsPlayed = t+1;
       const post = { pHp: pState.hp, cHp: cState.hp, pG: Math.round(pState.gauge), cG: Math.round(cState.gauge),
@@ -5750,12 +5757,13 @@ function applyAction(attacker, defender, action, opt) {
           addLog(`${dName}の身代わり！ダメージ無効！`, 'status');
         } else {
           const finalDmg = dealDamage(attacker, defender, dmg, aName, dName, titanOverheat);
-          // 強攻撃：実ダメが相手に入った場合のみ SPEED-10（強×ガードは常にジャスト扱いで finalDmg=0 → 不発）
+          // 強攻撃：実ダメが相手に入った場合のみ SPEED低下（強×ガードは常にジャスト扱いで finalDmg=0 → 不発）。LYは拘束強化で削り量UP（非LYは10）
           if (action === 'strong' && finalDmg > 0) {
-            defender.speed = Math.max(0, defender.speed - 10);
+            const spdDrop = attacker.passive === 'lyrax' ? LYRA_LOCK.strongSpdDrop : 10;
+            defender.speed = Math.max(0, defender.speed - spdDrop);
             defender.slow = defender.speed <= 35;
             defender.fast = defender.speed >= 70;
-            addLog(`${dName}のSPEED-10 → ${Math.round(defender.speed)}`, 'status');
+            addLog(`${dName}のSPEED-${spdDrop} → ${Math.round(defender.speed)}`, 'status');
           }
         }
       }
@@ -6322,9 +6330,14 @@ function endOfTurn() {
     const lyraxFighter = s.isPlayer ? cState : pState;
     if (lyraxFighter.passive === 'lyrax' && s.slow) {
       AudioManager.playSE('corrosion');
-      const corrodeDmg = (s.passive === 'titan') ? 2 : 3;
+      const corrodeDmg = (s.passive === 'titan') ? LYRA_LOCK.corrodeTitan : LYRA_LOCK.corrode;
       s.hp -= corrodeDmg;
       if (!_sim) { if (s.isPlayer) matchStats.pCorrosionDmg += corrodeDmg; else matchStats.cCorrosionDmg += corrodeDmg; }
+      // 速度腐食：SLOW中は腐食でSPEEDも蝕む＝自力加速しても押し戻され沼から抜けにくい（LY最大の個性）
+      if (LYRA_LOCK.corrodeSpdRot > 0 && s.speed > 0) {
+        s.speed = Math.max(0, s.speed - LYRA_LOCK.corrodeSpdRot);
+        s.slow = s.speed <= 35; s.fast = s.speed >= 70;
+      }
       screenShake(s.isPlayer);
       showDmgPopup(s.isPlayer, corrodeDmg);
       addLog(`${name}が腐食ダメージ -${corrodeDmg}HP`, 'hit');

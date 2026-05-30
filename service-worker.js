@@ -1,4 +1,4 @@
-const CACHE_NAME = 'syntax-wars-pwa-v1';
+const CACHE_NAME = 'syntax-wars-pwa-v2';
 const CORE_ASSETS = [
   './',
   './index.html',

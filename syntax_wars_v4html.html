@@ -2651,10 +2651,10 @@ const CHARS = {
     themeColor:'#00ffff', emoji:'🤖', imgSrc:'assets/image/thumbs/nexus7_thumb.jpg',
     posterSrc:'assets/posters/nexus7_9x16.png', posterMobileSrc:'assets/posters/mobile/nexus7_poster_mobile.jpg',
     catchphrase:'被弾で解析　同属性で破砕',
-    passiveKeys:'属性学習で威力2倍 ／ 固有技被ダメ-20%',
+    passiveKeys:'属性学習で威力2倍 ／ 固有技被ダメ-20% ／ 長引くほど相手の長所を特徴解析',
     moves:{ weak:'ナノブレード', mid:'EMP波動', strong:'プラズマカノン', guard:'GUARD', unique:'量子ビーム' },
     passive:'learning', uniqueName:'量子ビーム',
-    passiveDesc:'アドバンスド・ラーニング：相手の属性攻撃がヒットすると学習済みフラグをセット。同じ属性を自分が使う時に威力×2.0（+100%）。発動までフラグを保持。全属性攻撃に固有×1.3バフあり。相手の固有技被ダメ-30%。回復封じ持続+1T。',
+    passiveDesc:'アドバンスド・ラーニング：相手の属性攻撃がヒットすると学習済みフラグをセット。同じ属性を自分が使う時に威力×2.0（+100%）。発動までフラグを保持。全属性攻撃に固有×1.3バフあり。相手の固有技被ダメ-30%。回復封じ持続+1T。特徴解析：戦うほど相手の"核"となる長所（加速・腐食・被ダメ軽減・与ダメ）を毎ターン少しずつ削る＝長期戦ほど効く。',
     uniqueDesc:'量子ビーム：45ダメージ・命中でゲージ+25%＋次ターン属性コスト0＆威力+20%',
   },
   shadow: {
@@ -2663,10 +2663,10 @@ const CHARS = {
     themeColor:'#ff003c', emoji:'🥷', imgSrc:'assets/image/thumbs/shadow_thumb.jpg',
     posterSrc:'assets/posters/shadow_9x16.png', posterMobileSrc:'assets/posters/mobile/shadow_poster_mobile.jpg', imgPosition:'top',
     catchphrase:'超速で回避　反撃で処理',
-    passiveKeys:'SPEED差30以上で強攻撃回避 ／ 回避でゲージ+25%',
+    passiveKeys:'SPEED差20以上で強攻撃回避 ／ 回避でゲージ+25%',
     moves:{ weak:'クナイ投げ', mid:'鎖鎌', strong:'影斬り', guard:'GUARD', unique:'分身斬り' },
     passive:'shadow', uniqueName:'分身斬り',
-    passiveDesc:'絶影：SPEED差30以上で相手の強攻撃を確定回避。通常ダメージ-15%、速度特攻ボーナスはフルで入る。速度差回避でゲージ+25%。2回行動時の2撃目は確定クリティカル。SPEED自然回復なし。',
+    passiveDesc:'絶影：SPEED差20以上で相手の強攻撃を確定回避。通常ダメージ-15%、速度特攻ボーナスはフルで入る。速度差回避でゲージ+25%。2回行動時の2撃目は確定クリティカル。SPEED自然回復なし。',
     uniqueDesc:'分身斬り：ゲージ45%・影斬り×2.0ダメージ＋次の相手の攻撃を1回無効化（ダメージ・追加効果0）',
   },
   novaqueen: {
@@ -4414,8 +4414,8 @@ function _strategySelfTest(){
   ck('nexus_full', approx(winProgress(S({passive:'learning',gauge:50,learned:true,quantum:true}), S({})), 1.0));
   ck('nexus_zero', approx(winProgress(S({passive:'learning',gauge:0}), S({})), 0));
   ck('nexus_half_gauge', approx(winProgress(S({passive:'learning',gauge:25}), S({})), 0.25)); // 0.5×0.5
-  // NEXUS 適応火力ゲートが有効（dealDamage で SHADOW/LYRA 対面のみ加算・1.0=無効化を防ぐ）
-  ck('nexus_adapt_dmg_active', NEXUS_ADAPT_DMG > 1.0);
+  // NEXUS 特徴解析が有効（既定ON＝アドバンスド・ラーニングの一機能。__nashTune({nexusAnalysis:{on:false}})で旧挙動に戻せる）
+  ck('nexus_analysis_active', NEXUS_ANALYSIS.on === true);
   // SHADOW：速度差+20以上＝飽和＆ゲージ満 → 1.0／同速ゲージ0 → 0
   ck('shadow_full', approx(winProgress(S({passive:'shadow',speed:65,gauge:45}), S({speed:45})), 1.0));
   ck('shadow_zero', approx(winProgress(S({passive:'shadow',speed:50,gauge:0}), S({speed:50})), 0));
@@ -4738,9 +4738,12 @@ if (typeof window !== 'undefined') window.__nashTune = function(o){
   if (typeof o.temp     === 'number') NASH_TEMP = o.temp;          // Task 3 で定義
   if (typeof o.gaugeFloor === 'number') EVAL_W.gaugeFloor = o.gaugeFloor; // ゲージ枯渇罰のON/OFF・強度比較用（0で旧挙動）
   if (o.lyraLock && typeof o.lyraLock === 'object') Object.assign(LYRA_LOCK, o.lyraLock); // LYRA拘束の効き（旧挙動 {corrode:3,corrodeTitan:2,strongSpdDrop:10,corrodeSpdRot:0}）
+  if (o.nexusBuff && typeof o.nexusBuff === 'object') Object.assign(NEXUS_BUFF, o.nexusBuff); // NEXUS底上げ（旧"下駄"挙動 {dmgMul:1.0,adaptDmg:1.10}）
+  if (o.nexusAnalysis && typeof o.nexusAnalysis === 'object') Object.assign(NEXUS_ANALYSIS, o.nexusAnalysis); // NEXUS特徴解析（旧挙動＝{on:false}＝解析なし）
   return { AXIS_SCALE, NASH_MAIN_CAP: (typeof NASH_MAIN_CAP!=='undefined'?NASH_MAIN_CAP:null),
            NASH_TEMP: (typeof NASH_TEMP!=='undefined'?NASH_TEMP:null), gaugeFloor: EVAL_W.gaugeFloor,
-           lyraLock: Object.assign({}, LYRA_LOCK) };
+           lyraLock: Object.assign({}, LYRA_LOCK), nexusBuff: Object.assign({}, NEXUS_BUFF),
+           nexusAnalysis: Object.assign({}, NEXUS_ANALYSIS) };
 };
 // DEV: 全6キャラ総当たり 6×6 勝率マトリクス＋総勝率（設計書 §11B 固定フォーマット）。
 // matrix[a][b] = a を先手(p)・b を後手(c) にして games 試合した a の勝率(%)。
@@ -5770,11 +5773,16 @@ function applyAction(attacker, defender, action, opt) {
 
       // SHADOW：通常攻撃の命中（ガード含む）でSPEED上昇（弱+10／中+8／強+6、上限100。SPEED80超でも半減しない）
       if (attacker.passive === 'shadow') {
-        const gain = action === 'weak' ? 10 : action === 'mid' ? 8 : 6;
-        attacker.speed = Math.min(100, attacker.speed + gain);
-        attacker.fast = attacker.speed >= 70;
-        attacker.slow = attacker.speed <= 35;
-        addLog(`${aName}の機動上昇！SPEED +${gain} → ${Math.round(attacker.speed)}`, 'status');
+        const baseGain = action === 'weak' ? 10 : action === 'mid' ? 8 : 6;
+        // 特徴解析：相手がNEXUS(learning)なら、SHADOWの"核"＝加速量を解析率ぶん削る（雪だるまの芽を摘む。spdF=0で従来通り）
+        const spdF = (defender.passive === 'learning') ? nexusAnalysisFrac(defender) : 0;
+        const gain = Math.max(0, Math.round(baseGain * (1 - spdF)));
+        if (gain > 0) {
+          attacker.speed = Math.min(100, attacker.speed + gain);
+          attacker.fast = attacker.speed >= 70;
+          attacker.slow = attacker.speed <= 35;
+          addLog(`${aName}の機動上昇！SPEED +${gain} → ${Math.round(attacker.speed)}`, 'status');
+        }
       }
       if (shadowSureHit) attacker.shadowSureHitNext = false;
       break;
@@ -6241,9 +6249,26 @@ function applyUnique(attacker, defender, aName, dName) {
 }
 
 // ===== ダメージ適用 =====
-// NEXUS-7 適応学習：回避型(SHADOW)・再生型(LYRA)の手を解析して火力を上乗せ（この2対面のみ）。
-// 苦手2対面でのダメージレース僅差負けを是正＝NEXUS底上げ＋SHADOW/LYRA天井下げ（他対面は不変）。1.0=無効。TUNABLE。
-const NEXUS_ADAPT_DMG = 1.10;
+// NEXUS-7「特徴解析」（2026-05-30）＝アドバンスド・ラーニングの一機能。相手の"核"となる長所を毎ターン解析し、
+// ターン経過で解析率(frac)が増えてその長所を削る。対面でステータスを切り替える"下駄"ではなく、相手が誰でも常時onの固有特性
+// （刺さる相手が偏るのはOK＝相手の勝ち筋に自然に効く・対面でstatを切替えない）。削る核はキャラ別＝
+// SHADOW:加速量(殴って得る速度上昇)／LYRA:腐食(攻めの削り)／NOVA:被ダメ軽減／TITAN・BLAZE・ミラーNEXUS:与ダメ。
+// 解析率 = min(上限, perTurn×経過ターン)、startTurnから起動（序盤は無害・長引くほど効く＝"学習"の味）。
+// 与ダメ削りだけは効きが強いので専用の低い上限(dmgMaxErosion)を使う＝得意のTITAN/BLAZEを過剰に殴らない。
+// 全てTUNABLE：__nashTune({nexusAnalysis:{on:false}}) で旧挙動（解析なし）と同じ物差しで比較可。
+let NEXUS_ANALYSIS = { on: true, startTurn: 2, perTurn: 0.04, maxErosion: 0.40, dmgMaxErosion: 0.22 };
+// analyzer(=NEXUS側)が相手に課す解析率。analyzerがNEXUS(learning)でなければ0。ミラーは双方が課す＝対称で相殺。
+// cap省略時はmaxErosion、与ダメ削りは dmgMaxErosion を渡して効きを抑える。
+function nexusAnalysisFrac(analyzer, cap) {
+  if (!NEXUS_ANALYSIS.on || !analyzer || analyzer.passive !== 'learning') return 0;
+  const active = (turn | 0) - NEXUS_ANALYSIS.startTurn + 1;
+  if (active <= 0) return 0;
+  const c = (typeof cap === 'number') ? cap : NEXUS_ANALYSIS.maxErosion;
+  return Math.min(c, NEXUS_ANALYSIS.perTurn * active);
+}
+// NEXUS-7 素の火力つまみ（既定オフ＝1.0）。特徴解析の効きを単体で測れるよう一様火力盛りはオフに戻した（必要なら微調整用に残置）。
+// adaptDmg=旧"下駄"(SHADOW/LYRA対面のみ・既定オフ)。__nashTune({nexusBuff:{dmgMul:1.08}}) 等で復元・比較可（TUNABLE）。
+let NEXUS_BUFF = { dmgMul: 1.0, adaptDmg: 1.0 };
 function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
   let finalDmg = dmg;
   if (defender.guardThisTurn && !defender.primed && !guardBreak) {
@@ -6275,13 +6300,25 @@ function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
   // NOVA QUEEN HP閾値
   // NEXUS-7 アドバンスド・ラーニング：相手の固有技被ダメ-30%（2026-05-28: -20%→-30% 装甲強化）
   if (defender.passive === 'learning' && attacker.lastAction === 'unique') finalDmg = Math.round(finalDmg * 0.7);
-  // NOVA QUEEN 瀕死の逆転王: HP40%以下で被ダメ-20%（maxHp可変に追従）（2026-05-30: -25%→-20% スプレッド是正＝救済buffを差し戻し）
-  if (defender.passive === 'nova' && defender.hp <= Math.floor(defender.maxHp * 0.4)) finalDmg = Math.round(finalDmg * 0.80);
-  // NOVA QUEEN 序盤パッシブ: HP48以上で被ダメ-5%（2026-05-30: -10%→-5% スプレッド是正＝救済buffを差し戻し）
-  if (defender.passive === 'nova' && defender.hp >= 48) finalDmg = Math.round(finalDmg * 0.95);
-  // NEXUS-7 適応学習：SHADOW(回避)/LYRA(再生)への解析火力（この2対面のみ・スプレッド締め）
-  if (NEXUS_ADAPT_DMG !== 1.0 && attacker.passive === 'learning' && (defender.passive === 'shadow' || defender.passive === 'lyrax')) {
-    finalDmg = Math.round(finalDmg * NEXUS_ADAPT_DMG);
+  // NOVA QUEEN 被ダメ軽減（瀕死HP40%以下=-20% ／ 序盤HP48以上=-5%）。
+  // 特徴解析：攻め手がNEXUS(learning)なら、NOVAの"核"＝被ダメ軽減そのものを解析率ぶん薄める（novaF=0で従来の-20%/-5%に一致）。
+  if (defender.passive === 'nova') {
+    const novaF = (attacker.passive === 'learning') ? nexusAnalysisFrac(attacker) : 0;
+    if (defender.hp <= Math.floor(defender.maxHp * 0.4)) finalDmg = Math.round(finalDmg * (1 - 0.20 * (1 - novaF)));
+    else if (defender.hp >= 48) finalDmg = Math.round(finalDmg * (1 - 0.05 * (1 - novaF)));
+  }
+  // NEXUS-7 底上げ：全攻撃を一様に底上げ(dmgMul)＋旧"下駄"(adaptDmg・SHADOW/LYRA対面のみ)は既定オフ（TUNABLE）
+  if (attacker.passive === 'learning') {
+    if (NEXUS_BUFF.dmgMul !== 1.0) finalDmg = Math.round(finalDmg * NEXUS_BUFF.dmgMul);
+    if (NEXUS_BUFF.adaptDmg !== 1.0 && (defender.passive === 'shadow' || defender.passive === 'lyrax')) {
+      finalDmg = Math.round(finalDmg * NEXUS_BUFF.adaptDmg);
+    }
+  }
+  // 特徴解析：TITAN・BLAZE・ミラーNEXUSの"核"＝与ダメを、被弾側NEXUS(=analyzer)が解析率ぶん削る（専用の低い上限dmgMaxErosion）。
+  // ミラーは双方が相手の与ダメを削る＝対称で相殺（ミラーは約50%維持）。
+  if (defender.passive === 'learning' && (attacker.passive === 'titan' || attacker.passive === 'blaze' || attacker.passive === 'learning')) {
+    const dmgF = nexusAnalysisFrac(defender, NEXUS_ANALYSIS.dmgMaxErosion);
+    if (dmgF > 0) finalDmg = Math.round(finalDmg * (1 - dmgF));
   }
   finalDmg = Math.max(0, finalDmg);
   defender.hp -= finalDmg;
@@ -6330,12 +6367,16 @@ function endOfTurn() {
     const lyraxFighter = s.isPlayer ? cState : pState;
     if (lyraxFighter.passive === 'lyrax' && s.slow) {
       AudioManager.playSE('corrosion');
-      const corrodeDmg = (s.passive === 'titan') ? LYRA_LOCK.corrodeTitan : LYRA_LOCK.corrode;
+      // 特徴解析：腐食を受けているのがNEXUS(learning)なら、LYRAの"核"＝腐食(攻めの削り)を解析率ぶん弱める（cF=0で従来通り）
+      const cF = (s.passive === 'learning') ? nexusAnalysisFrac(s) : 0;
+      const baseCorrode = (s.passive === 'titan') ? LYRA_LOCK.corrodeTitan : LYRA_LOCK.corrode;
+      const corrodeDmg = Math.max(0, Math.round(baseCorrode * (1 - cF)));
       s.hp -= corrodeDmg;
       if (!_sim) { if (s.isPlayer) matchStats.pCorrosionDmg += corrodeDmg; else matchStats.cCorrosionDmg += corrodeDmg; }
-      // 速度腐食：SLOW中は腐食でSPEEDも蝕む＝自力加速しても押し戻され沼から抜けにくい（LY最大の個性）
-      if (LYRA_LOCK.corrodeSpdRot > 0 && s.speed > 0) {
-        s.speed = Math.max(0, s.speed - LYRA_LOCK.corrodeSpdRot);
+      // 速度腐食：SLOW中は腐食でSPEEDも蝕む＝自力加速しても押し戻され沼から抜けにくい（LY最大の個性）。特徴解析で同様に弱まる。
+      const spdRot = Math.max(0, Math.round(LYRA_LOCK.corrodeSpdRot * (1 - cF)));
+      if (spdRot > 0 && s.speed > 0) {
+        s.speed = Math.max(0, s.speed - spdRot);
         s.slow = s.speed <= 35; s.fast = s.speed >= 70;
       }
       screenShake(s.isPlayer);

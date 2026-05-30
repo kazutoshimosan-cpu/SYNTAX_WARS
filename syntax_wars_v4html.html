@@ -6253,10 +6253,10 @@ function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
   // NOVA QUEEN HP閾値
   // NEXUS-7 アドバンスド・ラーニング：相手の固有技被ダメ-30%（2026-05-28: -20%→-30% 装甲強化）
   if (defender.passive === 'learning' && attacker.lastAction === 'unique') finalDmg = Math.round(finalDmg * 0.7);
-  // NOVA QUEEN 瀕死の逆転王: HP40%以下で被ダメ-25%（maxHp可変に追従）（2026-05-28: -20%→-25% 救済）
-  if (defender.passive === 'nova' && defender.hp <= Math.floor(defender.maxHp * 0.4)) finalDmg = Math.round(finalDmg * 0.75);
-  // NOVA QUEEN 序盤パッシブ: HP48以上で被ダメ-10%（2026-05-28: -5%→-10% 救済）
-  if (defender.passive === 'nova' && defender.hp >= 48) finalDmg = Math.round(finalDmg * 0.90);
+  // NOVA QUEEN 瀕死の逆転王: HP40%以下で被ダメ-20%（maxHp可変に追従）（2026-05-30: -25%→-20% スプレッド是正＝救済buffを差し戻し）
+  if (defender.passive === 'nova' && defender.hp <= Math.floor(defender.maxHp * 0.4)) finalDmg = Math.round(finalDmg * 0.80);
+  // NOVA QUEEN 序盤パッシブ: HP48以上で被ダメ-5%（2026-05-30: -10%→-5% スプレッド是正＝救済buffを差し戻し）
+  if (defender.passive === 'nova' && defender.hp >= 48) finalDmg = Math.round(finalDmg * 0.95);
   // NEXUS-7 適応学習：SHADOW(回避)/LYRA(再生)への解析火力（この2対面のみ・スプレッド締め）
   if (NEXUS_ADAPT_DMG !== 1.0 && attacker.passive === 'learning' && (defender.passive === 'shadow' || defender.passive === 'lyrax')) {
     finalDmg = Math.round(finalDmg * NEXUS_ADAPT_DMG);

@@ -4397,6 +4397,8 @@ function _strategySelfTest(){
   ck('nexus_full', approx(winProgress(S({passive:'learning',gauge:50,learned:true,quantum:true}), S({})), 1.0));
   ck('nexus_zero', approx(winProgress(S({passive:'learning',gauge:0}), S({})), 0));
   ck('nexus_half_gauge', approx(winProgress(S({passive:'learning',gauge:25}), S({})), 0.25)); // 0.5×0.5
+  // NEXUS 適応火力ゲートが有効（dealDamage で SHADOW/LYRA 対面のみ加算・1.0=無効化を防ぐ）
+  ck('nexus_adapt_dmg_active', NEXUS_ADAPT_DMG > 1.0);
   // SHADOW：速度差+20以上＝飽和＆ゲージ満 → 1.0／同速ゲージ0 → 0
   ck('shadow_full', approx(winProgress(S({passive:'shadow',speed:65,gauge:45}), S({speed:45})), 1.0));
   ck('shadow_zero', approx(winProgress(S({passive:'shadow',speed:50,gauge:0}), S({speed:50})), 0));
@@ -6217,6 +6219,9 @@ function applyUnique(attacker, defender, aName, dName) {
 }
 
 // ===== ダメージ適用 =====
+// NEXUS-7 適応学習：回避型(SHADOW)・再生型(LYRA)の手を解析して火力を上乗せ（この2対面のみ）。
+// 苦手2対面でのダメージレース僅差負けを是正＝NEXUS底上げ＋SHADOW/LYRA天井下げ（他対面は不変）。1.0=無効。TUNABLE。
+const NEXUS_ADAPT_DMG = 1.10;
 function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
   let finalDmg = dmg;
   if (defender.guardThisTurn && !defender.primed && !guardBreak) {
@@ -6252,6 +6257,10 @@ function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
   if (defender.passive === 'nova' && defender.hp <= Math.floor(defender.maxHp * 0.4)) finalDmg = Math.round(finalDmg * 0.75);
   // NOVA QUEEN 序盤パッシブ: HP48以上で被ダメ-10%（2026-05-28: -5%→-10% 救済）
   if (defender.passive === 'nova' && defender.hp >= 48) finalDmg = Math.round(finalDmg * 0.90);
+  // NEXUS-7 適応学習：SHADOW(回避)/LYRA(再生)への解析火力（この2対面のみ・スプレッド締め）
+  if (NEXUS_ADAPT_DMG !== 1.0 && attacker.passive === 'learning' && (defender.passive === 'shadow' || defender.passive === 'lyrax')) {
+    finalDmg = Math.round(finalDmg * NEXUS_ADAPT_DMG);
+  }
   finalDmg = Math.max(0, finalDmg);
   defender.hp -= finalDmg;
   attacker.totalDmgDealt += finalDmg;

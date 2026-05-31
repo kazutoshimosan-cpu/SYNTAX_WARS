@@ -2654,7 +2654,7 @@ const CHARS = {
     passiveKeys:'属性学習で威力2倍 ／ 固有技被ダメ-20% ／ 長引くほど相手の長所を特徴解析',
     moves:{ weak:'ナノブレード', mid:'EMP波動', strong:'プラズマカノン', guard:'GUARD', unique:'量子ビーム' },
     passive:'learning', uniqueName:'量子ビーム',
-    passiveDesc:'アドバンスド・ラーニング：相手の属性攻撃がヒットすると学習済みフラグをセット。同じ属性を自分が使う時に威力×2.0（+100%）。発動までフラグを保持。全属性攻撃に固有×1.3バフあり。相手の固有技被ダメ-30%。回復封じ持続+1T。特徴解析：戦うほど相手の"核"となる長所（加速・腐食・被ダメ軽減・与ダメ）を毎ターン少しずつ削る＝長期戦ほど効く。',
+    passiveDesc:'アドバンスド・ラーニング：相手の属性攻撃がヒットすると学習済みフラグをセット。同じ属性を自分が使う時に威力×2.0（+100%）。発動までフラグを保持。全属性攻撃に固有×1.3バフあり。相手の固有技被ダメ-30%。回復封じ持続+1T。特徴解析：戦うほど相手の"核"となる長所（加速・腐食・被ダメ軽減・与ダメ）を毎ターン少しずつ削る＝長期戦ほど効く。さらに相手の土俵を奪い返す＝対SHADOWはその機動（SPEED）を毎ターン削り、対LYRAは逆に相手を腐食させつつ自分が回復する。',
     uniqueDesc:'量子ビーム：45ダメージ・命中でゲージ+25%＋次ターン属性コスト0＆威力+20%',
   },
   shadow: {
@@ -6255,8 +6255,12 @@ function applyUnique(attacker, defender, aName, dName) {
 // SHADOW:加速量(殴って得る速度上昇)／LYRA:腐食(攻めの削り)／NOVA:被ダメ軽減／TITAN・BLAZE・ミラーNEXUS:与ダメ。
 // 解析率 = min(上限, perTurn×経過ターン)、startTurnから起動（序盤は無害・長引くほど効く＝"学習"の味）。
 // 与ダメ削りだけは効きが強いので専用の低い上限(dmgMaxErosion)を使う＝得意のTITAN/BLAZEを過剰に殴らない。
+// 【苦手対面の追加対策（2026-05-31）＝同じ"解析して相手の土俵を奪い返す"枠】
+//   対SHADOW: 毎ターンSHADOWの現在SPEEDを解析率ぶん直接削る（最大 shadowSpdErode/ターン）＝tempo支配を崩す。
+//   対LYRA  : 毎ターンNEXUSがLYRAに腐食を与え(最大 lyraCorrode/ターン)＋NEXUS自身も回復(最大 lyraHeal/ターン)＝長期戦の土俵を奪い返す。
+//   いずれも解析率と同じくターン経過で増える。0にすれば旧挙動＝精密ペア測定で比較可。
 // 全てTUNABLE：__nashTune({nexusAnalysis:{on:false}}) で旧挙動（解析なし）と同じ物差しで比較可。
-let NEXUS_ANALYSIS = { on: true, startTurn: 2, perTurn: 0.04, maxErosion: 0.40, dmgMaxErosion: 0.22 };
+let NEXUS_ANALYSIS = { on: true, startTurn: 2, perTurn: 0.04, maxErosion: 0.40, dmgMaxErosion: 0.22, shadowSpdErode: 0.20, lyraCorrode: 4, lyraHeal: 4 };
 // analyzer(=NEXUS側)が相手に課す解析率。analyzerがNEXUS(learning)でなければ0。ミラーは双方が課す＝対称で相殺。
 // cap省略時はmaxErosion、与ダメ削りは dmgMaxErosion を渡して効きを抑える。
 function nexusAnalysisFrac(analyzer, cap) {
@@ -6385,6 +6389,27 @@ function endOfTurn() {
     }
   });
 
+  // 1b. 特徴解析（対LYRA）：NEXUS(learning)がLYRAの土俵=腐食を奪い返す。毎ターンLYRAに腐食ダメージ（解析率ぶん増える・最大lyraCorrode/ターン）。
+  [pState, cState].forEach(s => {
+    if (s.passive === 'lyrax' && s.hp > 0) {
+      const opp = s.isPlayer ? cState : pState;
+      if (opp.passive === 'learning') {
+        const lf = nexusAnalysisFrac(opp);
+        const amt = Math.max(0, Math.round((NEXUS_ANALYSIS.lyraCorrode || 0) * lf / (NEXUS_ANALYSIS.maxErosion || 1)));
+        if (amt > 0) {
+          s.hp -= amt;
+          if (!_sim) {
+            const name = s.displayName || (s.isPlayer ? 'あなた' : (gameMode === '2p' ? s.name : 'CPU'));
+            AudioManager.playSE('corrosion');
+            screenShake(s.isPlayer);
+            showDmgPopup(s.isPlayer, amt);
+            addLog(`${name}が解析腐食 -${amt}HP`, 'hit');
+          }
+        }
+      }
+    }
+  });
+
   // 2. 回復系（LYRA-X自動回復）
   [pState, cState].forEach(s => {
     const name = s.displayName || (s.isPlayer ? 'あなた' : (gameMode === '2p' ? s.name : 'CPU'));
@@ -6393,6 +6418,22 @@ function endOfTurn() {
       s.hp = Math.min(s.maxHp, s.hp + 4);
       showDmgPopup(s.isPlayer, 4, 'heal');
       addLog(`${name}が自動回復 +4HP`, 'heal');
+    }
+    // 特徴解析（対LYRA）：NEXUS(learning)もLYRAの土俵=自動回復を奪い返す。解析率ぶん増える・最大lyraHeal/ターン。
+    if (s.passive === 'learning' && s.hp > 0) {
+      const opp = s.isPlayer ? cState : pState;
+      if (opp.passive === 'lyrax') {
+        const lf = nexusAnalysisFrac(s);
+        const amt = Math.max(0, Math.round((NEXUS_ANALYSIS.lyraHeal || 0) * lf / (NEXUS_ANALYSIS.maxErosion || 1)));
+        if (amt > 0) {
+          s.hp = Math.min(s.maxHp, s.hp + amt);
+          if (!_sim) {
+            AudioManager.playSE('lyrax_autoHeal', 0.4);
+            showDmgPopup(s.isPlayer, amt, 'heal');
+            addLog(`${name}が解析回復 +${amt}HP`, 'heal');
+          }
+        }
+      }
     }
   });
 
@@ -6406,6 +6447,23 @@ function endOfTurn() {
     s.fast = s.speed >= 70;
     s.slow = s.speed <= 35;
     if (!s.slow) s.corrode = false; // SLOW解除で腐食タグもクリア
+  });
+
+  // 3b. 特徴解析（対SHADOW）：NEXUS(learning)と戦う間、SHADOWの現在SPEEDを解析率ぶん直接削る（最大shadowSpdErode/ターン）＝tempo支配を崩す。
+  [pState, cState].forEach(s => {
+    if (s.passive === 'shadow' && s.speed > 0) {
+      const opp = s.isPlayer ? cState : pState;
+      const sf = (opp.passive === 'learning') ? nexusAnalysisFrac(opp, NEXUS_ANALYSIS.shadowSpdErode) : 0;
+      if (sf > 0) {
+        const cut = Math.round(s.speed * sf);
+        if (cut > 0) {
+          s.speed = Math.max(0, s.speed - cut);
+          s.fast = s.speed >= 70;
+          s.slow = s.speed <= 35;
+          if (!_sim) addLog(`${s.displayName || 'CPU'}のSPEEDを解析 -${cut} → ${Math.round(s.speed)}`, 'status');
+        }
+      }
+    }
   });
 
   // 4. カウントダウン

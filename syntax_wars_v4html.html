@@ -4050,6 +4050,7 @@ function serializeState(s) {
     // opp未指定＝LYRAの相手SLOW割引のみ保守側（gauge50要求）になるが最終ゲートはJSが判断。
     passive: s.passive,
     canUnique: canUseUnique(s),
+    uniqueCost: uniqueGaugeCost(s),  // UI表示用：今の固有技コスト（BLAZE起爆中=0/TITAN・NOVAはHP連動/SHADOW=45）。opp無し＝LYRA相手SLOW割引のみ保守側。
   };
 }
 function applySerializedState(s, data) {

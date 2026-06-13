@@ -782,6 +782,9 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
 .dmg-popup.big  { font-size:26px; color:#ff8800; text-shadow: 0 0 10px #ff6600, 0 0 24px #ff660066; }
 .dmg-popup.huge { font-size:32px; color:#ffdd00; text-shadow: 0 0 14px #ffaa00, 0 0 32px #ffaa0066; letter-spacing:2px; }
 .dmg-popup.heal { font-size:18px; color:#44ff88; text-shadow: 0 0 8px #00ff44, 0 0 18px #00ff4466; }
+/* 継続/受動ダメ＝攻撃被弾(赤/橙)と別色＋ラベル。腐食=毒紫／自爆=燻る橙赤。小さめ＝チップダメの含意。 */
+.dmg-popup.corrode { font-size:16px; color:#c77dff; text-shadow: 0 0 8px #a64dff, 0 0 18px #a64dff66; }
+.dmg-popup.selfdmg { font-size:16px; color:#ff6a33; text-shadow: 0 0 8px #ff4400, 0 0 18px #ff440066; }
 
 /* ===== アクションポップラベル ===== */
 .action-pop {
@@ -3776,6 +3779,12 @@ function showDmgPopup(isPlayer, amount, type = 'normal') {
   if (type === 'heal') {
     cls += ' heal';
     popup.textContent = `+${amount}`;
+  } else if (type === 'corrode') {
+    cls += ' corrode';
+    popup.textContent = `腐食 -${amount}`;   // 継続ダメ＝攻撃被弾と区別（毒色＋ラベル）
+  } else if (type === 'selfdmg') {
+    cls += ' selfdmg';
+    popup.textContent = `自爆 -${amount}`;   // BLAZE自爆＝受動ダメ
   } else {
     if (amount >= 30) cls += ' huge';
     else if (amount >= 20) cls += ' big';
@@ -6147,7 +6156,7 @@ function applyBlazeJibaku(attacker, defender, dealtDmg, aName, dName) {
   attacker.hp -= selfDmg;
   defender.hp -= chainDmg;
   screenShake(attacker.isPlayer);
-  showDmgPopup(attacker.isPlayer, selfDmg);
+  showDmgPopup(attacker.isPlayer, selfDmg, 'selfdmg');
   if (chainDmg > 0) { screenShake(defender.isPlayer); showDmgPopup(defender.isPlayer, chainDmg); }
   addGauge(attacker, 8); // 自爆時ゲージ2倍（通常+8が既に入っているので追加+8）
 }
@@ -6512,7 +6521,7 @@ function endOfTurn() {
         s.slow = s.speed <= 35; s.fast = s.speed >= 70;
       }
       screenShake(s.isPlayer);
-      showDmgPopup(s.isPlayer, corrodeDmg);
+      showDmgPopup(s.isPlayer, corrodeDmg, 'corrode');
       addLog(`${name}が腐食ダメージ -${corrodeDmg}HP`, 'hit');
     }
   });
@@ -6530,7 +6539,7 @@ function endOfTurn() {
             const name = s.displayName || (s.isPlayer ? 'あなた' : (gameMode === '2p' ? s.name : 'CPU'));
             AudioManager.playSE('corrosion');
             screenShake(s.isPlayer);
-            showDmgPopup(s.isPlayer, amt);
+            showDmgPopup(s.isPlayer, amt, 'corrode');
             addLog(`${name}が解析腐食 -${amt}HP`, 'hit');
           }
         }

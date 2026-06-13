@@ -1780,11 +1780,6 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
         TAUNT<span class="cost" id="cost-taunt">30%</span>
       </button>
     </div>
-    <div class="btn-grid grid-spact" style="grid-template-columns:1fr">
-      <button class="action-btn" id="btn-overclock" onclick="selectAction('overclock')">
-        OVERCLOCK<span class="cost" id="cost-overclock">100%</span>
-      </button>
-    </div>
     <div class="col-label label-spmove">SPECIAL MOVE</div>
     <div class="btn-grid grid-spmove" style="grid-template-columns:1fr">
       <button class="action-btn" id="btn-unique" onclick="selectAction('unique')">
@@ -2663,10 +2658,10 @@ const CHARS = {
     themeColor:'#ff003c', emoji:'🥷', imgSrc:'assets/image/thumbs/shadow_thumb.jpg',
     posterSrc:'assets/posters/shadow_9x16.png', posterMobileSrc:'assets/posters/mobile/shadow_poster_mobile.jpg', imgPosition:'top',
     catchphrase:'超速で回避　反撃で処理',
-    passiveKeys:'SPEED差20以上で強攻撃回避 ／ 回避でゲージ+25%',
+    passiveKeys:'SPEED差20以上で強攻撃回避 ／ 回避でゲージ+20%',
     moves:{ weak:'クナイ投げ', mid:'鎖鎌', strong:'影斬り', guard:'GUARD', unique:'分身斬り' },
     passive:'shadow', uniqueName:'分身斬り',
-    passiveDesc:'絶影：SPEED差20以上で相手の強攻撃を確定回避。通常ダメージ-15%、速度特攻ボーナスはフルで入る。速度差回避でゲージ+25%。2回行動時の2撃目は確定クリティカル。SPEED自然回復なし。',
+    passiveDesc:'絶影：SPEED差20以上で相手の強攻撃を確定回避。通常ダメージ-15%、速度特攻ボーナスはフルで入る。速度差回避でゲージ+20%。2回行動時の2撃目は確定クリティカル。SPEED自然回復なし。',
     uniqueDesc:'分身斬り：ゲージ45%・影斬り×2.0ダメージ＋次の相手の攻撃を1回無効化（ダメージ・追加効果0）',
   },
   novaqueen: {
@@ -2687,10 +2682,10 @@ const CHARS = {
     themeColor:'#ffb000', emoji:'🦾', imgSrc:'assets/image/thumbs/titan_thumb.jpg',
     posterSrc:'assets/posters/titan_9x16.png', posterMobileSrc:'assets/posters/mobile/titan_poster_mobile.jpg', imgPosition:'20% top',
     catchphrase:'遅いほど強い　押して潰す',
-    passiveKeys:'SLOW状態で被ダメ-15%＆与ダメ+10% ／ FAST状態でガード不可',
+    passiveKeys:'剛体：攻撃が飲まれず相打ち ／ SLOW状態で被ダメ-15%＆与ダメ+10% ／ FAST状態でガード不可',
     moves:{ weak:'鉄拳', mid:'地震砕き', strong:'ギガントプレス', guard:'GUARD', unique:'超電磁砲' },
     passive:'titan', uniqueName:'超電磁砲',
-    passiveDesc:'不動の要塞：SLOW状態で被ダメ-15%＆与ダメ+10%（全キャラ共通のSLOWペナルティを無効化＋バフ）。FAST状態（オーバーヒート）で通常攻撃-10%・ガード不可。',
+    passiveDesc:'剛体（ごうたい）：質量が大きすぎて攻撃が"飲み込まれない"＝弱・中が上位の攻撃（中・強）に消されず相打ちになり押し通す。SLOW状態で被ダメ-15%＆与ダメ+10%（全キャラ共通のSLOWペナルティを無効化＋バフ）。FAST状態（オーバーヒート）で通常攻撃-10%・ガード不可。',
     uniqueDesc:'超電磁砲：残HP50以上→30、30〜49→45、29以下→55ダメージ',
   },
   lyrax: {
@@ -2699,11 +2694,11 @@ const CHARS = {
     themeColor:'#39ff14', emoji:'🧬', imgSrc:'assets/image/thumbs/lyra_thumb.jpg',
     posterSrc:'assets/posters/lyra_9x16.png', posterMobileSrc:'assets/posters/mobile/lyra_poster_mobile.jpg',
     catchphrase:'slowで腐食　持久で削れ',
-    passiveKeys:'毎ターン+4HP自動回復 ／ SLOW相手に毎ターン腐食-3HP（TITANは-2）',
+    passiveKeys:'毎ターン+4HP自動回復 ／ HP40%以下でゲージ+80% ／ SLOW相手に毎ターン腐食-3HP（TITANは-2）',
     moves:{ weak:'酸液噴射', mid:'変異爪', strong:'捕縛触手', guard:'GUARD', unique:'細胞再生' },
     passive:'lyrax', uniqueName:'細胞再生',
-    passiveDesc:'バイオ・エボリューション：毎ターン終了時+4HP自動回復。スロー・回復封じ効果が1ターン持続。SLOW状態の相手に毎ターン腐食-3HP（TITANは-2）。',
-    uniqueDesc:'細胞再生：35ダメージ・与ダメの30%をHP吸収',
+    passiveDesc:'バイオ・エボリューション：毎ターン終了時+4HP自動回復。HP40%以下でゲージ増加+80%（瀕死から細胞再生を確実に撃つ逆転燃料）。スロー・回復封じ効果が1ターン持続。SLOW状態の相手に毎ターン腐食-3HP（TITANは-2）。',
+    uniqueDesc:'細胞再生：35ダメージ・与ダメをHP吸収（30%〜瀕死で最大60%・回復封じ無視）。HP40%以下または相手SLOWでコスト30%＝傷ついた時ほど撃てて立て直す逆転技。',
   },
   blaze: {
     name:'BLAZE 🔥', type:'爆発型', hp:100, speed:50, gauge:30,
@@ -2763,7 +2758,8 @@ function uniqueGaugeCost(s, opp) {
   }
   // LYRA（option B改・2026-05-30）：勝ち筋＝拘束（相手SLOW）が立った時だけ細胞再生を撃ちやすく。cost30＝到達天井(~38)の下に置き実際に撃てるように（40では届かず不発だった）。
   // 相手情報(opp)を渡された時だけ適用。未指定の呼び出しは従来どおり cost 50（安全側＝割引が出ないだけ）。
-  if (s.passive === 'lyrax' && opp && opp.slow) return 30;
+  // LYRA：拘束(相手SLOW)時、または自分が瀕死(HP40%以下)で細胞再生を撃ちやすく＝傷ついた時ほど撃てる逆転技（バースト/封じへの耐性）。
+  if (s.passive === 'lyrax' && ((opp && opp.slow) || s.hp <= Math.floor(s.maxHp * 0.4))) return 30;
   return 50;
 }
 /** 固有技を選択可能か（BLAZE起爆中はコスト0扱い・ただし初回のみ）。opp は LYRA の状況依存コスト判定用（省略可）。 */
@@ -2792,7 +2788,7 @@ const UNIQUE_SUBTEXT = {
   shadow:   '次の攻撃を1回無効化 / ダメージも追加効果もすべて0に\n【重さ】ゲージ45%。相手の大技を1回だけ潰す保険',
   nova:     '35＋損失HP×0.4ダメージ・相手ゲージ-20% / 属性攻撃1ターン封じ\n【重さ】ゲージ50%／HP40%以下:30%／HP20%以下:20%。瀕死ほど火力が跳ねる',
   titan:    'HP残量で威力変化・瀕死で最大55ダメージ\n【重さ】残HPテーブル。ガード不可のFAST時は注意',
-  lyrax:    '35ダメージ・与ダメの30%をHP吸収\n【重さ】CROWD中は吸収率アップ（キャラボーナス）',
+  lyrax:    '35ダメージ・与ダメをHP吸収（30%〜瀕死で最大60%・回復封じ無視）\n【重さ】HP40%以下/相手SLOWでコスト30%。傷つくほど撃てて立て直す',
   blaze:    '43ダメージ・自爆20% / 起爆準備後なら56ダメージ＆自爆なし\n【重さ】起爆後はリスク激減で一気に決まる',
 };
 // EASYナビ用：一行の「重さ」ラベル（NORMALのナビには出さない）
@@ -3195,7 +3191,6 @@ const TUT_PAGES = [
       <div class="tut-row"><span class="tut-key">スロー（30%）</span><span class="tut-val">相手のSPEEDを大幅低下。SLOW状態は攻撃-20%</span></div>
       <div class="tut-row"><span class="tut-key">回復（30%）</span><span class="tut-val">HP+15〜25回復。回復封じ中は使用不可</span></div>
       <div class="tut-row"><span class="tut-key">挑発（30%）</span><span class="tut-val">次の自分の攻撃ダメージ+30%。回復封じ中は使用不可</span></div>
-      <div class="tut-row"><span class="tut-key">オーバークロック（100%）</span><span class="tut-val">次ターン2回行動！ただし3ターンゲージ増加量-50%</span></div>
 
       <div class="tut-h">SPEEDの仕組み</div>
       <div class="tut-row"><span class="tut-key">FAST（70以上）</span><span class="tut-val">先手を取りやすい。ただし速度特攻で追加ダメージを受けるリスクあり</span></div>
@@ -3230,7 +3225,7 @@ const TUT_PAGES = [
       <div class="tut-row"><span class="tut-key">ゲージ管理</span><span class="tut-val">弱攻撃でゲージを溜めて、チャンスに特殊技を叩き込む</span></div>
       <div class="tut-row"><span class="tut-key">読み合い</span><span class="tut-val">相手がカウンターを多用するなら「ガード」や「スロー」で様子見</span></div>
       <div class="tut-row"><span class="tut-key">速度管理</span><span class="tut-val">加速しすぎると速度特攻の的に。SPEEDは70前後をキープが基本</span></div>
-      <div class="tut-row"><span class="tut-key">逆転狙い</span><span class="tut-val">HP40%以下はゲージ増加×1.5倍！一気にオーバークロックを狙える</span></div>
+      <div class="tut-row"><span class="tut-key">逆転狙い</span><span class="tut-val">HP40%以下はゲージ増加×1.5倍！一気に特殊技で逆転を狙える</span></div>
 
       <div class="tut-note">キャラ選択画面でキャラをタップするとパッシブ・固有技の詳細を確認できます。</div>
     `
@@ -4051,6 +4046,10 @@ function serializeState(s) {
     crowdBonusActive: s.crowdBonusActive,
     crowdBonusPending: s.crowdBonusPending,
     actionHistory: s.actionHistory ? [...s.actionHistory] : [],
+    // UIヒント用：固有技を今撃てるか（BLAZE起爆初回0コスト/各キャラ固有コストを脳の判定で正規化）。
+    // opp未指定＝LYRAの相手SLOW割引のみ保守側（gauge50要求）になるが最終ゲートはJSが判断。
+    passive: s.passive,
+    canUnique: canUseUnique(s),
   };
 }
 function applySerializedState(s, data) {
@@ -4535,7 +4534,7 @@ function isActionLegal(s, action, opp) {
     default: return false;
   }
 }
-const NASH_ACTIONS = ['weak','mid','strong','guard','counter','speedatk','guardbk','sealatk','accel','slow','heal','taunt','overclock','unique'];
+const NASH_ACTIONS = ['weak','mid','strong','guard','counter','speedatk','guardbk','sealatk','accel','slow','heal','taunt','unique'];
 function legalMoves(s, opp) { return NASH_ACTIONS.filter(a => isActionLegal(s, a, opp)); }
 
 const NASH_SAMPLES = 12;  // 各セルのモンテカルロ試行数（TUNABLE：重ければ減らす）
@@ -5007,7 +5006,6 @@ function updateButtons(s = pState, opp = (s === pState ? cState : pState)) {
   document.getElementById('btn-slow').classList.toggle('disabled', s.gauge < 30);
   document.getElementById('btn-heal').classList.toggle('disabled', s.gauge < 30 || s.sealTurns > 0);
   document.getElementById('btn-taunt').classList.toggle('disabled', s.gauge < 30 || s.sealTurns > 0);
-  document.getElementById('btn-overclock').classList.toggle('disabled', s.gauge < 100);
   document.getElementById('btn-unique').classList.toggle('disabled', !canUseUnique(s, opp));
 }
 
@@ -5156,7 +5154,6 @@ function chooseCpuAction() {
       slow:     s.gauge >= 30 && opp.passive !== 'titan' && !novaVsLyra,
       heal:     turn >= 3 && s.gauge >= 30 && s.sealTurns === 0,
       taunt:    s.gauge >= 30 && s.sealTurns === 0,
-      overclock:s.gauge >= 100,
       unique:   canUseUnique(s),
     };
 
@@ -5311,7 +5308,6 @@ function chooseCpuAction() {
     add('slow', 2);
     if (turn >= 3 && s.sealTurns === 0) { add('heal', 1); add('taunt', 2); }
   }
-  if (s.gauge >= 100) add('overclock', 1);
   if (canUseUnique(s)) add('unique', 2);
 
   // ===== 対NOVA（全キャラ共通：NORMALでも発動）=====
@@ -5497,6 +5493,13 @@ function chooseCpuAction() {
     }
   }
 
+  // ★4すくみ 軽量読みバイアス（NORMAL）：相手の直前の基礎手のRPS天敵を少しだけ盛る。
+  // 中>弱・強>中・ガード>強・弱>ガード。連発されるほど読みを強める（軽め＝ハード読みにしない）。
+  {
+    const cnt = { weak: 'mid', mid: 'strong', strong: 'guard', guard: 'weak' }[opp.lastAction];
+    if (cnt) add(cnt, 2 + Math.min(2, (opp.sameStreak || 1) - 1));
+  }
+
   // 対SHADOW：強攻撃は当たりにくいので常に禁止（全キャラ共通）／NOVA×LYRAはslowをプールから除外
   let filtered = (opp.passive === 'shadow') ? pool.filter(a => a !== 'strong') : pool.slice();
   if (novaVsLyra) filtered = filtered.filter(a => a !== 'slow' && a !== 'speedatk');
@@ -5559,6 +5562,51 @@ function preSetDefenseStance(s, act, shadowMirrorCrowdSimul = false, ohkMirrorTu
   }
 }
 
+// ===== 基礎4すくみ 相性判定（2026-06-07追加：ゲージ切れ後の削り合いを読み合い化） =====
+// 中>弱・強>中（隣接ティアで上位が下位を「飲む」＝下位ダメ0）／弱>ガード（貫通＝半減なし）。
+// 強>ガードはdealDamage側の既存ジャスガで処理。対角(弱vs強)・同段はトレード据え置き。
+// ★裁定A：飲み込みはティアで決まり速度の先後で覆らないが、飲む側がスカ/ミスした時は飲み込み権を失う。
+//   →飲む側の接続(命中/速度差スカし)をここで先に確定し、その結果をapplyActionが流用する（_preRoll）。
+function _attackConnects(attacker, defender, action) {
+  // 飲む側は mid か strong。接続したか(speed-whiff/命中)を返す。
+  if (action === 'strong' && defender.speed - attacker.speed >= 20) return { whiff: true, hit: false };
+  if (action === 'weak') return { whiff: false, hit: true };
+  const shadowSureHit = attacker.passive === 'shadow' && attacker.shadowSureHitNext && (action === 'mid' || action === 'strong');
+  if (_tutForceHit || shadowSureHit) return { whiff: false, hit: true };
+  const hitRate = ({ weak: 100, mid: 80, strong: 70 }[action]) + attacker.hitMod;
+  return { whiff: false, hit: _rng() * 100 <= hitRate };
+}
+
+function resolveBaseAffinity(p, c, pAct, cAct) {
+  // フラグ初期化（毎ターン）
+  for (const s of [p, c]) { s._affSwallowed = false; s._affPierce = false; s._affSwallowWin = false; s._preRoll = null; }
+  // ★A/B検証用トグル：__noAffinity=true で4すくみOFF（旧ルール＝飲み込み/貫通なし）
+  if (typeof window !== 'undefined' && window.__noAffinity) return;
+
+  const TIER = { weak: 1, mid: 2, strong: 3 };
+  const pT = TIER[pAct], cT = TIER[cAct];
+
+  // --- 攻撃 vs 攻撃：隣接ティアで上位が下位を飲む（飲む側が接続した時のみ）---
+  if (pT && cT) {
+    if (cT - pT === 1) {            // c が上位 → c が p を飲む
+      const r = _attackConnects(c, p, cAct);
+      c._preRoll = r;
+      // ★TITAN剛体：TITANの攻撃は飲まれない＝飲み込み不成立で相打ち（両方満額）
+      if (!r.whiff && r.hit && p.passive !== 'titan') { p._affSwallowed = true; c._affSwallowWin = true; }
+    } else if (pT - cT === 1) {     // p が上位 → p が c を飲む
+      const r = _attackConnects(p, c, pAct);
+      p._preRoll = r;
+      if (!r.whiff && r.hit && c.passive !== 'titan') { c._affSwallowed = true; p._affSwallowWin = true; } // ★TITAN剛体
+    }
+    // 差2(弱vs強)・差0(同段)＝据え置き
+    return;
+  }
+
+  // --- 弱 vs ガード：弱が貫通（半減なし）。強vsガード=ジャスガ／中vsガード=半減は既存処理 ---
+  if (pAct === 'weak' && cAct === 'guard') p._affPierce = true;
+  if (cAct === 'weak' && pAct === 'guard') c._affPierce = true;
+}
+
 // ===== 行動解決 =====
 function resolveActions(pAct, cAct) {
   devSaveUndo();
@@ -5594,9 +5642,15 @@ function resolveActions(pAct, cAct) {
     addLog('⭐ 双影：CROWD同時ターン — カウンター側の構えは2ヒット分まで（コストはその1回）', 'status');
   }
 
+  // ★基礎4すくみ相性をダメージ前に確定（ティア依存・速度の先後で覆らない）
+  resolveBaseAffinity(pState, cState, pAct, cAct);
+
   const speedDiff = pState.speed - cState.speed;
   const absSpeedDiff = Math.abs(speedDiff);
-  const pFirst = speedDiff >= 0;
+  // SPEED差があれば速い方が先（設計通り）。完全同値(タイ)は固定でP1先＝1P有利だったので
+  // コインフリップで割る（_rng＝命中判定と同じ乱数源・sim時は注入seedで再現可能）。
+  // タイは差<10でキャンセル無し＝両者必ず発動、揺れるのは適用順のマージンのみ（席順有利を解消）。
+  const pFirst = speedDiff > 0 ? true : (speedDiff < 0 ? false : (_rng() < 0.5));
 
   const first  = pFirst ? pState : cState;
   const firstAct  = pFirst ? pAct : cAct;
@@ -5638,7 +5692,9 @@ function resolveActions(pAct, cAct) {
       const lbl = pState.passive === 'shadow' ? `⭐ 絶影の極み！${p1Disp}が追加行動！` : `▶ オーバークロック発動！${p1Disp}が追加行動！`;
       addLog(lbl, 'status');
       addLog(`▶ 2回目 ${p1Disp}: ${actionLabel(pAct, pState)}`, 'log-action');
+      if (pState.passive === 'shadow') pState._critNext = true;  // 絶影：2撃目確定クリティカル
       applyAction(pState, cState, pAct, extraOpts);
+      pState._critNext = false;  // 攻撃が出なかった場合も確実にリセット
     }
   }
   if (cState.extraTurn) {
@@ -5647,7 +5703,9 @@ function resolveActions(pAct, cAct) {
       const lbl = cState.passive === 'shadow' ? `⭐ 絶影の極み！${p2Disp}が追加行動！` : `▶ オーバークロック発動！${p2Disp}が追加行動！`;
       addLog(lbl, 'status');
       addLog(`▶ 2回目 ${p2Disp}: ${actionLabel(cAct, cState)}`, 'log-action');
+      if (cState.passive === 'shadow') cState._critNext = true;  // 絶影：2撃目確定クリティカル
       applyAction(cState, pState, cAct, extraOpts);
+      cState._critNext = false;  // 攻撃が出なかった場合も確実にリセット
     }
   }
 
@@ -5686,6 +5744,20 @@ function applyAction(attacker, defender, action, opt) {
     case 'mid':
     case 'strong': {
       AudioManager.playAttackSE(attacker.passive, action);
+      // ★4すくみ：飲み込まれた手はダメージ0。ゲージは電池(弱=満額)/成果報酬(中=0)ルール。
+      if (attacker._affSwallowed) {
+        attacker._affSwallowed = false;
+        let g = { weak:12, mid:8, strong:4 }[action];
+        if (attacker.sameStreak >= 3) g *= 0.7;
+        if (action === 'weak') addGauge(attacker, attacker.passive === 'nova' ? g * 1.5 : g); // 弱=電池：飲まれてもゲージ
+        // 中=成果報酬：飲まれたらゲージ0
+        if (attacker.primed) attacker.primed = false;
+        const eater = action === 'weak' ? '中' : '強';
+        addLog(`– ${aName}の${actionLabel(action, attacker)}は${eater}に飲み込まれた！（ダメージ0）`, 'log-miss');
+        showActionPop(attacker.isPlayer, 'SWALLOWED', 'misread');
+        showBattleFlash('SWALLOWED', 'miss');
+        break;
+      }
       const base = { weak:8, mid:15, strong:22 }[action];
       // v5: 命中率 弱100%、中80%、強70%
       const baseHitRate = { weak:100, mid:80, strong:70 }[action];
@@ -5693,11 +5765,14 @@ function applyAction(attacker, defender, action, opt) {
 
       // 全キャラ共通：相手SPEEDが自分より20以上高い場合、強攻撃は確定外れ
       // SHADOW絶影：速度差回避時にゲージ+20%ボーナス
-      if (action === 'strong' && defender.speed - attacker.speed >= 20) {
+      // ★4すくみ：飲む側はresolveBaseAffinityで接続を先決済み→_preRollを流用（命中/スカしの再ロール回避）
+      const _pre = attacker._preRoll; attacker._preRoll = null;
+      const _whiff = _pre ? _pre.whiff : (defender.speed - attacker.speed >= 20);
+      if (action === 'strong' && _whiff) {
         addLog(`– ${aName}の強攻撃…速度差で外れた`, 'log-miss');
         showBattleFlash('MISS', 'miss');
         AudioManager.playSE('miss');
-        addGauge(attacker, 5);
+        addGauge(attacker, (typeof window !== 'undefined' && window.__noAffinity) ? 5 : 4);
         if (attacker.primed) attacker.primed = false;
         if (defender.counterStance) { clearCounterStance(defender); addLog(`– カウンター空振り（攻撃届かず）`, 'log-miss'); showBattleFlash('MISS', 'miss'); }
         if (defender.passive === 'shadow') {
@@ -5714,8 +5789,9 @@ function applyAction(attacker, defender, action, opt) {
       // SHADOW：速度差回避後の「反撃必中」は中/強に適用（カウンターは別処理）
       const shadowSureHit = attacker.passive === 'shadow' && attacker.shadowSureHitNext && (action === 'mid' || action === 'strong');
       const blazePrimedBefore = attacker.passive === 'blaze' && attacker.primed;
-      if (action !== 'weak' && !_tutForceHit && !shadowSureHit && _rng() * 100 > hitRate) {
-        const gaugeOnMiss = action === 'strong' ? 5 : 8;
+      const _missed = _pre ? !_pre.hit : (_rng() * 100 > hitRate);
+      if (action !== 'weak' && !_tutForceHit && !shadowSureHit && _missed) {
+        const gaugeOnMiss = action === 'strong' ? ((typeof window !== 'undefined' && window.__noAffinity) ? 5 : 4) : 8;
         addLog(`– ${aName}の攻撃がはずれた`, 'log-miss');
         showBattleFlash('MISS', 'miss');
         AudioManager.playSE('miss');
@@ -5726,8 +5802,8 @@ function applyAction(attacker, defender, action, opt) {
       }
 
       // ダメージ計算
-      let dmg = base * attacker.dmgMod;
-      // SHADOW通常攻撃の追加減衰は廃止（dmgModのみ適用）
+      // SHADOW絶影：通常攻撃(弱/中/強)は与ダメ-15%＝専用係数0.85（dmgMod0.9でなく。機動の代償。速度特攻ボーナスは別途フル加算）。
+      let dmg = base * ((attacker.passive === 'shadow') ? 0.85 : attacker.dmgMod);
       dmg = applySlowMod(attacker, dmg);
       if (attacker.taunt) { dmg *= 1.3; attacker.taunt = false; }
       if (attacker.primed && attacker.passive === 'blaze') dmg *= 1.3;
@@ -5736,14 +5812,16 @@ function applyAction(attacker, defender, action, opt) {
       if (titanOverheat) { dmg *= 0.9; addLog(`${aName}オーバーヒート！攻撃-10%・ガード不可！`, 'status'); }
       dmg = Math.round(dmg);
 
-      // ゲージ（弱+10%、中+12%、強+5%・調整: 旧 弱15/中8 → 弱連打のゲージ稼ぎ支配を是正し中攻撃に価値を持たせる）/ NOVA QUEEN通常攻撃ゲージ×1.5（v6.7：×1.5→×1.2 ナーフ → 2026-05-28：全戻し）
-      let gaugeGain = { weak:10, mid:12, strong:5 }[action];
+      // ゲージ（2026-06-07 4すくみ導入で再配分：弱+12=電池/中+8=成果報酬/強+4=成果報酬。弱は飲まれてもゲージ入る＝溜め役。中/強は飲まれ/ジャスガ時0）/ NOVA QUEEN通常攻撃ゲージ×1.5
+      let gaugeGain = ((typeof window !== 'undefined' && window.__noAffinity) ? { weak:10, mid:12, strong:5 } : { weak:12, mid:8, strong:4 })[action];
       // 案B：同一行動3連続〜で観客が飽きてゲージ獲得×0.7（読まれる手の連発を罰し心理戦を促す）
       if (attacker.sameStreak >= 3) {
         gaugeGain *= 0.7;
         addLog(`${aName}：同じ手の連発で観客が飽きた…ゲージ獲得ダウン（×0.7）`, 'status');
       }
-      addGauge(attacker, attacker.passive === 'nova' ? gaugeGain * 1.5 : gaugeGain);
+      // ★4すくみ：強がジャスガされる時はゲージ0（読み負け=丸損）。中の半減・弱の貫通はゲージ入る。
+      const willBeJustGuarded = !(typeof window !== 'undefined' && window.__noAffinity) && action === 'strong' && defender.guardThisTurn && !defender.primed && !titanOverheat && !defender.counterStance;
+      if (!willBeJustGuarded) addGauge(attacker, attacker.passive === 'nova' ? gaugeGain * 1.5 : gaugeGain);
       if (attacker.primed) attacker.primed = false;
       // 通常攻撃ではBLAZE自爆なし（v5変更）
 
@@ -6215,7 +6293,9 @@ function applyUnique(attacker, defender, aName, dName) {
       } else if (defender.shimaiNext) { defender.shimaiNext = false; addLog(`${dName}の身代わり！無効！`, 'status'); }
       else {
         const finalDmg = dealDamage(attacker, defender, dmg, aName, dName);
-        const absorbRate = attacker.crowdBonusActive ? 0.5 : 0.3;
+        // 傷つくほど吸収UP（コムバック強化）：失HP割合で最大+0.3、CROWD時は0.5基点。上限0.6。
+        const lostFrac = attacker.maxHp > 0 ? (attacker.maxHp - attacker.hp) / attacker.maxHp : 0;
+        const absorbRate = Math.min(0.6, (attacker.crowdBonusActive ? 0.5 : 0.3) + lostFrac * 0.3);
         attacker.crowdBonusActive = false;
         const absorb = Math.round(finalDmg * absorbRate);
         attacker.hp = Math.min(attacker.maxHp, attacker.hp + absorb);
@@ -6273,6 +6353,8 @@ function nexusAnalysisFrac(analyzer, cap) {
 // NEXUS-7 素の火力つまみ（既定オフ＝1.0）。特徴解析の効きを単体で測れるよう一様火力盛りはオフに戻した（必要なら微調整用に残置）。
 // adaptDmg=旧"下駄"(SHADOW/LYRA対面のみ・既定オフ)。__nashTune({nexusBuff:{dmgMul:1.08}}) 等で復元・比較可（TUNABLE）。
 let NEXUS_BUFF = { dmgMul: 1.0, adaptDmg: 1.0 };
+// SHADOW絶影：2回行動（OC／絶影の極み）の2撃目は確定クリティカル（×1.5）。
+const SHADOW_DOUBLE_CRIT = 1.5;
 function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
   let finalDmg = dmg;
   if (defender.guardThisTurn && !defender.primed && !guardBreak) {
@@ -6289,6 +6371,13 @@ function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
       showActionPop(defender.isPlayer, 'JUST GUARD ✨', 'just-guard');
       showActionPop(attacker.isPlayer, 'MISREAD', 'misread');
       addAudience(3);
+    } else if (attacker.lastAction === 'weak' && attacker._affPierce) {
+      // ★4すくみ：弱>ガード＝貫通（半減せず満額）
+      addLog(`✨ ${aName}の弱攻撃がガードを貫通！ダメージ満額`, 'log-success');
+      showActionPop(attacker.isPlayer, 'PIERCE 💢', 'guard-break');
+      showActionPop(defender.isPlayer, 'MISREAD', 'misread');
+      addAudience(2);
+      // finalDmg = dmg のまま（半減しない）
     } else {
       finalDmg = Math.round(dmg * 0.5);
       addLog(`${dName}がガード！ダメージ半減`, '');
@@ -6324,6 +6413,13 @@ function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
     const dmgF = nexusAnalysisFrac(defender, NEXUS_ANALYSIS.dmgMaxErosion);
     if (dmgF > 0) finalDmg = Math.round(finalDmg * (1 - dmgF));
   }
+  // SHADOW絶影：2回行動の2撃目は確定クリティカル（攻撃が通る時だけ消費）。
+  if (attacker._critNext && finalDmg > 0) {
+    attacker._critNext = false;
+    finalDmg = Math.round(finalDmg * SHADOW_DOUBLE_CRIT);
+    addLog(`⭐ 絶影クリティカル！`, 'log-success');
+    showBattleFlash('CRITICAL', 'success');
+  }
   finalDmg = Math.max(0, finalDmg);
   defender.hp -= finalDmg;
   attacker.totalDmgDealt += finalDmg;
@@ -6340,10 +6436,14 @@ function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
 function addGauge(s, amount) {
   let inc = amount * s.gaugeIncMod;
   if (s.overclockCooldown > 0) inc *= 0.5;
-  // 一般ルール: HP40%以下でゲージ+50%（NOVA QUEENは固有ルール適用）
-  if (s.hp <= s.maxHp * 0.4 && s.passive !== 'nova') inc *= 1.5;
+  // 一般ルール: HP40%以下でゲージ+50%（NOVA QUEEN / LYRAは固有ルール適用）
+  if (s.hp <= s.maxHp * 0.4 && s.passive !== 'nova' && s.passive !== 'lyrax') inc *= 1.5;
   // NOVA QUEEN固有: 瀕死（HP40%以下）でゲージ増加+20%（一般ルールとは別）
   if (s.passive === 'nova' && s.hp <= Math.floor(s.maxHp * 0.4)) inc *= 1.2;
+  // LYRA固有: 瀕死（HP40%以下）でゲージ増加+80%。逆転王の細胞再生(cost30)へ確実に届かせる。
+  // 一般×1.5では低HP平均ゲージ23で割引コスト30に届かず逆転技が不発だった（計装1000戦で判明）。
+  // ×2.0だと合算53.5で単独首位＝効きすぎ→×1.8でパック(~51)へ合流（逆転機構は維持・×1.5の壊れには戻さない）。
+  if (s.passive === 'lyrax' && s.hp <= Math.floor(s.maxHp * 0.4)) inc *= 1.8;
   s.gauge = Math.min(100, s.gauge + inc);
 }
 
@@ -6356,6 +6456,8 @@ function endOfTurn() {
   cState.guardJustCharges = 0;
   clearCounterStance(pState);
   clearCounterStance(cState);
+  // ★4すくみ相性フラグのリセット
+  [pState, cState].forEach(s => { s._affSwallowed = false; s._affPierce = false; s._affSwallowWin = false; s._preRoll = null; });
   // CROWD BONUS: 前ターンactive→消滅、pending→active変換（1ターン遅延起動）
   [pState, cState].forEach(s => {
     s.crowdBonusActive = false; // 前ターンから持ち越した未使用ボーナスを消滅
@@ -6750,7 +6852,6 @@ function abSmartAct(s, opp) {
   if (s.gauge >= ccost)  add('counter',2);
   if (s.gauge >= 15)     add('accel',2);
   if (s.gauge >= 30 && opp.passive !== 'titan' && !novaVsLyra) { add('slow',2); if (turn >= 3 && !s.sealTurns) { add('heal',1); add('taunt',2); } }
-  if (s.gauge >= 100)    add('overclock',1);
   if (canUseUnique(s)) add('unique',2);
   // ===== 案B：アンチストリーク（全キャラ共通）=====
   // s.sameStreak は行動解決時に更新される。選択時点では「直前までの連続回数」。
@@ -7068,7 +7169,6 @@ function abRandomAct(s, opp) {
     if ((!opp || opp.passive !== 'titan') && !novaVsLyra) avail.push('slow');
     if (turn >= 3 && !s.sealTurns) avail.push('heal','taunt');
   }
-  if (s.gauge >= 100)   avail.push('overclock');
   if (canUseUnique(s)) avail.push('unique');
   const ok = avail.filter(a => cpuPoolAffordable(s, opp, a));
   return ok[Math.floor(Math.random() * ok.length)] || 'weak';
@@ -7085,7 +7185,6 @@ function abPrompt(s, opp) {
   }
   if (s.gauge >= 15)    avail.push('accel');
   if (s.gauge >= 30)  { avail.push('slow'); if (turn >= 3 && !s.sealTurns) avail.push('heal','taunt'); }
-  if (s.gauge >= 100)   avail.push('overclock');
   if (canUseUnique(s)) avail.push('unique');
   const strategyHint = {
     learning: s.learned
@@ -7115,7 +7214,7 @@ async function abGemmaAct(s, opp, url, model) {
     });
     const d = await r.json();
     const txt = (d.response || '').toLowerCase();
-    for (const a of ['speedatk','guardbk','sealatk','overclock','counter','unique','accel','taunt','guard','slow','heal','strong','mid','weak']) {
+    for (const a of ['speedatk','guardbk','sealatk','counter','unique','accel','taunt','guard','slow','heal','strong','mid','weak']) {
       if (txt.includes(a)) return a;
     }
   } catch(_) {}
@@ -7142,7 +7241,7 @@ async function abSonnetAct(s, opp, apiKey) {
     });
     const d = await r.json();
     const txt = (d.content?.[0]?.text || '').toLowerCase();
-    for (const a of ['speedatk','guardbk','sealatk','overclock','counter','unique','accel','taunt','guard','slow','heal','strong','mid','weak']) {
+    for (const a of ['speedatk','guardbk','sealatk','counter','unique','accel','taunt','guard','slow','heal','strong','mid','weak']) {
       if (txt.includes(a)) return a;
     }
   } catch(_) {}

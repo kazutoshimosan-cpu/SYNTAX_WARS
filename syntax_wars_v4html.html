@@ -875,7 +875,7 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
   border-color:var(--action-accent); background:var(--action-bg);
   box-shadow:0 0 10px #a0f0ff44, 0 0 20px #a0f0ff18;
 }
-.btn-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:5px; margin-bottom:4px; }
+.btn-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-bottom:4px; }
 .action-btn {
   background:#050510; border:1px solid #2a4060; color:#c0d8f0;
   font-family:'Courier New',monospace; font-size:11px; padding:11px 4px;
@@ -1738,10 +1738,7 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
     <div class="col-label label-normal">NORMAL</div>
     <div class="btn-grid grid-normal">
       <button class="action-btn" id="btn-weak" onclick="selectAction('weak')">
-        <span class="action-name" id="lbl-weak">ナノブレード</span><span class="action-tier">LIGHT</span><span class="cost">FREE +10%G</span>
-      </button>
-      <button class="action-btn" id="btn-mid" onclick="selectAction('mid')">
-        <span class="action-name" id="lbl-mid">EMP波動</span><span class="action-tier">MEDIUM</span><span class="cost">FREE +12%G</span>
+        <span class="action-name" id="lbl-weak">ナノブレード</span><span class="action-tier">LIGHT</span><span class="cost">FREE +12%G</span>
       </button>
       <button class="action-btn" id="btn-strong" onclick="selectAction('strong')">
         <span class="action-name" id="lbl-strong">プラズマカノン</span><span class="action-tier">HEAVY</span><span class="cost">FREE +5%G</span>
@@ -1758,9 +1755,6 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
       <button class="action-btn" id="btn-guardbk" onclick="selectAction('guardbk')">
         GUARD BREAK<span class="cost" id="cost-guardbk">25%</span>
       </button>
-      <button class="action-btn" id="btn-sealatk" onclick="selectAction('sealatk')">
-        ANTI-HEAL<span class="cost" id="cost-sealatk">25%</span>
-      </button>
       <button class="action-btn" id="btn-counter" onclick="selectAction('counter')">
         COUNTER<span class="cost" id="cost-counter">25%</span>
       </button>
@@ -1772,9 +1766,6 @@ body { background:#0a0a0f; color:#e0e0ff; font-family:'Courier New',monospace; m
       </button>
       <button class="action-btn" id="btn-slow" onclick="selectAction('slow')">
         SLOW<span class="cost" id="cost-slow">30%</span>
-      </button>
-      <button class="action-btn" id="btn-heal" onclick="selectAction('heal')">
-        HEAL<span class="cost" id="cost-heal">30%</span>
       </button>
       <button class="action-btn" id="btn-taunt" onclick="selectAction('taunt')">
         TAUNT<span class="cost" id="cost-taunt">30%</span>
@@ -4259,7 +4250,15 @@ const AXIS_W = {
 // LYRA-X 拘束の効き（いやらしい攻め化・2026-05-30）。AIは触らず"締め付け"だけ強化＝最適手は同じでも沼が深く速くなる。
 // 旧挙動（ライブ版）は __nashTune({lyraLock:{corrode:3,corrodeTitan:2,strongSpdDrop:10,corrodeSpdRot:0}}) で復元・ON/OFF比較可（TUNABLE）。
 // corrode/corrodeTitan=SLOW相手への毎ターン腐食HP／strongSpdDrop=LYの強攻撃ヒット時の相手SPEED低下量（非LYは固定10）／corrodeSpdRot=SLOW中の相手が腐食で毎ターン失うSPEED（"速度も腐る"＝抜け出しにくさ）。
+// ★3すくみ焼き込み（2026-06-13 balance lock・N=60で12.7pt確認）：既定で3すくみON。
+// 旧4すくみと比較したい時だけ window.__rps3 = false を明示（出荷は3すくみ）。
+if (typeof window !== 'undefined' && typeof window.__rps3 === 'undefined') window.__rps3 = true;
 let LYRA_LOCK = { corrode: 4, corrodeTitan: 3, strongSpdDrop: 14, corrodeSpdRot: 2 };
+// ★3すくみ再バランス：腐食(LYRA_LOCK)はユーザー判断で現行据置に戻した（下げ過ぎ＝44だったため）。
+// LYRAのナーフは自動再生 +4→+2 のみ（別箇所）。腐食を再度弱めるならここで返す値を変える。
+function _lyraLock() {
+  return LYRA_LOCK;
+}
 // 固有技準備価値 0..1：撃てない gauge<cost の時だけ ready² で評価（非線形・ゴール直前ほど価値伸び）。
 // 撃てる状態(gauge≥cost)は 0＝発動報酬(nashBuildPayoff側)に明け渡す。これで「保持中毒」を防ぎつつ
 // 長期投資動機(NEXUS：50まで貯めて量子ビーム発動 等)を1-ply評価で維持できる。
@@ -4515,6 +4514,9 @@ if (typeof window !== 'undefined') window._strategySelfTest = _strategySelfTest;
 // ===== Nash CPU Phase③: 利得マトリクス＋regret-matching混合戦略 =====
 // プレイヤーが選べる手と完全一致の合法手判定（ボタン無効化ロジックを抽出・CPU都合の枝刈りは混ぜない）。
 function isActionLegal(s, action, opp) {
+  // ★3すくみ試作トグル(__rps3)：リーン構成で計測（採否判断用・本番未適用）。
+  // カット＝中(mid)・回復(heal)・回復封じ(sealatk)。基礎=弱/強/ガードの3すくみ。挑発は残す。
+  if (typeof window !== 'undefined' && window.__rps3 && (action === 'mid' || action === 'heal' || action === 'sealatk')) return false;
   switch (action) {
     case 'weak': case 'mid': case 'strong': case 'guard': case 'idle': return true;
     case 'speedatk': case 'guardbk': case 'sealatk': {
@@ -4983,7 +4985,6 @@ function _renderLogBar() {
 // ===== ボタン更新 =====
 function updateButtons(s = pState, opp = (s === pState ? cState : pState)) {
   document.getElementById('lbl-weak').textContent = s.moves.weak;
-  document.getElementById('lbl-mid').textContent = s.moves.mid;
   document.getElementById('lbl-strong').textContent = s.moves.strong;
   document.getElementById('lbl-guard').textContent = s.moves.guard;
   document.getElementById('btn-unique-name').textContent = s.uniqueName;
@@ -4995,17 +4996,16 @@ function updateButtons(s = pState, opp = (s === pState ? cState : pState)) {
 
   document.getElementById('cost-speedatk').textContent = (s.quantum ? 0 : atk25) + '%';
   document.getElementById('cost-guardbk').textContent = (s.quantum ? 0 : atk25) + '%';
-  document.getElementById('cost-sealatk').textContent = (s.quantum ? 0 : atk25) + '%';
   document.getElementById('cost-counter').textContent = counterCost + '%' + (s.counterConsecutive > 0 ? '(×2!)' : '');
 
-  ['speedatk','guardbk','sealatk'].forEach(id => {
+  // ★3すくみ：回復封じ(sealatk)・回復(heal)は撤去（ボタン無し）。属性は速度特攻/ガード破壊の2種。
+  ['speedatk','guardbk'].forEach(id => {
     const cost = s.quantum ? 0 : atk25;
     document.getElementById(`btn-${id}`).classList.toggle('disabled', s.gauge < cost && !s.quantum);
   });
   document.getElementById('btn-counter').classList.toggle('disabled', s.gauge < counterCost);
   document.getElementById('btn-accel').classList.toggle('disabled', s.gauge < 15);
   document.getElementById('btn-slow').classList.toggle('disabled', s.gauge < 30);
-  document.getElementById('btn-heal').classList.toggle('disabled', s.gauge < 30 || s.sealTurns > 0);
   document.getElementById('btn-taunt').classList.toggle('disabled', s.gauge < 30 || s.sealTurns > 0);
   document.getElementById('btn-unique').classList.toggle('disabled', !canUseUnique(s, opp));
 }
@@ -5550,6 +5550,11 @@ function preSetDefenseStance(s, act, shadowMirrorCrowdSimul = false, ohkMirrorTu
       s.primed = true;
       AudioManager.playSE('blaze_primed');
       addLog(`${aName}が起爆準備！`, 'status');
+      // ★3すくみ：起爆準備はガードも兼ねる（身構えて溜める＝防御姿勢）＝BLAZEに3すくみのガード役を与える。
+      if (typeof window !== 'undefined' && window.__rps3) {
+        s.guardThisTurn = true;
+        s.guardJustCharges = ohkMirrorTurn ? 2 : 1;
+      }
     } else {
       s.guardThisTurn = true;
       s.guardJustCharges = ohkMirrorTurn ? 2 : 1;
@@ -5598,8 +5603,15 @@ function resolveBaseAffinity(p, c, pAct, cAct) {
       const r = _attackConnects(p, c, pAct);
       p._preRoll = r;
       if (!r.whiff && r.hit && c.passive !== 'titan') { c._affSwallowed = true; p._affSwallowWin = true; } // ★TITAN剛体
+    } else if ((typeof window !== 'undefined' && window.__rps3) && Math.abs(pT - cT) === 2) {
+      // ★3すくみ試作：中を抜いた弱/強/ガード環では「強>弱」で輪を閉じる（強が弱を飲む。TITAN剛体は据置で相打ち）。
+      const strongIsP = pT > cT;
+      const sS = strongIsP ? p : c, wS = strongIsP ? c : p, sAct = strongIsP ? pAct : cAct;
+      const r = _attackConnects(sS, wS, sAct);
+      sS._preRoll = r;
+      if (!r.whiff && r.hit && wS.passive !== 'titan') { wS._affSwallowed = true; sS._affSwallowWin = true; }
     }
-    // 差2(弱vs強)・差0(同段)＝据え置き
+    // （通常）差2(弱vs強)・差0(同段)＝据え置き
     return;
   }
 
@@ -5769,7 +5781,9 @@ function applyAction(attacker, defender, action, opt) {
       // ★4すくみ：飲む側はresolveBaseAffinityで接続を先決済み→_preRollを流用（命中/スカしの再ロール回避）
       const _pre = attacker._preRoll; attacker._preRoll = null;
       const _whiff = _pre ? _pre.whiff : (defender.speed - attacker.speed >= 20);
-      if (action === 'strong' && _whiff) {
+      // ★3すくみ：TITANの強は速度で躱されても破片/衝撃波で半減ヒット（完全回避させない・常時on特性。中喪失の救済）。
+      const titanGraze = (typeof window !== 'undefined' && window.__rps3 && attacker.passive === 'titan' && action === 'strong' && _whiff);
+      if (action === 'strong' && _whiff && !titanGraze) {
         addLog(`– ${aName}の強攻撃…速度差で外れた`, 'log-miss');
         showBattleFlash('MISS', 'miss');
         AudioManager.playSE('miss');
@@ -5791,7 +5805,7 @@ function applyAction(attacker, defender, action, opt) {
       const shadowSureHit = attacker.passive === 'shadow' && attacker.shadowSureHitNext && (action === 'mid' || action === 'strong');
       const blazePrimedBefore = attacker.passive === 'blaze' && attacker.primed;
       const _missed = _pre ? !_pre.hit : (_rng() * 100 > hitRate);
-      if (action !== 'weak' && !_tutForceHit && !shadowSureHit && _missed) {
+      if (action !== 'weak' && !_tutForceHit && !shadowSureHit && _missed && !titanGraze) {
         const gaugeOnMiss = action === 'strong' ? ((typeof window !== 'undefined' && window.__noAffinity) ? 5 : 4) : 8;
         addLog(`– ${aName}の攻撃がはずれた`, 'log-miss');
         showBattleFlash('MISS', 'miss');
@@ -5808,6 +5822,8 @@ function applyAction(attacker, defender, action, opt) {
       dmg = applySlowMod(attacker, dmg);
       if (attacker.taunt) { dmg *= 1.3; attacker.taunt = false; }
       if (attacker.primed && attacker.passive === 'blaze') dmg *= 1.3;
+      // ★3すくみ：TITANの強・速度回避時は破片で半減ヒット（完全回避させない）。
+      if (titanGraze) { dmg *= 0.5; addLog(`– ${aName}の強攻撃は躱されたが破片が直撃！(半減)`, 'log-hit'); showBattleFlash('GRAZE', 'hit'); }
       // TITANオーバーヒート
       const titanOverheat = attacker.passive === 'titan' && attacker.fast;
       if (titanOverheat) { dmg *= 0.9; addLog(`${aName}オーバーヒート！攻撃-10%・ガード不可！`, 'status'); }
@@ -5821,7 +5837,7 @@ function applyAction(attacker, defender, action, opt) {
         addLog(`${aName}：同じ手の連発で観客が飽きた…ゲージ獲得ダウン（×0.7）`, 'status');
       }
       // ★4すくみ：強がジャスガされる時はゲージ0（読み負け=丸損）。中の半減・弱の貫通はゲージ入る。
-      const willBeJustGuarded = !(typeof window !== 'undefined' && window.__noAffinity) && action === 'strong' && defender.guardThisTurn && !defender.primed && !titanOverheat && !defender.counterStance;
+      const willBeJustGuarded = !(typeof window !== 'undefined' && window.__noAffinity) && action === 'strong' && defender.guardThisTurn && (!defender.primed || (typeof window !== 'undefined' && window.__rps3 && defender.passive === 'blaze')) && !titanOverheat && !defender.counterStance;
       if (!willBeJustGuarded) addGauge(attacker, attacker.passive === 'nova' ? gaugeGain * 1.5 : gaugeGain);
       if (attacker.primed) attacker.primed = false;
       // 通常攻撃ではBLAZE自爆なし（v5変更）
@@ -5841,7 +5857,7 @@ function applyAction(attacker, defender, action, opt) {
           const finalDmg = dealDamage(attacker, defender, dmg, aName, dName, titanOverheat);
           // 強攻撃：実ダメが相手に入った場合のみ SPEED低下（強×ガードは常にジャスト扱いで finalDmg=0 → 不発）。LYは拘束強化で削り量UP（非LYは10）
           if (action === 'strong' && finalDmg > 0) {
-            const spdDrop = attacker.passive === 'lyrax' ? LYRA_LOCK.strongSpdDrop : 10;
+            const spdDrop = attacker.passive === 'lyrax' ? _lyraLock().strongSpdDrop : 10;
             defender.speed = Math.max(0, defender.speed - spdDrop);
             defender.slow = defender.speed <= 35;
             defender.fast = defender.speed >= 70;
@@ -5852,7 +5868,10 @@ function applyAction(attacker, defender, action, opt) {
 
       // SHADOW：通常攻撃の命中（ガード含む）でSPEED上昇（弱+10／中+8／強+6、上限100。SPEED80超でも半減しない）
       if (attacker.passive === 'shadow') {
-        const baseGain = action === 'weak' ? 10 : action === 'mid' ? 8 : 6;
+        // ★3すくみ再バランス：通常攻撃の速度上昇（雪だるまエンジン）を半減。
+        const _r3 = (typeof window !== 'undefined' && window.__rps3);
+        const baseGain = _r3 ? (action === 'weak' ? 5 : action === 'mid' ? 4 : 3)
+                             : (action === 'weak' ? 10 : action === 'mid' ? 8 : 6);
         // 特徴解析：相手がNEXUS(learning)なら、SHADOWの"核"＝加速量を解析率ぶん削る（雪だるまの芽を摘む。spdF=0で従来通り）
         const spdF = (defender.passive === 'learning') ? nexusAnalysisFrac(defender) : 0;
         const gain = Math.max(0, Math.round(baseGain * (1 - spdF)));
@@ -6358,7 +6377,9 @@ let NEXUS_BUFF = { dmgMul: 1.0, adaptDmg: 1.0 };
 const SHADOW_DOUBLE_CRIT = 1.5;
 function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
   let finalDmg = dmg;
-  if (defender.guardThisTurn && !defender.primed && !guardBreak) {
+  // ★3すくみ：BLAZEの起爆準備はガード兼用＝primedでもフルガード(ジャスガ/貫通/半減)を通す。
+  const _blazeGuard = (typeof window !== 'undefined' && window.__rps3 && defender.passive === 'blaze' && defender.guardThisTurn);
+  if (defender.guardThisTurn && (!defender.primed || _blazeGuard) && !guardBreak) {
     if (attacker.lastAction === 'strong') {
       finalDmg = 0;
       defender.gauge = Math.min(100, defender.gauge + 20 + 3); // +20報酬＋案Dガードコスト-3を返金＝強読み勝ちは実質ノーコスト
@@ -6384,8 +6405,8 @@ function dealDamage(attacker, defender, dmg, aName, dName, guardBreak = false) {
       addLog(`${dName}がガード！ダメージ半減`, '');
     }
   }
-  // BLAZE：起爆準備はガードより軽い軽減（B1）
-  if (defender.passive === 'blaze' && defender.primed && !guardBreak) {
+  // BLAZE：起爆準備はガードより軽い軽減（B1）。★3すくみではガード兼用にしたので、ガード構えた当ターンは二重軽減しない（固有発射ターン等のprimed持ち越しのみ0.8×）。
+  if (defender.passive === 'blaze' && defender.primed && !guardBreak && !_blazeGuard) {
     finalDmg = Math.round(finalDmg * 0.8);
     addLog(`${dName}の起爆準備！被ダメ軽減`, 'status');
   }
@@ -6476,12 +6497,12 @@ function endOfTurn() {
       AudioManager.playSE('corrosion');
       // 特徴解析：腐食を受けているのがNEXUS(learning)なら、LYRAの"核"＝腐食(攻めの削り)を解析率ぶん弱める（cF=0で従来通り）
       const cF = (s.passive === 'learning') ? nexusAnalysisFrac(s) : 0;
-      const baseCorrode = (s.passive === 'titan') ? LYRA_LOCK.corrodeTitan : LYRA_LOCK.corrode;
+      const baseCorrode = (s.passive === 'titan') ? _lyraLock().corrodeTitan : _lyraLock().corrode;
       const corrodeDmg = Math.max(0, Math.round(baseCorrode * (1 - cF)));
       s.hp -= corrodeDmg;
       if (!_sim) { if (s.isPlayer) matchStats.pCorrosionDmg += corrodeDmg; else matchStats.cCorrosionDmg += corrodeDmg; }
       // 速度腐食：SLOW中は腐食でSPEEDも蝕む＝自力加速しても押し戻され沼から抜けにくい（LY最大の個性）。特徴解析で同様に弱まる。
-      const spdRot = Math.max(0, Math.round(LYRA_LOCK.corrodeSpdRot * (1 - cF)));
+      const spdRot = Math.max(0, Math.round(_lyraLock().corrodeSpdRot * (1 - cF)));
       if (spdRot > 0 && s.speed > 0) {
         s.speed = Math.max(0, s.speed - spdRot);
         s.slow = s.speed <= 35; s.fast = s.speed >= 70;
@@ -6517,10 +6538,12 @@ function endOfTurn() {
   [pState, cState].forEach(s => {
     const name = s.displayName || (s.isPlayer ? 'あなた' : (gameMode === '2p' ? s.name : 'CPU'));
     if (s.passive === 'lyrax' && s.hp > 0) {
+      // ★3すくみ再バランス：自動再生を +4→+2 に（回復封じ削除で無罰化した分の抑制）。
+      const autoHeal = (typeof window !== 'undefined' && window.__rps3) ? 2 : 4;
       AudioManager.playSE('lyrax_autoHeal', 0.4);
-      s.hp = Math.min(s.maxHp, s.hp + 4);
-      showDmgPopup(s.isPlayer, 4, 'heal');
-      addLog(`${name}が自動回復 +4HP`, 'heal');
+      s.hp = Math.min(s.maxHp, s.hp + autoHeal);
+      showDmgPopup(s.isPlayer, autoHeal, 'heal');
+      addLog(`${name}が自動回復 +${autoHeal}HP`, 'heal');
     }
     // 特徴解析（対LYRA）：NEXUS(learning)もLYRAの土俵=自動回復を奪い返す。解析率ぶん増える・最大lyraHeal/ターン。
     if (s.passive === 'learning' && s.hp > 0) {
@@ -6542,7 +6565,10 @@ function endOfTurn() {
 
   // 3. ステータス変化（SPEEDの自然回復）
   [pState, cState].forEach(s => {
-    if (s.speed > 50 && s.passive !== 'shadow') {
+    // ★3すくみ：SHADOWの速度減衰免除を解除（ログでavg69/peak100＝雪だるまが勝因と判明）。
+    // OFF(4すくみ)では従来どおりSHADOW免除のまま。
+    const decayApplies = (s.passive !== 'shadow') || (typeof window !== 'undefined' && window.__rps3);
+    if (s.speed > 50 && decayApplies) {
       const diff = s.speed - 50;
       s.speed -= Math.round(diff * 0.15);
       if (s.speed < 50) s.speed = 50;

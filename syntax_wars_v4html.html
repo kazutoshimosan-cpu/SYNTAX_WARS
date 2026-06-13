@@ -5095,6 +5095,10 @@ function confirmAction() {
 // ===== CPU AI =====
 /** 抽選プール用：解決時にゲージ・封じ等で無言スキップにならない行動か（全難易度の CPU プール最終ガードに使用） */
 function cpuPoolAffordable(s, opp, act) {
+  // 3すくみ(__rps3)では中/回復/回復封じは存在しない手。EASY/NORMALの簡易CPUが
+  // 旧4すくみ前提の重みプールでこれらを積むため、全CPUピックの共通フィルタである
+  // ここで弾く（isActionLegal と同じ禁止条件）。HARD(Nash)は isActionLegal で既に除外済。
+  if (typeof window !== 'undefined' && window.__rps3 && (act === 'mid' || act === 'heal' || act === 'sealatk')) return false;
   if (!act || act === 'weak' || act === 'mid' || act === 'guard' || act === 'idle') return true;
   if (!opp) return true;
   const novaVsLyra = s.passive === 'nova' && opp.passive === 'lyrax';

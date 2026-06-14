@@ -2428,15 +2428,15 @@ const InteractiveTutorial = (() => {
       preSetup() {
         pState.gauge = Math.max(pState.gauge, 30);
         pState.counterConsecutive = 0;
-        audienceGauge = 6; // 後のガード貫通でCROWDに届くよう設定
+        audienceGauge = 6; // 後のガード破壊でCROWDに届くよう設定
       },
       explain: 'カウンター成功！\n受けたダメージをそのまま返した。\n\nカウンターは SPEED を無視して割り込む—\n「読み勝ち」の最大の報酬だ。',
     },
     {
-      // STEP 5: ガード貫通 → CROWD ON FIRE → 固有技フィニッシュ
+      // STEP 5: ガード破壊 → CROWD ON FIRE → 固有技フィニッシュ
       label: 'STEP 6 / 6 — フィニッシュ',
-      msg:   '相手がガードしてきた。\nガード貫通で観客を沸かせて\n固有技でとどめを刺せ。',
-      hint:  '▶ まず「ガード貫通」を選んで READY',
+      msg:   '相手がガードしてきた。\nガード破壊で観客を沸かせて\n固有技でとどめを刺せ。',
+      hint:  '▶ まず「ガード破壊」を選んで READY',
       btn: 'guardbk', cpuAct: 'guard', cpuSpeed: 65,
       preSetup() {
         pState.gauge = Math.max(pState.gauge, 60);
@@ -2444,7 +2444,7 @@ const InteractiveTutorial = (() => {
         cState.extraTurn = false;
         cState.hp = 30;
       },
-      explain: 'ガード貫通で観客ゲージが上がる。\nMAXになると CROWD ON FIRE 発動—\n両者ゲージ +30%、固有技が光る瞬間だ。\n\nあとは実戦で確かめろ。',
+      explain: 'ガード破壊で観客ゲージが上がる。\nMAXになると CROWD ON FIRE 発動—\n両者ゲージ +30%、固有技が光る瞬間だ。\n\nあとは実戦で確かめろ。',
       isLast: true,
     },
   ];
@@ -5330,7 +5330,7 @@ function chooseCpuAction() {
     if (turn <= 3) add('sealatk', 6);
     // 回復タイミングに重ねる（次の回復を封じる圧）
     if (opp.lastAction === 'heal') add('sealatk', 6);
-    // 星屑砲（固有）圏内は、封じ＋ガード貫通でテンポを取りやすい
+    // 星屑砲（固有）圏内は、封じ＋ガード破壊でテンポを取りやすい
     if (opp.gauge >= 50) { add('sealatk', 4); add('guardbk', 3); }
   }
 
@@ -5983,7 +5983,7 @@ function applyAction(attacker, defender, action, opt) {
       const guardbkWasPrimed = attacker.primed;
       if (attacker.primed) attacker.primed = false;
       if (defender.guardThisTurn) {
-        addLog(`✨ ガード貫通成功！`, 'log-success');
+        addLog(`✨ ガード破壊成功！`, 'log-success');
         showBattleFlash('GUARD BREAK', 'success');
         showActionPop(attacker.isPlayer, 'GUARD BREAK 💥', 'guard-break');
         showActionPop(defender.isPlayer, 'MISREAD', 'misread');
@@ -5998,7 +5998,7 @@ function applyAction(attacker, defender, action, opt) {
         defender.shimaiNext = false;
         addLog(`${dName}の身代わり！ダメージ無効！`, 'status');
       } else {
-        const finalDmg = dealDamage(attacker, defender, dmg, aName, dName, true); // ガード貫通：ガード無視
+        const finalDmg = dealDamage(attacker, defender, dmg, aName, dName, true); // ガード破壊：ガード無視
         if (attacker.passive === 'blaze' && !guardbkWasPrimed) applyBlazeJibaku(attacker, defender, finalDmg, aName, dName);
         if (defender.passive === 'learning') defender.learned = 'guardbk';
       }
@@ -7148,7 +7148,7 @@ function abSmartAct(s, opp) {
     if (opp.gauge >= 50) { add('sealatk', 4); add('guardbk', 3); }
   }
   if (opp.passive === 'shadow' && opp.fast && s.gauge >= atk25) add('speedatk', 8); // SHADOW FAST時はスピードブレイク
-  if (opp.passive === 'shadow' && opp.slow && s.gauge >= atk25) { add('guardbk', 8); add('sealatk', 8); } // SHADOW SLOW中はガード貫通＋回復封じで畳み込む
+  if (opp.passive === 'shadow' && opp.slow && s.gauge >= atk25) { add('guardbk', 8); add('sealatk', 8); } // SHADOW SLOW中はガード破壊＋回復封じで畳み込む
   if (opp.primed) {
     if (s.gauge >= 50 && s.gauge >= ccost) add('counter',3);
     else { add('guard', novaVsLyra ? 1 : 3); if (s.gauge >= 30 && !novaVsLyra) add('slow',2); }
@@ -7167,7 +7167,7 @@ function abSmartAct(s, opp) {
     // カウンターが多い→攻撃チャンスが増える（カウンター後は無防備）
     if (count('counter') >= 2) { add('mid', 3); add('strong', 3); if (s.gauge >= atk25) add('guardbk', 3); }
 
-    // ガードが多い→ガード貫通で崩す
+    // ガードが多い→ガード破壊で崩す
     if (count('guard') >= 2 && s.gauge >= atk25) add('guardbk', 5);
 
     // 加速が多い→スピードブレイクで迎え撃つ

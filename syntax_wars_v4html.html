@@ -2407,10 +2407,10 @@ const InteractiveTutorial = (() => {
       explain: '外れた。\n相手の SPEED が自分より 20 以上高いと\n強攻撃は確定で外れる。\n\nSPEED はただの「速さ」じゃない—\n読み合いの武器だ。',
     },
     {
-      // STEP 3: 速度特攻 → 速い相手ほど痛い属性攻撃
-      label: 'STEP 4 / 6 — 速度特攻',
-      msg:   '速い相手には速度特攻が刺さる。\nゲージ 25% を使って撃て。',
-      hint:  '▶ 「速度特攻」を選んで READY',
+      // STEP 3: スピードブレイク → 速い相手ほど痛い属性攻撃
+      label: 'STEP 4 / 6 — スピードブレイク',
+      msg:   '速い相手にはスピードブレイクが刺さる。\nゲージ 25% を使って撃て。',
+      hint:  '▶ 「スピードブレイク」を選んで READY',
       btn: 'speedatk', cpuAct: 'idle', cpuSpeed: 78,
       preSetup() {
         pState.gauge = Math.max(pState.gauge, 30);
@@ -2655,7 +2655,7 @@ const CHARS = {
     passiveKeys:'SPEED差20以上で強攻撃回避 ／ 回避でゲージ+20%',
     moves:{ weak:'クナイ投げ', mid:'鎖鎌', strong:'影斬り', guard:'GUARD', unique:'分身斬り' },
     passive:'shadow', uniqueName:'分身斬り',
-    passiveDesc:'絶影：SPEED差20以上で相手の強攻撃を確定回避。通常ダメージ-15%、速度特攻ボーナスはフルで入る。速度差回避でゲージ+20%。2回行動時の2撃目は確定クリティカル。SPEED自然回復なし。',
+    passiveDesc:'絶影：SPEED差20以上で相手の強攻撃を確定回避。通常ダメージ-15%、スピードブレイクボーナスはフルで入る。速度差回避でゲージ+20%。2回行動時の2撃目は確定クリティカル。SPEED自然回復なし。',
     uniqueDesc:'分身斬り：ゲージ45%・影斬り×2.0ダメージ＋次の相手の攻撃を1回無効化（ダメージ・追加効果0）',
   },
   novaqueen: {
@@ -2771,7 +2771,7 @@ const ACTION_SUBTEXT = {
   guardbk:  '中攻撃・ガードを無視してダメージ（必中）\n【重さ】ガード癖へのカウンター。ゲージ25%の投資',
   sealatk:  '強攻撃・次ターンの回復と挑発を封じる（必中）\n【重さ】回復待ちを潰す。外れないがコストあり',
   counter:  '攻撃を等倍返し・連続使用でコスト増\n【重さ】読み勝ちの報酬。攻撃されないと空振り',
-  accel:    'SPEEDを上昇・FAST状態は速度特攻に注意\n【重さ】以降の帯が変わる。相手の速度特攻を誘発しうる',
+  accel:    'SPEEDを上昇・FAST状態はスピードブレイクに注意\n【重さ】以降の帯が変わる。相手のスピードブレイクを誘発しうる',
   slow:     '相手のSPEEDを1ターン低下・ダメージ-20%\n【重さ】後手を作る。LYRA相手では腐食とも絡む',
   heal:     'HPを回復・回復封じ中は使用不可\n【重さ】ゲージ30%のリカバ。封じられていると詰む',
   taunt:    '次の攻撃ダメージ+30%・回復封じ中は使用不可\n【重さ】次の一撃に賭ける。起爆準備（BLAZE）とも相性',
@@ -3162,7 +3162,7 @@ const TUT_PAGES = [
       <div class="tut-h">属性付き攻撃（ゲージ25%消費）</div>
       必中（速度差で外れない）。ガードやカウンターは有効。
 
-      <div class="tut-row"><span class="tut-key">速度特攻</span><span class="tut-val">相手のSPEEDが高いほど追加ダメージ大。FASTな相手には特に有効</span></div>
+      <div class="tut-row"><span class="tut-key">スピードブレイク</span><span class="tut-val">相手のSPEEDが高いほど追加ダメージ大。FASTな相手には特に有効</span></div>
       <div class="tut-row"><span class="tut-key">ガード貫通</span><span class="tut-val">ガードを無視してダメージ。ガード多用の相手に</span></div>
       <div class="tut-row"><span class="tut-key">回復封じ</span><span class="tut-val">次ターンの相手の回復・挑発を封じる</span></div>
 
@@ -3187,10 +3187,10 @@ const TUT_PAGES = [
       <div class="tut-row"><span class="tut-key">挑発（30%）</span><span class="tut-val">次の自分の攻撃ダメージ+30%。回復封じ中は使用不可</span></div>
 
       <div class="tut-h">SPEEDの仕組み</div>
-      <div class="tut-row"><span class="tut-key">FAST（70以上）</span><span class="tut-val">先手を取りやすい。ただし速度特攻で追加ダメージを受けるリスクあり</span></div>
+      <div class="tut-row"><span class="tut-key">FAST（70以上）</span><span class="tut-val">先手を取りやすい。ただしスピードブレイクで追加ダメージを受けるリスクあり</span></div>
       <div class="tut-row"><span class="tut-key">SLOW（35以下）</span><span class="tut-val">攻撃ダメージ-20%。後手になりやすい</span></div>
       <div class="tut-row"><span class="tut-key">自然回復</span><span class="tut-val">ターン終了時、SPEED50以上なら50に向かって15%戻る</span></div>
-      <div class="tut-note">※ 加速しすぎると速度特攻の的になる！速度管理が読み合いの鍵。</div>
+      <div class="tut-note">※ 加速しすぎるとスピードブレイクの的になる！速度管理が読み合いの鍵。</div>
     `
   },
   {
@@ -3218,7 +3218,7 @@ const TUT_PAGES = [
       <div class="tut-h">立ち回りのコツ</div>
       <div class="tut-row"><span class="tut-key">ゲージ管理</span><span class="tut-val">弱攻撃でゲージを溜めて、チャンスに特殊技を叩き込む</span></div>
       <div class="tut-row"><span class="tut-key">読み合い</span><span class="tut-val">相手がカウンターを多用するなら「ガード」や「スロー」で様子見</span></div>
-      <div class="tut-row"><span class="tut-key">速度管理</span><span class="tut-val">加速しすぎると速度特攻の的に。SPEEDは70前後をキープが基本</span></div>
+      <div class="tut-row"><span class="tut-key">速度管理</span><span class="tut-val">加速しすぎるとスピードブレイクの的に。SPEEDは70前後をキープが基本</span></div>
       <div class="tut-row"><span class="tut-key">逆転狙い</span><span class="tut-val">HP40%以下はゲージ増加×1.5倍！一気に特殊技で逆転を狙える</span></div>
 
       <div class="tut-note">キャラ選択画面でキャラをタップするとパッシブ・固有技の詳細を確認できます。</div>
@@ -5007,7 +5007,7 @@ function updateButtons(s = pState, opp = (s === pState ? cState : pState)) {
   document.getElementById('cost-guardbk').textContent = (s.quantum ? 0 : atk25) + '%';
   document.getElementById('cost-counter').textContent = counterCost + '%' + (s.counterConsecutive > 0 ? '(×2!)' : '');
 
-  // ★3すくみ：回復封じ(sealatk)・回復(heal)は撤去（ボタン無し）。属性は速度特攻/ガード破壊の2種。
+  // ★3すくみ：回復封じ(sealatk)・回復(heal)は撤去（ボタン無し）。属性はスピードブレイク/ガード破壊の2種。
   ['speedatk','guardbk'].forEach(id => {
     const cost = s.quantum ? 0 : atk25;
     document.getElementById(`btn-${id}`).classList.toggle('disabled', s.gauge < cost && !s.quantum);
@@ -5176,7 +5176,7 @@ function chooseCpuAction() {
     if (phase === 0) { add('mid', 2); add('strong', 2); add('guard', 1); }
     if (phase === 1) { add('guard', 3); if (can.accel) add('accel', 3); if (can.heal) add('heal', 2); if (can.slow) add('slow', 2); if (can.taunt) add('taunt', 2); }
     if (phase === 2) {
-      if (can.speedatk && !novaVsLyra) add('speedatk', 3); // CPU NOVA×LYRAは速度特攻を積まない
+      if (can.speedatk && !novaVsLyra) add('speedatk', 3); // CPU NOVA×LYRAはスピードブレイクを積まない
       if (can.guardbk) add('guardbk', 3); if (can.sealatk) add('sealatk', 3); if (can.unique) add('unique', 2);
     }
 
@@ -5231,7 +5231,7 @@ function chooseCpuAction() {
         break;
       }
       case 'nova': { // NOVA: 匂わせ少なめ、3ターン目以降に回復を少し混ぜる
-        if (can.speedatk && !novaVsLyra) add('speedatk', 2); // LYRA戦は速度特攻を積まない
+        if (can.speedatk && !novaVsLyra) add('speedatk', 2); // LYRA戦はスピードブレイクを積まない
         if (can.guardbk)  add('guardbk', 2);
         if (can.sealatk)  add('sealatk', 2);
         if (can.unique && s.hp <= 45) add('unique', 4);
@@ -5254,7 +5254,7 @@ function chooseCpuAction() {
           add('guard', 3);
           if (can.counter) add('counter', 3);
         }
-        // 対NEXUS/SHADOW：速度特攻はTITANの主武器。速い相手ほど刺さるので優先（学習されても痛くなりにくい）
+        // 対NEXUS/SHADOW：スピードブレイクはTITANの主武器。速い相手ほど刺さるので優先（学習されても痛くなりにくい）
         if ((opp.passive === 'learning' || opp.passive === 'shadow') && can.speedatk && s.gauge >= atk25) {
           if (opp.speed >= 70) add('speedatk', 10);
           else if (opp.speed >= 60) add('speedatk', 7);
@@ -5419,7 +5419,7 @@ function chooseCpuAction() {
         add('guard', 4);
         add('counter', 4);
       }
-      // 対NEXUS/SHADOW：速度特攻はTITANの主武器。相手が速いほど優先
+      // 対NEXUS/SHADOW：スピードブレイクはTITANの主武器。相手が速いほど優先
       if ((opp.passive === 'learning' || opp.passive === 'shadow') && s.gauge >= atk25) {
         if (opp.speed >= 70) add('speedatk', 10);
         else if (opp.speed >= 60) add('speedatk', 7);
@@ -5830,7 +5830,7 @@ function applyAction(attacker, defender, action, opt) {
       }
 
       // ダメージ計算
-      // SHADOW絶影：通常攻撃(弱/中/強)は与ダメ-15%＝専用係数0.85（dmgMod0.9でなく。機動の代償。速度特攻ボーナスは別途フル加算）。
+      // SHADOW絶影：通常攻撃(弱/中/強)は与ダメ-15%＝専用係数0.85（dmgMod0.9でなく。機動の代償。スピードブレイクボーナスは別途フル加算）。
       let dmg = base * ((attacker.passive === 'shadow') ? 0.85 : attacker.dmgMod);
       dmg = applySlowMod(attacker, dmg);
       if (attacker.taunt) { dmg *= 1.3; attacker.taunt = false; }
@@ -5927,9 +5927,9 @@ function applyAction(attacker, defender, action, opt) {
       if (attacker.learned === 'speedatk') { const lm = 2.0; totalDmg = Math.round(totalDmg * lm); attacker.learned = null; attacker.crowdBonusActive = false; } // v6.5: 1.8→2.0
       const speedatkWasPrimed = attacker.primed;
       if (attacker.primed) attacker.primed = false;
-      addLog(`${aName}の速度特攻！(+${bonusDmg}ボーナス)`, '');
+      addLog(`${aName}のスピードブレイク！(+${bonusDmg}ボーナス)`, '');
       // CROWDは「読み合い勝ち」の演出寄り：FAST級（SPEED70+）を咎めた時だけ上げる
-      // 速度特攻は「読み勝ち」の確度が低い（相手FASTを咎めただけ）ので、他の読み勝ち系より上昇量を抑える
+      // スピードブレイクは「読み勝ち」の確度が低い（相手FASTを咎めただけ）ので、他の読み勝ち系より上昇量を抑える
       if (bonusDmg > 0 && defender.speed >= 70) addAudience(1);
       if (defender.counterStance) {
         const incoming = (attacker.passive === 'blaze' && speedatkWasPrimed) ? Math.round(totalDmg * 0.7) : totalDmg;
@@ -6170,7 +6170,7 @@ function applySlowMod(attacker, dmg) {
   return dmg * 0.8;
 }
 
-// ===== 速度特攻ボーナス =====
+// ===== スピードブレイクボーナス =====
 function getSpeedBonus(defSpeed) {
   if (defSpeed >= 85) return 20;
   if (defSpeed >= 75) return 14;
@@ -6886,7 +6886,7 @@ function abSmartAct(s, opp) {
   // 案D対応：guard選択でゲージ-3%がかかるため、汎用guardを軽微に削減。
   add('weak',3); add('mid',4); add('strong',1); add('guard', novaVsLyra ? 1 : 1);
   if (s.gauge >= atk25) {
-    if (!novaVsLyra) add('speedatk', 2); // LYRAは自前加速しないことが多く速度特攻の旨味が薄い
+    if (!novaVsLyra) add('speedatk', 2); // LYRAは自前加速しないことが多くスピードブレイクの旨味が薄い
     add('guardbk', 2); add('sealatk', 2);
   }
   if (s.gauge >= ccost)  add('counter',2);
@@ -6938,7 +6938,7 @@ function abSmartAct(s, opp) {
         add('guard', 4);
         if (s.gauge >= ccost) add('counter', 4);
       }
-      // 対NEXUS/SHADOW：速度特攻はTITANの主武器。速い相手ほど刺さるので優先
+      // 対NEXUS/SHADOW：スピードブレイクはTITANの主武器。速い相手ほど刺さるので優先
       if ((opp.passive === 'learning' || opp.passive === 'shadow') && s.gauge >= atk25) {
         if (opp.speed >= 70) add('speedatk', 10);
         else if (opp.speed >= 60) add('speedatk', 7);
@@ -7078,7 +7078,7 @@ function abSmartAct(s, opp) {
     case 'nova': { // NOVA QUEEN: ゲージ80%到達後に属性連発が真骨頂（属性コスト軽減の閾値）
       const vsLyra = opp.passive === 'lyrax';
       if (s.gauge >= 80) {
-        if (!vsLyra) add('speedatk', 8); // LYRAは自前加速が少なく速度特攻の旨味が薄い
+        if (!vsLyra) add('speedatk', 8); // LYRAは自前加速が少なくスピードブレイクの旨味が薄い
         add('guardbk', 8); add('sealatk', 8);
         if (canUseUnique(s)) add('unique', 8);
       }
@@ -7107,7 +7107,7 @@ function abSmartAct(s, opp) {
       if (vsLyra) {
         if (turn <= 2) add('weak', 5);
         add('mid', 3); // 新メタ：vsLyra全体で中を追加（弱のゲージ効率が中より低くなったため）
-        if (s.gauge >= 80) { add('guardbk', 8); add('sealatk', 8); add('mid', 4); } // LYRA戦は速度特攻より封じ・貫通・中火力
+        if (s.gauge >= 80) { add('guardbk', 8); add('sealatk', 8); add('mid', 4); } // LYRA戦はスピードブレイクより封じ・貫通・中火力
         if (canUseUnique(s)) add('unique', 3);
         // 腐食タグ付き＝LYRAのSLOW軸で削られている局面。相手にSLOWを振っても腐食は解けずゲージの無駄になりやすい→属性・固有で踏み込む
         if (s.corrode) {
@@ -7127,7 +7127,7 @@ function abSmartAct(s, opp) {
       if (s.gauge >= 80) {
         const novaAtk = pool.filter(a => !['mid','strong','accel','guard','slow','taunt'].includes(a))
           .filter(a => cpuPoolAffordable(s, opp, a));
-        // 対LYRAは属性連打が勝ち筋（速度特攻は相手が自前加速しないことが多くコスパが悪い）
+        // 対LYRAは属性連打が勝ち筋（スピードブレイクは相手が自前加速しないことが多くコスパが悪い）
         if (vsLyra && Math.random() < 0.75) {
           const lyraAtk = novaAtk.filter(a => a !== 'unique' && a !== 'speedatk');
           return lyraAtk[Math.floor(Math.random() * lyraAtk.length)] || 'sealatk';
@@ -7149,7 +7149,7 @@ function abSmartAct(s, opp) {
     if (opp.lastAction === 'heal') add('sealatk', 6);
     if (opp.gauge >= 50) { add('sealatk', 4); add('guardbk', 3); }
   }
-  if (opp.passive === 'shadow' && opp.fast && s.gauge >= atk25) add('speedatk', 8); // SHADOW FAST時は速度特攻
+  if (opp.passive === 'shadow' && opp.fast && s.gauge >= atk25) add('speedatk', 8); // SHADOW FAST時はスピードブレイク
   if (opp.passive === 'shadow' && opp.slow && s.gauge >= atk25) { add('guardbk', 8); add('sealatk', 8); } // SHADOW SLOW中はガード貫通＋回復封じで畳み込む
   if (opp.primed) {
     if (s.gauge >= 50 && s.gauge >= ccost) add('counter',3);
@@ -7172,7 +7172,7 @@ function abSmartAct(s, opp) {
     // ガードが多い→ガード貫通で崩す
     if (count('guard') >= 2 && s.gauge >= atk25) add('guardbk', 5);
 
-    // 加速が多い→速度特攻で迎え撃つ
+    // 加速が多い→スピードブレイクで迎え撃つ
     if (count('accel') >= 2 && s.gauge >= atk25 && !novaVsLyra) add('speedatk', 5);
 
     // 回復が多い→回復封じを優先

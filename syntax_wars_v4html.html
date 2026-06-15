@@ -2396,7 +2396,7 @@ const InteractiveTutorial = (() => {
       msg:   '今度はこちらの番だ。\n弱攻撃でゲージを溜めろ。',
       hint:  '▶ 「弱」を選んで READY',
       btn: 'weak', cpuAct: 'guard', cpuSpeed: 55,
-      explain: '弱攻撃は必中・8ダメ・ゲージ +10%。\nゲージは属性攻撃や固有技に使う。\n確実に溜めるならこれだ。',
+      explain: '弱攻撃は必中・8ダメ・ゲージ +12%。\nゲージは属性攻撃や固有技に使う。\n確実に溜めるならこれだ。',
     },
     {
       // STEP 2: 速度差 → 強攻撃が外れる
@@ -2763,7 +2763,7 @@ function canUseUnique(s, opp) {
 
 // ===== コマンドサブテキスト（効果説明＋【重さ】＝GDD 8-3：初心者向けコマンド説明） =====
 const ACTION_SUBTEXT = {
-  weak:     '確実命中・低火力でゲージ+10%\n【重さ】安定枠。読み勝ちは少ないが削りは遅い',
+  weak:     '確実命中・低火力でゲージ+12%\n【重さ】安定枠。読み勝ちは少ないが削りは遅い',
   mid:      '80%命中・標準ダメージ\n【重さ】バランス型。外れたターンは隙あり',
   strong:   '70%命中・ヒット時相手SPEED-10（ガード相手はジャスト扱い）\n【重さ】ハイリスク。相手よりSPEED+20以上低いと確定外れ',
   guard:    '被ダメ半減／相手の強攻撃はジャストでさらに軽減（BLAZEは「起爆準備」扱い）\n【重さ】相手の強・属性を読めた時に価値が跳ねる',
@@ -3143,8 +3143,8 @@ const TUT_PAGES = [
     title: '② 通常行動 ＆ ゲージ',
     html: `
       <div class="tut-h">通常行動（ゲージ不要）</div>
-      <div class="tut-row"><span class="tut-key">弱攻撃</span><span class="tut-val">8ダメ / 必中 / ゲージ+10%　確実に当たる基本技</span></div>
-      <div class="tut-row"><span class="tut-key">強攻撃</span><span class="tut-val">22ダメ / 命中率70% / ゲージ+5%　ヒット時（ジャスト除く）相手SPEED-10</span></div>
+      <div class="tut-row"><span class="tut-key">弱攻撃</span><span class="tut-val">8ダメ / 必中 / ゲージ+12%　確実に当たる基本技</span></div>
+      <div class="tut-row"><span class="tut-key">強攻撃</span><span class="tut-val">22ダメ / 命中率70% / ゲージ+4%　ヒット時（ジャスト除く）相手SPEED-10</span></div>
       <div class="tut-row"><span class="tut-key">ガード</span><span class="tut-val">被ダメを半分にする。強攻撃をガードするとジャストガード（被ダメ0・ゲージ+20%）</span></div>
 
       <div class="tut-h">ゲージとは？</div>

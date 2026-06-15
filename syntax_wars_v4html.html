@@ -2767,8 +2767,8 @@ const ACTION_SUBTEXT = {
   mid:      '80%命中・標準ダメージ\n【重さ】バランス型。外れたターンは隙あり',
   strong:   '70%命中・ヒット時相手SPEED-10（ガード相手はジャスト扱い）\n【重さ】ハイリスク。相手よりSPEED+20以上低いと確定外れ',
   guard:    '被ダメ半減／相手の強攻撃はジャストでさらに軽減（BLAZEは「起爆準備」扱い）\n【重さ】相手の強・属性を読めた時に価値が跳ねる',
-  speedatk: '弱攻撃・相手が速いほど威力UP（必中）\n【重さ】相手加速・FASTへの牽制。ガード・カウンターは有効',
-  guardbk:  '中攻撃・ガードを無視してダメージ（必中）\n【重さ】ガード癖へのカウンター。ゲージ25%の投資',
+  speedatk: '13ダメ＋相手が速いほど威力UP（必中・ゲージ+8）\n【重さ】相手加速・FASTへの牽制。ガード・カウンターは有効',
+  guardbk:  '20ダメ・ガード貫通の必中（確定なので強より平均火力は上・ゲージ+8）\n【重さ】ガード癖へのカウンター。ゲージ25%の投資',
   sealatk:  '強攻撃・次ターンの回復と挑発を封じる（必中）\n【重さ】回復待ちを潰す。外れないがコストあり',
   counter:  '攻撃を等倍返し・連続使用でコスト増\n【重さ】読み勝ちの報酬。攻撃されないと空振り',
   accel:    'SPEEDを上昇・FAST状態はスピードブレイクに注意\n【重さ】以降の帯が変わる。相手のスピードブレイクを誘発しうる',
@@ -3144,7 +3144,6 @@ const TUT_PAGES = [
     html: `
       <div class="tut-h">通常行動（ゲージ不要）</div>
       <div class="tut-row"><span class="tut-key">弱攻撃</span><span class="tut-val">8ダメ / 必中 / ゲージ+10%　確実に当たる基本技</span></div>
-      <div class="tut-row"><span class="tut-key">中攻撃</span><span class="tut-val">15ダメ / 命中率80% / ゲージ+12%　バランス型</span></div>
       <div class="tut-row"><span class="tut-key">強攻撃</span><span class="tut-val">22ダメ / 命中率70% / ゲージ+5%　ヒット時（ジャスト除く）相手SPEED-10</span></div>
       <div class="tut-row"><span class="tut-key">ガード</span><span class="tut-val">被ダメを半分にする。強攻撃をガードするとジャストガード（被ダメ0・ゲージ+20%）</span></div>
 

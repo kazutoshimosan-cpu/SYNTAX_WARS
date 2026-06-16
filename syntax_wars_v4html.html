@@ -2688,10 +2688,10 @@ const CHARS = {
     themeColor:'#39ff14', emoji:'🧬', imgSrc:'assets/image/thumbs/lyra_thumb.jpg',
     posterSrc:'assets/posters/lyra_9x16.png', posterMobileSrc:'assets/posters/mobile/lyra_poster_mobile.jpg',
     catchphrase:'slowで腐食　持久で削れ',
-    passiveKeys:'毎ターン+2HP自動回復 ／ HP40%以下でゲージ+80% ／ SLOW相手に毎ターン腐食-3HP（TITANは-2）',
+    passiveKeys:'毎ターン+2HP自動回復 ／ HP40%以下でゲージ+80% ／ SLOW相手に毎ターン腐食-4HP（TITANは-3）',
     moves:{ weak:'酸液噴射', mid:'変異爪', strong:'捕縛触手', guard:'GUARD', unique:'細胞再生' },
     passive:'lyrax', uniqueName:'細胞再生',
-    passiveDesc:'バイオ・エボリューション：毎ターン終了時+2HP自動回復。HP40%以下でゲージ増加+80%（瀕死から細胞再生を確実に撃つ逆転燃料）。自分が付与したスロー効果が1ターン持続。SLOW状態の相手に毎ターン腐食-3HP（TITANは-2）。',
+    passiveDesc:'バイオ・エボリューション：毎ターン終了時+2HP自動回復。HP40%以下でゲージ増加+80%（瀕死から細胞再生を確実に撃つ逆転燃料）。自分が付与したスロー効果が1ターン持続。SLOW状態の相手に毎ターン腐食-4HP（TITANは-3）。',
     uniqueDesc:'細胞再生：35ダメージ・与ダメをHP吸収（30%〜瀕死で最大60%）。HP40%以下または相手SLOWでコスト30%＝傷ついた時ほど撃てて立て直す逆転技。',
   },
   blaze: {
@@ -2893,7 +2893,7 @@ function buildNormalBattleHintLines() {
   lines.push(`SPEED差（あなた−相手）: ${d > 0 ? '+' : ''}${d}`);
   if (pState.sealTurns > 0) lines.push(`回復封じ 残り ${pState.sealTurns} ターン`);
   if (pState.slow) lines.push('SLOW：与ダメ-20%・後手になりやすい');
-  if (cState.passive === 'lyrax' && pState.slow) lines.push('腐食：LYRA相手かつSLOW中はターン終了時 -3HP/回');
+  if (cState.passive === 'lyrax' && pState.slow) lines.push('腐食：LYRA相手かつSLOW中はターン終了時 -4HP/回（TITANは-3）');
   if (crowdOnFireNext) lines.push('CROWD ON FIRE：このターンは同時解決（SPEED差の先手キル無効）');
   if (pState.crowdBonusActive) lines.push('CROWDボーナス：あなたにキャラ固有1T強化適用中');
   if (cState.crowdBonusActive) lines.push('CROWDボーナス：相手にキャラ固有1T強化適用中');

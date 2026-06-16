@@ -5682,7 +5682,9 @@ function resolveActions(pAct, cAct) {
 
   applyAction(first, second, firstAct);
 
-  // 速度順解決：forceSim時はキャンセルなし（同時解決）
+  // 速度順解決：forceSim時はキャンセルなし（同時解決）。
+  // 差≥10で先手が後手をKO→後手の行動キャンセル。差1まで下げるとSHADOW(最速)が雪だるま化し
+  // スプレッド12.7→21.2ptに悪化したため不採用＝10維持（2026-06-16 Nash N=60検証）。
   if (!forceSim && absSpeedDiff >= 10 && second.hp <= 0) {
     addLog(`⚡ 先手で撃破！後手の行動キャンセル！`, 'status');
   } else {

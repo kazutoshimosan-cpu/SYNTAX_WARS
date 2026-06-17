@@ -5777,8 +5777,9 @@ function applyAction(attacker, defender, action, opt) {
         if (action === 'weak') addGauge(attacker, attacker.passive === 'nova' ? g * 1.5 : g); // 弱=電池：飲まれてもゲージ
         // 中=成果報酬：飲まれたらゲージ0
         if (attacker.primed) attacker.primed = false;
-        const eater = action === 'weak' ? '中' : '強';
-        addLog(`– ${aName}の${actionLabel(action, attacker)}は${eater}に飲み込まれた！（ダメージ0）`, 'log-miss');
+        const rps3 = (typeof window !== 'undefined' && window.__rps3);
+        const eater = (action === 'weak') ? (rps3 ? '強' : '中') : '強';  // 3すくみ＝弱を飲むのは強（旧4すくみの"中"表示を是正）
+        addLog(`– ${aName}の${actionLabel(action, attacker)}は${dName}の${eater}攻撃に飲み込まれた（ダメージ0）`, 'log-miss');
         showActionPop(attacker.isPlayer, 'SWALLOWED', 'misread');
         showBattleFlash('SWALLOWED', 'miss');
         break;

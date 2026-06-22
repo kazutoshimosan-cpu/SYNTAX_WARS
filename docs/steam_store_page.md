@@ -13,8 +13,8 @@
 ---
 
 ## 2. タグライン（確定）
-- **JP**：全部、同じ瞬間に開く。読み切った方が、勝つ。
-- **EN**：It all flips at once. The better read wins.
+- **JP**：伏せた手が、同時に開く。読み切った方が、勝つ。
+- **EN**：Both hands flip at once. The better read wins.
 
 ---
 

@@ -171,7 +171,9 @@ One purchase. Everything included. No free-to-play hooks, ever.
 | **Main capsule** | 616×353 | `main_616x353.png`（／`_en`） | 検索/おすすめ枠の顔 |
 | **Vertical capsule** | 374×448 | `vertical_374x448.png` | ロゴのみ＝EN版不要 |
 | **Library capsule** | 600×900 | `library_600x900.png`（／`_en`） | ライブラリ/WL縦サムネ |
-| **Page background** | 1438×810 | （未作成＝任意・§9参照） | 無ければSteamが既定ぼかし |
+| **Page background** | 1438×810 | `page_background_1438x810.png` ✅ | op_p4を暗め加工・作成済（任意枠だが用意） |
+| **Library Hero** | 3840×1240 | `library_hero_3840x1240.png` ✅ | 発売時用・中央シャープ＋左右ボカし延長 |
+| **Library Logo** | 透過PNG | `logo_transparent.png` ✅ | 既存・★ロゴ位置は「bottom」系に（顔の上書き回避） |
 
 > ※ **Small capsule のpx**：長く 231×87 だったが高解像度化で 462×174 を受け付ける。**アップロード時にフォーム表示の要求サイズと一致するか一目確認**（462×174 でいけるはず／ダメなら 231×87 に縮小版を出す）。
 > **ロゴ素材** `logo_transparent.png`（1431×229・透過）＝ライブラリHero/Logo を作る時の素材（発売時・§9）。各キャプセルの言語版は **JP=無印／EN=`_en`**。英語ストアページには `_en`、日本語ストアページには無印を割り当てる。
@@ -209,9 +211,10 @@ One purchase. Everything included. No free-to-play hooks, ever.
 ## 9. 残ギャップ＆チェックリスト
 
 **今すぐ出すのに「必須でない」もの（後追いOK）：**
-- ◻️ **ページ背景 1438×810**＝任意（未作成）。無ければ既定ぼかし。自前にすると見栄え◎ → 作るならいつでも追加可。
-- ◻️ **ライブラリ Hero 3840×1240 ＋ Library Logo**＝**発売時**に要る（Coming Soon では不要）。`logo_transparent.png` から作れる。
+- ✅ **ページ背景 1438×810** ＝ `page_background_1438x810.png`（作成済・op_p4暗め）。
+- ✅ **ライブラリ Hero 3840×1240** ＝ `library_hero_3840x1240.png`（作成済）／**Library Logo** ＝ `logo_transparent.png`（既存）。**発売時はこの2つをそのまま使える**（★ロゴ位置は「bottom」系に設定＝顔の上書き回避）。
 - ◻️ **カウンター読み合いのスクショ1枚**＝任意・帰宅後に実機で。
+- ◻️ **ライブラリ Header 920×430**（任意・一部表示枠）＝必要なら Hero から切り出せる。
 
 **発売までに確定するもの（Coming Soon では未定でOK）：**
 - 価格（仮 $8.99／発売週−15% で実売≈$7.6・[[project-launch-scope]]）

@@ -40,10 +40,12 @@
 | 言語 | Interface | Full Audio | Subtitles |
 |---|---|---|---|
 | **日本語 / Japanese** | ✅ | — (音声なし) | ✅ |
-| English | ❌ **今は付けない** | — | ❌ |
+| **English** | ✅ | — (音声なし) | ✅ |
 
-> ★**ゲーム内UIは現状 日本語のみ**（翻訳テーブル無しを確認済）。英語UIを申告すると虚偽になる＝レビュー差し戻し／低評価の元。
-> **ストアページの英語コピーは別物でOK**（ストアは多言語で書ける）。**英語UI対応は出荷前 ship prep でまとめて**入れてから言語欄に追加する（[[project-i18n-localization-timing]]）。
+> ★**ゲーム内 英語化＝完成（2026-06-24・Godot push済 ..`1f8829a`）**＝OPTIONSの言語トグルで全画面 JA⇄EN（タイトル/選択/戦闘/あそびかた/チュートリアル/OP/ED/勝利台詞/実績）。よって **English の Interface ＋ Subtitles を申告してよい**（虚偽でない）。音声は元々なし＝Full Audio は両言語とも「—」。
+> **申告前の最終確認（推奨・帰宅後Mac）**：実機で English に切替えてレイアウト目視。※固定幅UIのオーバーフローは**ヘッドレス実寸監査で機械的にクリア済**（強技名→compactティア `(S)/(W)`・アーケード主ボタン整形）＝残りは最終目視のみ。
+> **既知の軽微な残JP（申告に影響しない）**：バトルログ復習欄（Lキーで開く隠し二次機能・JS由来の戦闘ログ）のみ日本語。プレイヤー導線・物語は全EN＝「English UI対応」の表記は妥当。
+> ストアページの英語コピーは従来どおり別管理（`steam_store_page.md` EN）。
 
 ---
 
@@ -219,7 +221,7 @@ One purchase. Everything included. No free-to-play hooks, ever.
 **発売までに確定するもの（Coming Soon では未定でOK）：**
 - 価格（仮 $8.99／発売週−15% で実売≈$7.6・[[project-launch-scope]]）
 - リリース時期
-- **英語UI（in-game i18n）**＝出荷前 ship prep → 完了後に §2 の言語欄へ English を追加
+- **英語UI（in-game i18n）＝✅完成済（2026-06-24・Godot ..`1f8829a`）**＝§2 の言語欄に English（Interface＋Subtitles）を申告済。残＝実機での最終レイアウト目視のみ（オーバーフローは監査でクリア済）
 
 **Mac で踏む順（まとめ）：**
 1. Steamworks 登録 → Steam Direct $100 → 本人/税務/銀行 → App ID 発番

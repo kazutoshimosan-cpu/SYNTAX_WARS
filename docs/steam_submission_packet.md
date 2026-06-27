@@ -27,8 +27,8 @@
 |---|---|
 | **App name** | `SYNTAX WARS` |
 | **Release date** | **Coming soon**（日付未定でOK＝価格・時期は発売直前に実データで確定） |
-| **Developer** | （ユーザーのスタジオ名／個人名） |
-| **Publisher** | （同上・自己パブリッシュ） |
+| **Developer** | `Mosan Game Studio` |
+| **Publisher** | `Mosan Game Studio`（自己パブリッシュ） |
 | **Primary genre** | `Strategy` |
 | **Secondary genre** | `Indie` |
 | **App type** | Game |
@@ -149,7 +149,7 @@ If you live for the bluffs in Inscryption, the mind games of Slay the Spire, or 
 [h2]◆ Modes[/h2]
 [list]
 [*][b]VS CPU[/b] — difficulty options, and an AI that actually reads you.
-[*][b]Arcade Gauntlet (best of five) + Challenge Runs[/b] — No Guard, No Signature, clear with all six. Earn the achievements.
+[*][b]Arcade Gauntlet (five straight fights) + Challenge Runs[/b] — No Guard, No Signature, clear with all six. Earn the achievements.
 [*][b]Local 2-player[/b] — hand a friend the other controller.
 [/list]
 

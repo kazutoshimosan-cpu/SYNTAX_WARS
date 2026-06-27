@@ -88,7 +88,7 @@ If you live for the bluffs in Inscryption, the mind games of Slay the Spire, or 
 
 ### ◆ Modes
 - **VS CPU** — difficulty options, and an AI that actually reads you.
-- **Arcade Gauntlet (best of five) + Challenge Runs** — No Guard, No Signature, clear with all six. Earn the achievements.
+- **Arcade Gauntlet (five straight fights) + Challenge Runs** — No Guard, No Signature, clear with all six. Earn the achievements.
 - **Local 2-player** — hand a friend the other controller.
 
 ### ◆ A quiet story underneath.
